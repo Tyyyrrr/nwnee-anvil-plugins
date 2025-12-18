@@ -3,8 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuiMVC", "NuiMVC\NuiMVC.csproj", "{23C902FA-70C6-4A4E-8F2B-A482E5427991}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection	
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{23C902FA-70C6-4A4E-8F2B-A482E5427991}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23C902FA-70C6-4A4E-8F2B-A482E5427991}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal
