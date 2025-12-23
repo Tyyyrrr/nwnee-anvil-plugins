@@ -27,6 +27,7 @@ namespace ServerData
             CustomBaseItemTypesMap = bootstrapper.GetCustomBaseItemTypesMap();
             BodyAppearanceProvider = bootstrapper.GetBodyAppearanceProvider();
             ItemAppearanceProvider = bootstrapper.GetItemAppearanceProvider();
+            BodyAppearanceSQLMap = bootstrapper.GetBodyAppearanceSQLMap();
         }
 
 
@@ -108,6 +109,14 @@ namespace ServerData
         } static IItemAppearanceProvider? _itemAppearanceProvider;
 
 
-
+        public static IBodyAppearanceSQLMap BodyAppearanceSQLMap
+        {
+            get => _bodyAppearanceSQLMap ?? throw new InvalidOperationException($"{nameof(IBodyAppearanceSQLMap)} is not initialized.");
+            set
+            {
+                if(_bodyAppearanceSQLMap != null) throw new InvalidOperationException($"{nameof(IBodyAppearanceSQLMap)} is already initialized.");
+                _bodyAppearanceSQLMap = value;
+            } 
+        } static IBodyAppearanceSQLMap? _bodyAppearanceSQLMap;
     }
 }

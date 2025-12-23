@@ -11,5 +11,6 @@ namespace ServerData
         ICustomBaseItemTypesMap GetCustomBaseItemTypesMap();
         IBodyAppearanceProvider GetBodyAppearanceProvider();
         IItemAppearanceProvider GetItemAppearanceProvider();
+        IBodyAppearanceSQLMap GetBodyAppearanceSQLMap();
     }
 }
