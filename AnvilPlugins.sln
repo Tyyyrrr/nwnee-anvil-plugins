@@ -7,17 +7,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuiMVC", "NuiMVC\NuiMVC.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyConfig", "EasyConfig\EasyConfig.csproj", "{B9023835-DA2F-4B67-950E-038B624E1DF6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerData", "ServerData\ServerData.csproj", "{65A039BB-07AA-4301-B9F1-8E555BF6A2F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection	
+	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{23C902FA-70C6-4A4E-8F2B-A482E5427991}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{23C902FA-70C6-4A4E-8F2B-A482E5427991}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9023835-DA2F-4B67-950E-038B624E1DF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B9023835-DA2F-4B67-950E-038B624E1DF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65A039BB-07AA-4301-B9F1-8E555BF6A2F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65A039BB-07AA-4301-B9F1-8E555BF6A2F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal
