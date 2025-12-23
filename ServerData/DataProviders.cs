@@ -25,6 +25,8 @@ namespace ServerData
             CustomClassesMap = bootstrapper.GetCustomClassesMap();
             CustomFeatsMap = bootstrapper.GetCustomFeatsMap();
             CustomBaseItemTypesMap = bootstrapper.GetCustomBaseItemTypesMap();
+            BodyAppearanceProvider = bootstrapper.GetBodyAppearanceProvider();
+            ItemAppearanceProvider = bootstrapper.GetItemAppearanceProvider();
         }
 
 
@@ -82,5 +84,30 @@ namespace ServerData
                 _customBaseItemTypesMap = value;
             } 
         } static ICustomBaseItemTypesMap? _customBaseItemTypesMap;
+    
+    
+        public static IBodyAppearanceProvider BodyAppearanceProvider
+        {
+            get => _bodyAppearanceProvider ?? throw new InvalidOperationException($"{nameof(IBodyAppearanceProvider)} is not initialized.");
+            set
+            {
+                if(_bodyAppearanceProvider != null) throw new InvalidOperationException($"{nameof(IBodyAppearanceProvider)} is already initialized.");
+                _bodyAppearanceProvider = value;
+            }
+        } static IBodyAppearanceProvider? _bodyAppearanceProvider;
+
+
+        public static IItemAppearanceProvider ItemAppearanceProvider
+        {
+            get => _itemAppearanceProvider ?? throw new InvalidOperationException($"{nameof(IItemAppearanceProvider)} is not initialized.");
+            set
+            {
+                if(_itemAppearanceProvider != null) throw new InvalidOperationException($"{nameof(IItemAppearanceProvider)} is already initialized.");
+                _itemAppearanceProvider = value;
+            }
+        } static IItemAppearanceProvider? _itemAppearanceProvider;
+
+
+
     }
 }

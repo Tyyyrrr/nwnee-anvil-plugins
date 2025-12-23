@@ -9,5 +9,7 @@ namespace ServerData
         ICustomClassesMap GetCustomClassesMap();
         ICustomFeatsMap GetCustomFeatsMap();
         ICustomBaseItemTypesMap GetCustomBaseItemTypesMap();
+        IBodyAppearanceProvider GetBodyAppearanceProvider();
+        IItemAppearanceProvider GetItemAppearanceProvider();
     }
 }
