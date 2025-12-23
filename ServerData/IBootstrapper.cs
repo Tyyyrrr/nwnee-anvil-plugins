@@ -6,5 +6,7 @@ namespace ServerData
     {
         IPlayerSQLMap GetPlayerSQLMap();
         ICreatureInspector GetCreatureInspector();
+        ICustomClassesMap GetCustomClassesMap();
+        ICustomFeatsMap GetCustomFeatsMap();
     }
 }

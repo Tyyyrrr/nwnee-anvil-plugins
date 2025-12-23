@@ -15,13 +15,15 @@ namespace ServerData
             return bootstrapper;
         }
         
-        
+
         static DataProviders()
         {
             var bootstrapper = GetBootstrapper();
 
             PlayerSQLMap = bootstrapper.GetPlayerSQLMap();
             CreatureInspector = bootstrapper.GetCreatureInspector();
+            CustomClassesMap = bootstrapper.GetCustomClassesMap();
+            CustomFeatsMap = bootstrapper.GetCustomFeatsMap();
         }
 
 
@@ -46,5 +48,27 @@ namespace ServerData
                 _creatureInspector = value;
             }
         } static ICreatureInspector? _creatureInspector;
+    
+    
+        public static ICustomClassesMap CustomClassesMap
+        {
+            get => _customClassesMap ?? throw new InvalidOperationException($"{nameof(ICustomClassesMap)} is not initialized.");
+            set
+            {
+                if(_customClassesMap != null) throw new InvalidOperationException($"{nameof(ICustomClassesMap)} is already initialized.");
+                _customClassesMap = value;
+            } 
+        } static ICustomClassesMap? _customClassesMap;
+
+
+        public static ICustomFeatsMap CustomFeatsMap
+        {
+            get => _customFeatsMap ?? throw new InvalidOperationException($"{nameof(ICustomFeatsMap)} is not initialized.");
+            set
+            {
+                if(_customFeatsMap != null) throw new InvalidOperationException($"{nameof(ICustomFeatsMap)} is already initialized.");
+                _customFeatsMap = value;
+            } 
+        } static ICustomFeatsMap? _customFeatsMap;
     }
 }
