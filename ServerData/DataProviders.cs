@@ -15,12 +15,16 @@ namespace ServerData
             return bootstrapper;
         }
         
+        
         static DataProviders()
         {
             var bootstrapper = GetBootstrapper();
 
             PlayerSQLMap = bootstrapper.GetPlayerSQLMap();
+            CreatureInspector = bootstrapper.GetCreatureInspector();
         }
+
+
 
         public static IPlayerSQLMap PlayerSQLMap
         {
@@ -31,5 +35,16 @@ namespace ServerData
                 _playerSQLMap = value;
             } 
         } static IPlayerSQLMap? _playerSQLMap;
+
+
+        public static ICreatureInspector CreatureInspector
+        {
+            get => _creatureInspector ?? throw new InvalidOperationException($"{nameof(ICreatureInspector)} is not initialized.");
+            set
+            {
+                if(_creatureInspector != null) throw new InvalidOperationException($"{nameof(ICreatureInspector)} is already initialized.");
+                _creatureInspector = value;
+            }
+        } static ICreatureInspector? _creatureInspector;
     }
 }

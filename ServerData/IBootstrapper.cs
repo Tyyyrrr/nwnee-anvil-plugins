@@ -5,5 +5,6 @@ namespace ServerData
     public interface IBootstrapper
     {
         IPlayerSQLMap GetPlayerSQLMap();
+        ICreatureInspector GetCreatureInspector();
     }
 }
