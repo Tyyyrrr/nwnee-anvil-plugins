@@ -12,5 +12,7 @@ namespace ServerData
         IBodyAppearanceProvider GetBodyAppearanceProvider();
         IItemAppearanceProvider GetItemAppearanceProvider();
         IBodyAppearanceSQLMap GetBodyAppearanceSQLMap();
+        IIdentitySQLMap GetIdentitySQLMap();
+        IAcquaintanceSQLMap GetAcquaintanceSQLMap();
     }
 }

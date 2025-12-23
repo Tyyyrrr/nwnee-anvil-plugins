@@ -28,6 +28,8 @@ namespace ServerData
             BodyAppearanceProvider = bootstrapper.GetBodyAppearanceProvider();
             ItemAppearanceProvider = bootstrapper.GetItemAppearanceProvider();
             BodyAppearanceSQLMap = bootstrapper.GetBodyAppearanceSQLMap();
+            IdentitySQLMap = bootstrapper.GetIdentitySQLMap();
+            AcquaintanceSQLMap = bootstrapper.GetAcquaintanceSQLMap();
         }
 
 
@@ -118,5 +120,27 @@ namespace ServerData
                 _bodyAppearanceSQLMap = value;
             } 
         } static IBodyAppearanceSQLMap? _bodyAppearanceSQLMap;
+
+
+        public static IIdentitySQLMap IdentitySQLMap
+        {
+            get => _identitySQLMap ?? throw new InvalidOperationException($"{nameof(IIdentitySQLMap)} is not initialized.");
+            set
+            {
+                if(_identitySQLMap != null) throw new InvalidOperationException($"{nameof(IIdentitySQLMap)} is already initialized.");
+                _identitySQLMap = value;
+            } 
+        } static IIdentitySQLMap? _identitySQLMap;
+
+
+        public static IAcquaintanceSQLMap AcquaintanceSQLMap
+        {
+            get => _acquaintanceSQLMap ?? throw new InvalidOperationException($"{nameof(IAcquaintanceSQLMap)} is not initialized.");
+            set
+            {
+                if(_acquaintanceSQLMap != null) throw new InvalidOperationException($"{nameof(IAcquaintanceSQLMap)} is already initialized.");
+                _acquaintanceSQLMap = value;
+            } 
+        } static IAcquaintanceSQLMap? _acquaintanceSQLMap;
     }
 }
