@@ -8,5 +8,6 @@ namespace ServerData
         ICreatureInspector GetCreatureInspector();
         ICustomClassesMap GetCustomClassesMap();
         ICustomFeatsMap GetCustomFeatsMap();
+        ICustomBaseItemTypesMap GetCustomBaseItemTypesMap();
     }
 }

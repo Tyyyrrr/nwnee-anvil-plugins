@@ -24,6 +24,7 @@ namespace ServerData
             CreatureInspector = bootstrapper.GetCreatureInspector();
             CustomClassesMap = bootstrapper.GetCustomClassesMap();
             CustomFeatsMap = bootstrapper.GetCustomFeatsMap();
+            CustomBaseItemTypesMap = bootstrapper.GetCustomBaseItemTypesMap();
         }
 
 
@@ -70,5 +71,16 @@ namespace ServerData
                 _customFeatsMap = value;
             } 
         } static ICustomFeatsMap? _customFeatsMap;
+
+
+        public static ICustomBaseItemTypesMap CustomBaseItemTypesMap
+        {
+            get => _customBaseItemTypesMap ?? throw new InvalidOperationException($"{nameof(ICustomBaseItemTypesMap)} is not initialized.");
+            set
+            {
+                if(_customBaseItemTypesMap != null) throw new InvalidOperationException($"{nameof(ICustomBaseItemTypesMap)} is already initialized.");
+                _customBaseItemTypesMap = value;
+            } 
+        } static ICustomBaseItemTypesMap? _customBaseItemTypesMap;
     }
 }
