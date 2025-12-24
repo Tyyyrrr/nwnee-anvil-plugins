@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>CharacterAppearance</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>$(SharedOutputDirectory)\$(AssemblyName)</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NWN.Anvil" Version="8193.37.2" ExcludeAssets="runtime" PrivateAssets="all"/>
+  </ItemGroup>
+
+  
+  <ItemGroup> <!-- you'll need the binaries in the same directory as this .csproj for development, but NOT in your server's "../anvil/Plugins/YourPlugin/" !-->
+    <Reference Include="NWN.Core" Private = "false" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\ServerData\ServerData.csproj" Private="false" />
+    <ProjectReference Include="..\MySQLClient\MySQLClient.csproj" Private="false" />
+    <ProjectReference Include="..\ExtensionsPlugin\ExtensionsPlugin.csproj" Private="false" />
+    <ProjectReference Include="..\EasyConfig\EasyConfig.csproj" Private="false" />
+    <ProjectReference Include="..\CharactersRegistry\CharactersRegistry.csproj" Private="false" />
+    <ProjectReference Include="..\NuiMVC\NuiMVC.csproj" Private="false" />
+  </ItemGroup>
+
+</Project>

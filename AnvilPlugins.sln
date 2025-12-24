@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CharactersRegistry", "Chara
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovementSystem", "MovementSystem\MovementSystem.csproj", "{3F57D272-726D-4CE1-938B-AEDA640A105D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CharacterAppearance", "CharacterAppearance\CharacterAppearance.csproj", "{177F09DA-046F-489C-8096-4D7F9DBEF1C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,5 +41,7 @@ Global
 		{E9B6DD25-9CA6-41E1-8B42-36ADCFF30FFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F57D272-726D-4CE1-938B-AEDA640A105D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3F57D272-726D-4CE1-938B-AEDA640A105D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{177F09DA-046F-489C-8096-4D7F9DBEF1C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{177F09DA-046F-489C-8096-4D7F9DBEF1C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal
