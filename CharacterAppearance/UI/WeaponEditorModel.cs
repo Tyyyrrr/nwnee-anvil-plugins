@@ -24,6 +24,8 @@ namespace CharacterAppearance.UI
         public WeaponEditorModel(NwCreature pc, EditorFlags flags)
         {
             _pc = pc;
+            _pc.ReplaceObjectAnimation("drwright","pause1");
+            _pc.ReplaceObjectAnimation("drwleft","pause1");
             
             RWrapper = new(flags);
             LWrapper = new(flags);
@@ -260,6 +262,8 @@ namespace CharacterAppearance.UI
 
         public void Dispose()
         {
+            _pc.ClearObjectAnimationOverride("drwright");
+            _pc.ClearObjectAnimationOverride("drwleft");
             CharacterAppearanceService.EventService.Unsubscribe<OnItemEquip, OnItemEquip.Factory>(_pc, OnItemEquip, Anvil.Services.EventCallbackType.After);
             CharacterAppearanceService.EventService.Unsubscribe<OnItemUnequip, OnItemUnequip.Factory>(_pc, OnItemUnequip, Anvil.Services.EventCallbackType.After);
             RevertChanges();
