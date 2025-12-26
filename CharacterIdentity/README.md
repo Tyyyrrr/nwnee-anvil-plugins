@@ -1,0 +1,6 @@
+# Environment config:
+```
+NWNX_RENAME_SKIP=n
+NWNX_RENAME_OVERWRITE_DISPLAY_NAME=true
+NWNX_RENAME_ALLOW_DM=true
+```
