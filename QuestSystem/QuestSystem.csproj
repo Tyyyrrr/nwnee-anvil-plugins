@@ -12,4 +12,10 @@
     <PackageReference Include="NWN.Anvil" Version="8193.37.2" ExcludeAssets="runtime" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MySQLClient\MySQLClient.csproj" Private="false" />
+    <ProjectReference Include="..\ServerData\ServerData.csproj" Private="false" />
+    <ProjectReference Include="..\CharactersRegistry\CharactersRegistry.csproj" Private="false" />
+  </ItemGroup>
+
 </Project>
