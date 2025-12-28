@@ -1,0 +1,43 @@
+name: Extract ServerData interface
+
+env:
+  SRC_BRANCH: main
+  DST_BRANCH: serverdata-interface
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update-interface-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check if interface changed
+      id: dircheck
+      run: |
+        git init
+        git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+        git fetch origin $SRC_BRANCH --depth=2
+        git fetch origin $DST_BRANCH --depth=2 || true
+        if git diff --quiet origin/$DST_BRANCH origin/$SRC_BRANCH:ServerData; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Extract interface folder
+      if: steps.dircheck.outputs.changed == 'true'
+      run: | 
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git checkout --orphan $DST_BRANCH
+        git rm -rf . 2>/dev/null || true
+        git clean -fdx
+        git read-tree origin/$SRC_BRANCH:ServerData
+        git checkout -- .
+        git commit -am "Update $DST_BRANCH from $SRC_BRANCH: $(date)"
+        git push origin $DST_BRANCH --force

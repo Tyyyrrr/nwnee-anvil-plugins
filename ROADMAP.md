@@ -1,5 +1,5 @@
 # Repository:
-- CI mechanism to extract ServerData interface into separate branch and make synchronisation automatic in private implementation repositories
+- ✔️ *CI mechanism to extract ServerData interface into separate branch and make synchronisation automatic in private implementation repositories*
 - Provide better documentation for plugins in READMEs
 
 # Existing feature improvements:
