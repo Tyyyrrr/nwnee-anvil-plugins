@@ -71,35 +71,49 @@ namespace QuestSystem.Objectives
 
         void OnCreatureDeath(CreatureEvents.OnDeath data)
         {
-            var creature = data.KilledCreature;
-            var killer = data.Killer as NwCreature;
+            var victim = data.KilledCreature;
+            var killerObj = data.Killer;
 
-            if(killer != null)
+            NwPlayer? killerPlayer = null;
+            NwArea? killerArea = null;
+
+            if(killerObj is NwTrappable trappable)
             {
-                Progress? progress = null;
-
-                if(killer.IsLoginPlayerCharacter(out var player))
+                killerPlayer = trappable.TrapCreator;
+                killerArea = trappable.Area;
+            }
+            else if(killerObj is NwTrigger trigger)
+            {
+                killerPlayer = trigger.TrapCreator;
+                killerArea = trigger.Area;
+            }
+            else if(killerObj is NwCreature creature)
+            {
+                killerArea = creature.Area;
+                if(!creature.IsPlayerControlled(out killerPlayer) && creature.Master != null)
                 {
-                    progress = GetTrackedProgress(player) as Progress;
+                    killerPlayer = creature.ControllingPlayer;
                 }
-                else
-                {
-                    foreach(var member in killer.Faction.GetMembers())
-                    {
-                        if(member.IsLoginPlayerCharacter(out player))
-                        {
-                            progress = GetTrackedProgress(player) as Progress;
-                            break;
-                        }
-                    }
-                }
-
-                if(progress == null) return;
-            
-                progress.Proceed();
             }
 
-            creature.OnDeath -= OnCreatureDeath;
+            if(killerPlayer == null) return;
+
+            if (PartyMembersAllowed)
+            {
+                foreach(var player in killerPlayer.PartyMembers)
+                {
+                    var controlledCreature = player.ControlledCreature;
+                    if(controlledCreature == null || killerArea != controlledCreature.Area) continue;
+                    (GetTrackedProgress(player) as Progress)?.Proceed();
+                }
+            }
+            else
+            {
+                (GetTrackedProgress(killerPlayer) as Progress)?.Proceed();
+            }
+
+
+            victim.OnDeath -= OnCreatureDeath;
         }
 
         void OnAreaEnter(AreaEvents.OnEnter data)
