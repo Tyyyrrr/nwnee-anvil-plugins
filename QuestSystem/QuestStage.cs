@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Anvil.API;
+using NLog;
 using QuestSystem.Objectives;
 
 namespace QuestSystem
 {
     public sealed class QuestStage
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
         internal Quest? Quest;
 
         public int ID {get;set;}
@@ -16,17 +19,29 @@ namespace QuestSystem
         public QuestStageReward Reward {get;set;} = new();
         public Objective[] Objectives {get;set;} = Array.Empty<Objective>();
 
-        private readonly HashSet<NwPlayer> _trackedCreatures = new();
-
+        private bool AssertQuestValid()
+        {
+            if(Quest == null)
+            {
+                _log.Error("No parent Quest");
+                foreach(var objective in Objectives)
+                    objective.StopTrackingProgress();
+                return false;
+            }
+            return true;
+        }
         internal void TrackProgress(NwPlayer player)
         {
+            if(!AssertQuestValid()) return;
+
             if(!player.IsValid)
             {
+                _log.Error("Player invalidated");
                 Quest.ClearPlayer(player);
                 return;
             }
 
-            if(!_trackedCreatures.Add(player)) return;
+            _log.Warn($"Tracking progress for player {player.PlayerName} on {Quest!.Tag}/{ID}");
 
             foreach(var objective in Objectives)
             {
@@ -37,14 +52,6 @@ namespace QuestSystem
 
         internal void StopTracking(NwPlayer player)
         {
-            if(!_trackedCreatures.Remove(player)) return;
-
-            if (!player.IsValid)
-            {
-                Quest.ClearPlayer(player);
-                return;
-            }
-
             foreach(var objective in Objectives)
             {
                 objective.StopTrackingProgress(player);
@@ -60,6 +67,8 @@ namespace QuestSystem
         {
             if(!_scheduledJournalUpdates.Add(player)) return;
 
+            _log.Warn("Journal update scheduled!");
+
             await NwTask.Delay(TimeSpan.FromSeconds(0.6));
 
             if(!_scheduledJournalUpdates.Remove(player)) return;
@@ -70,7 +79,10 @@ namespace QuestSystem
 
         private void UpdateJournal(NwPlayer player)
         {
-            var quest = Quest ?? throw new InvalidOperationException("No parent Quest");
+            if(!AssertQuestValid()) return;
+
+            
+            _log.Warn("Updating journal...");
 
             string[] parts = new string[1 + Objectives.Length];
             parts[0] = JournalEntry;
@@ -83,12 +95,12 @@ namespace QuestSystem
             }
             string str = string.Join("\n", parts);
 
-            var entry = player.GetJournalEntry(quest.Tag);
+            var entry = player.GetJournalEntry(Quest!.Tag);
             if(entry == null)
             {
                 entry = new();
-                entry.QuestTag = quest.Tag;
-                entry.Name = quest.Name;
+                entry.QuestTag = Quest.Tag;
+                entry.Name = Quest.Name;
                 entry.QuestDisplayed = true;
                 entry.QuestCompleted = allCompleted;
                 entry.Text = str;

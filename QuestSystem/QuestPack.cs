@@ -50,7 +50,7 @@ namespace QuestSystem
         
         public async Task<Quest?> GetQuestAsync(string questTag)
         {
-            string questPath = $"{questTag}/quest";
+            string questPath = $"{questTag}/q";
 
             NLog.LogManager.GetCurrentClassLogger().Warn("Getting quest at path " + questPath);
 
@@ -77,7 +77,7 @@ namespace QuestSystem
 
             var json = JsonSerializer.Serialize(quest,_jsonOptions);
 
-            var entry = CreateEntry($"{questFolder}quest");
+            var entry = CreateEntry($"{questFolder}q");
 
             await using var sw = new StreamWriter(entry.Open());
             await sw.WriteAsync(json);
@@ -86,7 +86,7 @@ namespace QuestSystem
 
         public async Task<QuestStage?> GetStageAsync(string questTag, int stageID)
         {
-            var stagePath = $"{questTag}/stage{stageID}";
+            var stagePath = $"{questTag}/{stageID}";
 
             NLog.LogManager.GetCurrentClassLogger().Warn("Getting stage at path " + stagePath);
 
@@ -119,7 +119,7 @@ namespace QuestSystem
                 return false;
             }
 
-            string stagePath = $"{questFolder}stage{stage.ID}";
+            string stagePath = $"{questFolder}{stage.ID}";
 
             var json = JsonSerializer.Serialize(stage, _jsonOptions);
 
@@ -138,7 +138,7 @@ namespace QuestSystem
         {
             ThrowIfReadOnly();
 
-            string stagePath = $"{questTag}/{stageID}.json";
+            string stagePath = $"{questTag}/{stageID}";
 
             var entry = Entries.FirstOrDefault(e=>e.FullName.StartsWith(stagePath));
 
