@@ -22,6 +22,7 @@ namespace QuestSystem.Objectives
 
         public string JournalEntry {get;set;} = string.Empty;
         public int NextStageID {get;set;} = -1;
+        public bool PartyMembersAllowed {get;set;} = false;
 
         private readonly Dictionary<NwPlayer, IObjectiveProgress> _trackedProgress = new();
 
