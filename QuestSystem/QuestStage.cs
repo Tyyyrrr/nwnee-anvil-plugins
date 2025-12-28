@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Anvil.API;
-using QuestSystem.Objectives.Templates;
+using QuestSystem.Objectives;
 
 namespace QuestSystem
 {
@@ -13,45 +16,95 @@ namespace QuestSystem
         public int NextStageID {get;set;}
         public string JournalEntry {get;set;} = string.Empty;
         public QuestStageReward Reward {get;set;} = new();
-        public ObjectiveTemplate[] Templates {get;set;} = Array.Empty<ObjectiveTemplate>();
+        public Objective[] Objectives {get;set;} = Array.Empty<Objective>();
 
-        private readonly HashSet<NwCreature> _trackedCreatures = new();
+        private readonly HashSet<NwPlayer> _trackedCreatures = new();
 
-        internal void TrackProgress(NwCreature pc)
+        internal void TrackProgress(NwPlayer player)
         {
-            if(!pc.IsValid)
+            if(!player.IsValid)
             {
-                Quest.ClearPC(pc);
+                Quest.ClearPlayer(player);
                 return;
             }
 
-            if(!_trackedCreatures.Add(pc)) return;
+            if(!_trackedCreatures.Add(player)) return;
 
-            foreach(var template in Templates)
+            foreach(var objective in Objectives)
             {
-                // template.StartTracking(pc);
+                objective.StartTrackingProgress(player);
             }
 
         }
 
-        internal void StopTracking(NwCreature pc)
+        internal void StopTracking(NwPlayer player)
         {
-            if(!_trackedCreatures.Remove(pc)) return;
+            if(!_trackedCreatures.Remove(player)) return;
 
-            if (!pc.IsValid)
+            if (!player.IsValid)
             {
-                Quest.ClearPC(pc);
+                Quest.ClearPlayer(player);
                 return;
             }
 
-            foreach(var template in Templates)
+            foreach(var objective in Objectives)
             {
-                // template.StopTracking(pc);
+                objective.StopTrackingProgress(player);
             }
         }
 
-        internal bool IsTracking(NwCreature pc) => _trackedCreatures.Contains(pc);
+        internal bool IsTracking(NwPlayer player) => Objectives.Any(o => o.IsTracking(player));
+        internal bool IsActive => Objectives.Any(o => o.IsActive);
 
-        internal bool IsActive => _trackedCreatures.Count > 0;
+
+        private readonly HashSet<NwPlayer> _scheduledJournalUpdates = new();
+        internal async void ScheduleJournalUpdate(NwPlayer player)
+        {
+            if(!_scheduledJournalUpdates.Add(player)) return;
+
+            await NwTask.Delay(TimeSpan.FromSeconds(0.6));
+
+            if(!_scheduledJournalUpdates.Remove(player)) return;
+
+            if(!player.IsValid) Quest.ClearPlayer(player);
+            else if(IsTracking(player)) UpdateJournal(player);
+        }
+
+        private void UpdateJournal(NwPlayer player)
+        {
+            var quest = Quest ?? throw new InvalidOperationException("No parent Quest");
+
+            string[] parts = new string[1 + Objectives.Length];
+            parts[0] = JournalEntry;
+            bool allCompleted = true;
+            for(int i = 1; i < Objectives.Length + 1; i++)
+            {
+                var objective = Objectives[i-1];
+                if(!objective.IsCompleted(player)) allCompleted = false;
+                parts[i] = objective.GetJournalText(player);
+            }
+            string str = string.Join("\n", parts);
+
+            var entry = player.GetJournalEntry(quest.Tag);
+            if(entry == null)
+            {
+                entry = new();
+                entry.QuestTag = quest.Tag;
+                entry.Name = quest.Name;
+                entry.QuestDisplayed = true;
+                entry.QuestCompleted = allCompleted;
+                entry.Text = str;
+                entry.Updated = true;
+
+                player.AddCustomJournalEntry(entry);
+            }
+            else
+            {
+                entry.Text = str;
+                entry.QuestCompleted = allCompleted;
+                entry.Updated = true;
+                player.AddCustomJournalEntry(entry, true);
+            }
+        }
     }
 }

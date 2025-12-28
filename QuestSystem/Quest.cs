@@ -35,7 +35,7 @@ namespace QuestSystem
         /// <br/>If any stage is not tracking players after clear - Unload that stage from memory.
         /// <br/>If any quest has no stages loaded after clear - Unload that quest from memory.
         /// </summary>
-        public static void ClearPC(NwCreature pc)
+        public static void ClearPlayer(NwPlayer player)
         {
             List<Quest> questsToRemove = new();
 
@@ -43,8 +43,8 @@ namespace QuestSystem
             {
                 foreach(var stage in quest._stages)
                 {
-                    if(stage.IsTracking(pc))
-                        stage.StopTracking(pc);
+                    if(stage.IsTracking(player))
+                        stage.StopTracking(player);
 
                     if(!stage.IsActive)
                     {

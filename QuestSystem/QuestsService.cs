@@ -54,7 +54,7 @@ namespace QuestSystem
         {
             var pc = data.Player.LoginCreature;
 
-            if(pc != null) Quest.ClearPC(pc);
+            if(pc != null) Quest.ClearPlayer(pc);
         }
 
         static async ValueTask<bool> SetPCOnQuestAsync(NwCreature pc, string questTag, int stageID)
@@ -69,7 +69,7 @@ namespace QuestSystem
 
             if (!pc.IsValid)
             {
-                Quest.ClearPC(pc);
+                Quest.ClearPlayer(pc);
                 return false;
             }
 
