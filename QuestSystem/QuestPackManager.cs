@@ -29,6 +29,7 @@ namespace QuestSystem
 
         public static QuestPack? FindPack(string questTag)
         {
+            NLog.LogManager.GetCurrentClassLogger().Warn($"Searching for pack containing quest \'{questTag}\'");
             var questDir = questTag+'/';
             foreach(var pack in _packs)
             {

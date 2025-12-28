@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 
 using Anvil.API;
+using NLog;
 
 namespace QuestSystem.Objectives
 {
@@ -20,6 +21,8 @@ namespace QuestSystem.Objectives
     {
         internal QuestStage? QuestStage;
 
+        protected static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
         public string JournalEntry {get;set;} = string.Empty;
         public int NextStageID {get;set;} = -1;
         public bool PartyMembersAllowed {get;set;} = false;
@@ -34,26 +37,58 @@ namespace QuestSystem.Objectives
 
         internal void StartTrackingProgress(NwPlayer player)
         {
+            bool shouldSubscribe = !IsActive;
+
             if (!player.IsValid)
             {
                 StopTrackingProgress(player);
                 return;
             }
 
-            if(_trackedProgress.ContainsKey(player)) return;
+            _log.Warn($"Track progress for player {player.PlayerName}");
+
+            if (IsTracking(player))
+            {
+                _log.Error("Player is already tracked!");
+                return;
+            }
+
+            if(shouldSubscribe){
+                _log.Warn("Subscribing...");
+                Subscribe();
+            }
 
             var progress = CreateProgress();
             progress.OnUpdate += OnProgressUpdate;
             _trackedProgress.Add(player, progress);
         }
 
+        internal void StopTrackingProgress()
+        {
+            _log.Warn("Stop tracking progress for all players");
+            foreach(var kvp in _trackedProgress)
+            {
+                kvp.Value.OnUpdate -= OnProgressUpdate;
+            }
+            _trackedProgress.Clear();
+            
+            _log.Warn("Unsubscribing...");
+            Unsubscribe();
+        }
         internal void StopTrackingProgress(NwPlayer player)
         {
+            _log.Warn($"Stop tracking progress for player {(player.IsValid ? player.PlayerName : "INVALID PLAYER")}");
             if(_trackedProgress.TryGetValue(player, out var progress))
             {
                 progress.OnUpdate -= OnProgressUpdate;
                 _ = _trackedProgress.Remove(player);
-            }    
+            }
+
+            if(!IsActive)
+            {
+                _log.Warn("Unsubscribing...");
+                Unsubscribe();
+            }
         }
 
         internal bool IsTracking(NwPlayer player) => _trackedProgress.ContainsKey(player);
@@ -71,6 +106,7 @@ namespace QuestSystem.Objectives
 
         private void OnProgressUpdate(IObjectiveProgress progress)
         {
+            _log.Info(" - - on progress update --");
             var player = GetTrackedPlayer(progress) ?? throw new InvalidOperationException("Progress object is not owned by this objective.");
 
             if (!player.IsValid)

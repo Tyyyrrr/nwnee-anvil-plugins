@@ -124,7 +124,7 @@ namespace QuestSystem
 
             // test:
             var testTag = "test_quest_1";
-            var testStage = 2;
+            var testStage = 0;
 
             var result = await SetPCOnQuestAsync(player, testTag, testStage);
 
@@ -139,15 +139,23 @@ namespace QuestSystem
 
         static async ValueTask<bool> SetPCOnQuestAsync(NwPlayer player, string questTag, int stageID)
         {
+            var log = NLog.LogManager.GetCurrentClassLogger();
+            log.Warn($"Setting player on stage {stageID} of quest {questTag}");
             if(!player.IsValid) return false;
 
             var questStage = await GetOrLoadStageAsync(questTag, stageID);
             await NwTask.SwitchToMainThread();
 
-            if(questStage == null) return false;
+            if(questStage == null)
+            {
+                log.Error($"Failed to obtain quest stage");
+                return false;
+            }
+            log.Info($"Quest stage obtained!");
 
             if (!player.IsValid)
             {
+                log.Error($"Player invalidated");
                 Quest.ClearPlayer(player);
                 return false;
             }
@@ -159,26 +167,44 @@ namespace QuestSystem
 
         static async ValueTask<QuestStage?> GetOrLoadStageAsync(string questTag, int stageID)
         {
+            var log = NLog.LogManager.GetCurrentClassLogger();
+            log.Warn($"Searching for stage {stageID} of quest {questTag}");
+
             // fast path (quest stage can be already cached in memory):
             var quest = Quest.GetQuest(questTag);
 
             if(quest != null)
             {
+                log.Info($"Quest found in cache!");
                 var stage = quest.GetStage(stageID);
 
-                if(stage != null) return stage;
+                if(stage != null)
+                {
+                    log.Info($"Stage found in cache!");
+                    return stage;
+                }
+                else log.Info($"Stage not found in cache!");
             }
+            else log.Info("Quest not found in cache.");
 
             var pack = QuestPackManager.FindPack(questTag);
 
-            if(pack == null) return null; // return if none of packs
+            if(pack == null)
+            {
+                log.Error("Pack not found");
+                return null; // return if none of packs
+            }
 
 
             // slow path (read from .zip archive and store quest and questStage in RAM asynchronously):
             if(quest != null)
             {
                 var stage = await pack.GetStageAsync(questTag, stageID);
-                if(stage == null) return null;
+                if(stage == null)
+                {
+                    log.Error("Failed to load stage.");
+                    return null;
+                }
 
                 quest.RegisterStage(stage);
 
@@ -187,10 +213,18 @@ namespace QuestSystem
             else
             {
                 quest = await pack.GetQuestAsync(questTag);
-                if(quest == null) return null;
+                if(quest == null)
+                {
+                    log.Error("Failed to load quest");
+                    return null;
+                }
 
                 var stage = await pack.GetStageAsync(questTag, stageID);
-                if(stage == null) return null;
+                if(stage == null)
+                { 
+                    log.Error("Failed to load stage");
+                    return null;
+                }
 
                 Quest.RegisterQuest(quest);
                 quest.RegisterStage(stage);
