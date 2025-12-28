@@ -17,7 +17,7 @@ namespace QuestSystem
             PreferredObjectCreationHandling = System.Text.Json.Serialization.JsonObjectCreationHandling.Populate,
             WriteIndented = false,
             AllowTrailingCommas = false,
-            MaxDepth = 2,
+            MaxDepth = 6,
             IncludeFields = false,
         };
         public static readonly string FileExtension = ".qp";
@@ -50,7 +50,9 @@ namespace QuestSystem
         
         public async Task<Quest?> GetQuestAsync(string questTag)
         {
-            string questPath = $"{questTag}/quest.json";
+            string questPath = $"{questTag}/quest";
+
+            NLog.LogManager.GetCurrentClassLogger().Warn("Getting quest at path " + questPath);
 
             var entry = Entries.FirstOrDefault(e=>string.Equals(e.FullName, questPath, StringComparison.OrdinalIgnoreCase));
             
@@ -75,7 +77,7 @@ namespace QuestSystem
 
             var json = JsonSerializer.Serialize(quest,_jsonOptions);
 
-            var entry = CreateEntry($"{questFolder}quest.json");
+            var entry = CreateEntry($"{questFolder}quest");
 
             await using var sw = new StreamWriter(entry.Open());
             await sw.WriteAsync(json);
@@ -84,13 +86,26 @@ namespace QuestSystem
 
         public async Task<QuestStage?> GetStageAsync(string questTag, int stageID)
         {
-            var stagePath = $"{questTag}/{stageID}.json";
+            var stagePath = $"{questTag}/stage{stageID}";
+
+            NLog.LogManager.GetCurrentClassLogger().Warn("Getting stage at path " + stagePath);
 
             var entry = Entries.FirstOrDefault(e=>string.Equals(e.FullName, stagePath));
 
-            if(entry == null) return null;
+            if(entry == null)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Error("NO ENTRY");
+                return null;
+            }
 
-            return await JsonSerializer.DeserializeAsync<QuestStage>(entry.Open(), _jsonOptions);
+            var stage = await JsonSerializer.DeserializeAsync<QuestStage>(entry.Open(), _jsonOptions);
+            if(stage == null)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Error("DESERIALIZATION FAILED");
+            }
+
+            return stage;
+            //return await JsonSerializer.DeserializeAsync<QuestStage>(entry.Open(), _jsonOptions);
         }
         public async Task<bool> SetStageAsync(string questTag, QuestStage stage)
         {
@@ -104,7 +119,7 @@ namespace QuestSystem
                 return false;
             }
 
-            string stagePath = $"{questFolder}{stage.ID}.json";
+            string stagePath = $"{questFolder}stage{stage.ID}";
 
             var json = JsonSerializer.Serialize(stage, _jsonOptions);
 

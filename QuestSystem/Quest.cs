@@ -12,14 +12,15 @@ namespace QuestSystem
         internal static void UnregisterQuest(Quest quest) => _loadedQuests.Remove(quest);
         public static Quest? GetQuest(string tag) => _loadedQuests.FirstOrDefault(q=>string.Equals(q.Tag, tag, StringComparison.OrdinalIgnoreCase));
 
-        public string Tag {get;internal set;} = string.Empty;
-        public string Name {get;internal set;} = string.Empty;
-        public string JournalEntry {get;internal set;} = string.Empty;
+        public string Tag {get;set;} = string.Empty;
+        public string Name {get;set;} = string.Empty;
+        public string JournalEntry {get;set;} = string.Empty;
 
         private readonly HashSet<QuestStage> _stages = new();
         internal void RegisterStage(QuestStage stage) 
         {
             stage.Quest = this;
+            foreach(var objective in stage.Objectives) objective.QuestStage = stage;
             _stages.Add(stage);
         }
         internal void UnregisterStage(QuestStage stage)

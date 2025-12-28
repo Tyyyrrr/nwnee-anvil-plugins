@@ -211,7 +211,44 @@ namespace QuestSystem.Objectives
 
         private void SubscribeItemActivate() => NwModule.Instance.OnActivateItem += OnItemActivated;
         private void UnsubscribeItemActivate() => NwModule.Instance.OnActivateItem -= OnItemActivated;
+
+        void OnItemActivated(ModuleEvents.OnActivateItem data)
+        {
+            
+        }
+
         private void SubscribeObjectExamine() => NwModule.Instance.OnExamineObject += OnObjectExamined;
         private void UnsubscribeObjectExamine() => NwModule.Instance.OnExamineObject -= OnObjectExamined;
+
+        void OnObjectExamined(OnExamineObject data)
+        {
+            var obj = data.ExaminedObject;
+
+            var area = obj.Area;
+
+            if(AreaTags.Length > 0 && (area == null || !AreaTags.Contains(area.Tag)))
+                return;
+
+            var player = data.ExaminedBy;
+
+            if((Tag == string.Empty && ResRef != string.Empty && ResRef == obj.ResRef)
+                || (ResRef == string.Empty && Tag != string.Empty && Tag == obj.Tag)
+                || (ResRef != string.Empty && Tag != string.Empty && ResRef == obj.ResRef && Tag == obj.Tag))
+            {
+                if (PartyMembersAllowed)
+                {
+                    foreach(var member in player.PartyMembers)
+                    {
+                        var controlledCreature = player.ControlledCreature;
+                        if(controlledCreature == null || controlledCreature.Area != area) continue;
+                        (GetTrackedProgress(member) as Progress)?.Proceed();
+                    }
+                }
+                else
+                {
+                    (GetTrackedProgress(player) as Progress)?.Proceed();
+                }
+            }
+        }
     }
 }
