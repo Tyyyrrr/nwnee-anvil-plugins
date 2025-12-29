@@ -12,4 +12,8 @@
     <WarningsAsErrors>true</WarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\QuestSystem.csproj" Private="false" />
+  </ItemGroup>
+
 </Project>
