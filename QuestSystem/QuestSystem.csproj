@@ -26,4 +26,10 @@
     <ProjectReference Include="..\CharactersRegistry\CharactersRegistry.csproj" Private="false" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Editor\**\*.cs" />
+    <None Remove="Editor\**\*" />
+    <EmbeddedResource Remove="Editor\**\*" />
+  </ItemGroup>
+
 </Project>
