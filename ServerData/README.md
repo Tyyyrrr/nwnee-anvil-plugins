@@ -11,3 +11,10 @@ NOTE: Some plugins may require additional configuration via EasyConfig to load p
 1) Extract your 'Implementation' folder into another private repository and remove it from the public one.
 2) Create .gitmodules file in top-level directory of the public repository.
 3) Add a submodule path "ServerData/Implementation" with URL pointing to the private repository
+
+# HOW TO SYNC PRIVATE IMPLEMENTATION WITH UPDATED INTERFACE
+```
+git remote add sdi https://github.com/Tyyyrrr/nwnee-anvil-plugins.git
+git fetch sdi serverdata-interface
+git checkout sdi/serverdata-interface -- .
+```
