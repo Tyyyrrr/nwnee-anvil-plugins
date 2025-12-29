@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QuestSystem\QuestSystem.csproj" />
+	  <ProjectReference Include="..\QuestSystem\QuestSystem.csproj" />
   </ItemGroup>
 
 </Project>
