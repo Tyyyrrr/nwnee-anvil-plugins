@@ -17,6 +17,7 @@ namespace QuestSystem.Objectives
     [JsonDerivedType(typeof(ObjectiveInteract),"$interact")]
     [JsonDerivedType(typeof(ObjectiveKill),"$kill")]
     [JsonDerivedType(typeof(ObjectiveObtain),"$obtain")]
+    [JsonDerivedType(typeof(ObjectiveSpellcast),"$spellcast")]
     public abstract partial class Objective
     {
         internal QuestStage? QuestStage;
