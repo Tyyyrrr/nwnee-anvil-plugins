@@ -2,10 +2,6 @@
 
   <PropertyGroup>
     <IsTool>true</IsTool>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <IsTool>true</IsTool>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
