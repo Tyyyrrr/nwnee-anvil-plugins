@@ -21,9 +21,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CharacterAppearance", "Char
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CharacterIdentity", "CharacterIdentity\CharacterIdentity.csproj", "{19740D28-4763-4F63-914C-86017114332B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestSystem", "QuestSystem\QuestSystem.csproj", "{4107E449-74BF-4280-9A5F-1BCBAE868535}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "QuestSystem", "QuestSystem", "{73C372C1-AB9D-4A39-BDD0-021DFC1087CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestSystem.Tests", "QuestSystem.Tests\QuestSystem.Tests.csproj", "{FDAAFBA9-7398-4DC9-9563-375A46A21DAB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestSystem", "QuestSystem\QuestSystem.csproj", "{5E37C22B-D3F9-4315-B7B2-FFDC28A9589F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestSystem.Tests", "QuestSystem.Tests\QuestSystem.Tests.csproj", "{170E24E7-23F4-4D39-BBEF-CB4BDE8E3E94}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestEditor", "QuestSystem\Editor\QuestEditor.csproj", "{8480187A-7099-4ACD-B39E-24F989B32583}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,15 +71,23 @@ Global
 		{19740D28-4763-4F63-914C-86017114332B}.All|x64.Build.0 = All|x64
 		{19740D28-4763-4F63-914C-86017114332B}.PluginsOnly|x64.ActiveCfg = PluginsOnly|x64
 		{19740D28-4763-4F63-914C-86017114332B}.PluginsOnly|x64.Build.0 = PluginsOnly|x64
-		{4107E449-74BF-4280-9A5F-1BCBAE868535}.All|x64.ActiveCfg = All|x64
-		{4107E449-74BF-4280-9A5F-1BCBAE868535}.All|x64.Build.0 = All|x64
-		{4107E449-74BF-4280-9A5F-1BCBAE868535}.PluginsOnly|x64.ActiveCfg = PluginsOnly|x64
-		{4107E449-74BF-4280-9A5F-1BCBAE868535}.PluginsOnly|x64.Build.0 = PluginsOnly|x64
-		{FDAAFBA9-7398-4DC9-9563-375A46A21DAB}.All|x64.ActiveCfg = All|x64
-		{FDAAFBA9-7398-4DC9-9563-375A46A21DAB}.All|x64.Build.0 = All|x64
-		{FDAAFBA9-7398-4DC9-9563-375A46A21DAB}.PluginsOnly|x64.ActiveCfg = PluginsOnly|x64
+		{5E37C22B-D3F9-4315-B7B2-FFDC28A9589F}.All|x64.ActiveCfg = All|x64
+		{5E37C22B-D3F9-4315-B7B2-FFDC28A9589F}.All|x64.Build.0 = All|x64
+		{5E37C22B-D3F9-4315-B7B2-FFDC28A9589F}.PluginsOnly|x64.ActiveCfg = PluginsOnly|x64
+		{5E37C22B-D3F9-4315-B7B2-FFDC28A9589F}.PluginsOnly|x64.Build.0 = PluginsOnly|x64
+		{170E24E7-23F4-4D39-BBEF-CB4BDE8E3E94}.All|x64.ActiveCfg = All|x64
+		{170E24E7-23F4-4D39-BBEF-CB4BDE8E3E94}.All|x64.Build.0 = All|x64
+		{170E24E7-23F4-4D39-BBEF-CB4BDE8E3E94}.PluginsOnly|x64.ActiveCfg = PluginsOnly|x64
+		{8480187A-7099-4ACD-B39E-24F989B32583}.All|x64.ActiveCfg = All|x64
+		{8480187A-7099-4ACD-B39E-24F989B32583}.All|x64.Build.0 = All|x64
+		{8480187A-7099-4ACD-B39E-24F989B32583}.PluginsOnly|x64.ActiveCfg = PluginsOnly|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5E37C22B-D3F9-4315-B7B2-FFDC28A9589F} = {73C372C1-AB9D-4A39-BDD0-021DFC1087CB}
+		{170E24E7-23F4-4D39-BBEF-CB4BDE8E3E94} = {73C372C1-AB9D-4A39-BDD0-021DFC1087CB}
+		{8480187A-7099-4ACD-B39E-24F989B32583} = {73C372C1-AB9D-4A39-BDD0-021DFC1087CB}
 	EndGlobalSection
 EndGlobal
