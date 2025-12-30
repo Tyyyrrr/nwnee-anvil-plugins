@@ -31,7 +31,19 @@ namespace QuestEditor.QuestPackExplorer
         public string SelectedPackFileName => QuestPackExplorerModel.SelectedPackFileName ?? "(No QuestPack Selected)";
         public bool IsPackFileSelected => !string.IsNullOrEmpty(QuestPackExplorerModel.SelectedPackFileName);
         public int SelectedQuest => QuestPackExplorerModel.CurrentQuestTag != null ? QuestTags.IndexOf(QuestPackExplorerModel.CurrentQuestTag) : -1;
+        
+        string newQuestTag = string.Empty;
+        public string NewQuestTag
+        {
+            get => IsPackFileSelected ? newQuestTag : string.Empty;
+            set
+            {
+                if(value == newQuestTag) return;
 
+                newQuestTag = value;
+                OnPropertyChanged(nameof(NewQuestTag));
+            }
+        }
         public ICommand CreatePackFileCommand { get; }
         public ICommand SelectPackFileCommand { get; }
         public ICommand SavePackFileCommand { get; }
@@ -44,25 +56,16 @@ namespace QuestEditor.QuestPackExplorer
         {
             if (string.IsNullOrWhiteSpace(tag)) return;
 
-            var ok = await QuestPackExplorerModel.AddQuest(tag);
-            if (ok)
-            {
-                if (!QuestTags.Contains(tag)) QuestTags.Add(tag);
-                OnPropertyChanged(nameof(QuestTags));
-                OnPropertyChanged(nameof(SelectedPackFileName));
-            }
+            if(await QuestPackExplorerModel.AddQuest(tag))
+                RefreshFromModel();
         }
 
         private void RemoveQuest(string? tag)
         {
-            Console.WriteLine("Removing quest with tag: " + tag);
             if (string.IsNullOrWhiteSpace(tag)) return;
             if (QuestPackExplorerModel.RemoveQuest(tag))
-            {
-                QuestTags.Remove(tag);
-                OnPropertyChanged(nameof(QuestTags));
-                OnPropertyChanged(nameof(SelectedPackFileName));
-            }
+                RefreshFromModel();
+            
         }
 
         private void RefreshFromModel()
@@ -74,6 +77,7 @@ namespace QuestEditor.QuestPackExplorer
             }
             OnPropertyChanged(nameof(SelectedPackFileName));
             OnPropertyChanged(nameof(QuestPackNameColor));
+            OnPropertyChanged(nameof(IsPackFileSelected));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <IsTool>true</IsTool>
+    <AssemblyName>QuestEditor</AssemblyName>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -14,5 +15,21 @@
   <ItemGroup>
     <ProjectReference Include="..\QuestSystem.csproj" Private="true" />
   </ItemGroup>
+
+  <Target Name="CreateShortcut" AfterTargets="Build">
+    <PropertyGroup>
+      <ShortcutPath>$(TargetDir)QuestEditor_CONSOLE.lnk</ShortcutPath>
+      <ExePath>$(TargetDir)QuestEditor.exe</ExePath>
+      <Arguments>console</Arguments>
+    </PropertyGroup>
+
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+      $WshShell = New-Object -ComObject WScript.Shell; ^
+      $Shortcut = $WshShell.CreateShortcut('$(ShortcutPath)'); ^
+      $Shortcut.TargetPath = '$(ExePath)'; ^
+      $Shortcut.Arguments = '$(Arguments)'; ^
+      $Shortcut.WorkingDirectory = '$(TargetDir)'; ^
+      $Shortcut.Save();" />
+  </Target>
 
 </Project>

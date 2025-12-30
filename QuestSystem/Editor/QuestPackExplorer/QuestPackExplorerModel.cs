@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using QuestSystem;
@@ -22,17 +23,10 @@ namespace QuestEditor.QuestPackExplorer
         {
             _selectedQuestPack?.Dispose();
             _selectedQuestPack = null;
+
             if(_tmpQuestPackFile != null && File.Exists(_tmpQuestPackFile))
-            {
-                try
-                {
-                    File.Delete(_tmpQuestPackFile);
-                }
-                catch (Exception)//(Exception ex)
-                {
-                    Console.WriteLine("Failed to delete temporary quest pack file.");
-                }
-            }
+                File.Delete(_tmpQuestPackFile);
+                
             _tmpQuestPackFile = null;
             _originalQuestPackFile = null;
             QuestTags = [];
@@ -58,17 +52,11 @@ namespace QuestEditor.QuestPackExplorer
             if(File.Exists(tmpPath))
             {
                 Console.WriteLine("Temporary quest pack file already exists. Deleting...");
-
-                try
-                {
-                    File.Delete(tmpPath);
-                }
-                catch (Exception)//(Exception ex)
-                {
-                    // log ex.Message
+                
+                if(tmpPath == _tmpQuestPackFile)
                     Clear();
-                    return;
-                }
+
+                File.Delete(tmpPath);
             }
 
             if(!createNew)
@@ -83,6 +71,8 @@ namespace QuestEditor.QuestPackExplorer
             _originalQuestPackFile = originalFileName;
 
             _selectedQuestPack = QuestPack.OpenWrite(_tmpQuestPackFile);
+            
+            RefreshQuestTags();
         }
 
         public static void CreatePackFile()
@@ -130,15 +120,14 @@ namespace QuestEditor.QuestPackExplorer
                 return;
             }
 
-            try
-            {
-                File.Copy(_tmpQuestPackFile, _originalQuestPackFile, true);
-                Console.WriteLine("Saved quest pack to " + _originalQuestPackFile);
-            }
-            catch(Exception)
-            {
-                Console.WriteLine("Failed to save quest pack to " + _originalQuestPackFile);
-            }
+            _selectedQuestPack.Dispose();
+            _selectedQuestPack = null;
+            File.Copy(_tmpQuestPackFile, _originalQuestPackFile, true);
+            Console.WriteLine("Saved quest pack to " + _originalQuestPackFile);
+
+            var ofn = _originalQuestPackFile;
+            Clear();
+            OpenTmpPack(ofn, false);
         }
 
         public static void SaveCurrentPackAs()
@@ -159,15 +148,14 @@ namespace QuestEditor.QuestPackExplorer
 
             if(!dlg.ShowDialog() ?? true) return;
 
-            try
-            {
-                File.Copy(_tmpQuestPackFile, dlg.FileName, true);
-                Console.WriteLine("Saved quest pack to " + dlg.FileName);
-            }
-            catch(Exception)
-            {
-                Console.WriteLine("Failed to save quest pack to " + dlg.FileName);
-            }
+            _selectedQuestPack.Dispose();
+            _selectedQuestPack = null;
+            File.Copy(_tmpQuestPackFile, dlg.FileName, true);
+
+            Console.WriteLine("Saved quest pack to " + dlg.FileName);
+            
+            Clear();
+            OpenTmpPack(dlg.FileName, false);
         }
 
 
@@ -179,6 +167,8 @@ namespace QuestEditor.QuestPackExplorer
             _currentQuest = new Quest { Tag = questTag };
 
             await _selectedQuestPack.AddQuestAsync(_currentQuest);
+
+            RefreshQuestTags();
 
             return true;
         }
@@ -192,15 +182,25 @@ namespace QuestEditor.QuestPackExplorer
             {
                 _currentQuest = null;
             }
-                
-            QuestTags = [.. QuestTags.Where(qt => qt != questTag)];
 
-            foreach(var entry in _selectedQuestPack.Entries.Where(e => e.FullName.StartsWith(questTag)))
-            {
-                entry.Delete();
-            }
+            List<ZipArchiveEntry> entriesToDelete = [.. _selectedQuestPack.Entries.Where(e => e.FullName.StartsWith(questTag))];
+
+            foreach(var entry in entriesToDelete) entry.Delete();
+
+            RefreshQuestTags();
 
             return true;
+        }
+
+        static void RefreshQuestTags()
+        {
+            if(_selectedQuestPack == null)
+            {
+                Clear();
+                return;
+            }
+
+            QuestTags = [.._selectedQuestPack.Entries.Select(e=>e.FullName.Split(Path.AltDirectorySeparatorChar)[0]).Order().ToHashSet()];
         }
     }    
 }

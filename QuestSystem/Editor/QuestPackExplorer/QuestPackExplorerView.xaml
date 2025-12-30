@@ -37,9 +37,11 @@
                     
 
             <StackPanel Orientation="Horizontal" Margin="8,0,0,0">
-                <TextBox x:Name="NewTagTextBox" Width="100" />
+                <TextBox x:Name="NewQuestTextBox" Width="100" Height="20" 
+                        Focusable="{Binding IsPackFileSelected}"
+                        Text="{Binding NewQuestTag}"/>
                 <Button Content="+" Command="{Binding AddQuestCommand}"
-                        CommandParameter="{Binding Text, ElementName=NewTagTextBox}" 
+                        CommandParameter="{Binding NewQuestTag}" 
                         Margin="8,2,0,4" 
                         Height="20" Width="20"
                         VerticalAlignment="Center"
@@ -47,7 +49,16 @@
                         VerticalContentAlignment="Top" />
             </StackPanel>
 
-            <ListBox x:Name="QuestPackList" ItemsSource="{Binding QuestTags}" Margin="8,0,0,0" MinHeight="200">
+            <ListBox x:Name="QuestPackList" 
+                ItemsSource="{Binding QuestTags}"
+                Margin="8,4,0,0" 
+                Height="Auto" 
+                MinHeight="200"
+                Width = "100"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Left"
+                >
+                
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="Padding" Value="0"/>
@@ -58,7 +69,7 @@
                                     <StackPanel Orientation="Horizontal">
                                         <Button Content="-"
                                                 Command="{Binding DataContext.RemoveQuestCommand,
-                                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                 CommandParameter="{Binding}"
                                                 Margin="4,0,0,0"
                                                 Height="20" Width="20"

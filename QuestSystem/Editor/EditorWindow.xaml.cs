@@ -19,17 +19,7 @@ public partial class EditorWindow : Window
 {
     public EditorWindow()
     {
-        try{
         InitializeComponent();
-        }catch(Exception ex)
-        {
-            Console.WriteLine("Error initializing EditorWindow: " + ex.ToString());
-            throw;
-        }
-        finally
-        {
-            Console.ReadKey();
-        }
         Console.WriteLine("EditorWindow initialized.");
     }
 }
