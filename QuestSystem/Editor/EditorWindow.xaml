@@ -1,12 +1,16 @@
-﻿<Window x:Class="Editor.EditorWindow"
+﻿<Window x:Class="QuestEditor.EditorWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Editor"
+        xmlns:local="clr-namespace:QuestEditor"
+        xmlns:qpe="clr-namespace:QuestEditor.QuestPackExplorer"
         mc:Ignorable="d"
         Title="Quest Editor" Height="450" Width="800">
-    <Grid>
-
-    </Grid>
+    <StackPanel
+        Orientation="Horizontal" Background="LightGray" Height="Auto">
+        <qpe:QuestPackExplorerView />
+        <Grid
+            Width="400" Height="300"/>
+    </StackPanel>
 </Window>

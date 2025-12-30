@@ -8,12 +8,11 @@
     <LangVersion>13.0</LangVersion>
     <ImplicitUsings>false</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <Nullable>disable</Nullable>
     <WarningsAsErrors>true</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QuestSystem.csproj" Private="false" />
+    <ProjectReference Include="..\QuestSystem.csproj" Private="true" />
   </ItemGroup>
 
 </Project>

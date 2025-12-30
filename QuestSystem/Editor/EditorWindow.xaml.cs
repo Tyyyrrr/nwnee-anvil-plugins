@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -9,7 +10,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Editor;
+namespace QuestEditor;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
@@ -18,6 +19,17 @@ public partial class EditorWindow : Window
 {
     public EditorWindow()
     {
+        try{
         InitializeComponent();
+        }catch(Exception ex)
+        {
+            Console.WriteLine("Error initializing EditorWindow: " + ex.ToString());
+            throw;
+        }
+        finally
+        {
+            Console.ReadKey();
+        }
+        Console.WriteLine("EditorWindow initialized.");
     }
 }
