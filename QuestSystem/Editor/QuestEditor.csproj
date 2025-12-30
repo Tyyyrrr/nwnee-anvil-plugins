@@ -16,6 +16,11 @@
     <ProjectReference Include="..\QuestSystem.csproj" Private="true" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <PackageReference Include="NWN.Anvil" Version="8193.37.2" PrivateAssets="all" ExcludeAssets="runtime"/>
+  </ItemGroup>
+
   <Target Name="CreateShortcut" AfterTargets="Build">
     <PropertyGroup>
       <ShortcutPath>$(TargetDir)QuestEditor_CONSOLE.lnk</ShortcutPath>

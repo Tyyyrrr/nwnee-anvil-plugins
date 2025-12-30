@@ -4,13 +4,19 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QuestEditor"
-        xmlns:qpe="clr-namespace:QuestEditor.QuestPackExplorer"
+        xmlns:explorer="clr-namespace:QuestEditor.QuestPackExplorer"
+        xmlns:canvas="clr-namespace:QuestEditor.QuestCanvas"
         mc:Ignorable="d"
-        Title="Quest Editor" Height="450" Width="800">
-    <StackPanel
-        Orientation="Horizontal" Background="LightGray" Height="Auto">
-        <qpe:QuestPackExplorerView />
-        <Grid
-            Width="400" Height="300"/>
-    </StackPanel>
+        Title="Quest Editor" Height="450" Width="800"
+        Background="LightGray">
+<Grid Background="LightGray" Margin="0,0,8,8">
+    <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <explorer:QuestPackExplorerView x:Name="PackExplorer" Grid.Column="0"/>
+    <canvas:QuestCanvasView x:Name="EditorCanvas" Grid.Column="1"/>
+</Grid>
+
 </Window>

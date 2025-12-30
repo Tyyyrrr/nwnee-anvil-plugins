@@ -5,99 +5,97 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:QuestEditor.QuestPackExplorer"
              mc:Ignorable="d">
-    <UserControl.Resources>
-        <local:QuestPackExplorerViewModel x:Key="ViewModel"/>
-    </UserControl.Resources>
-        <StackPanel DataContext="{StaticResource ViewModel}"
-            Orientation="Vertical"
-            Height="Auto"
+    <StackPanel
+        Orientation="Vertical"
+        Height="Auto"
+        Width="Auto"
+        MinHeight="400"
+        MinWidth="200">
+
+        <Menu Background="LightGray" Height="Auto">
+            <MenuItem Header="QuestPack" Background="White" HorizontalContentAlignment="Left">
+                <MenuItem Header="New" Command="{Binding CreatePackFileCommand}"/>
+                <MenuItem Header="Open" Command="{Binding SelectPackFileCommand}"/>
+                <MenuItem Header="Save" Command="{Binding SavePackFileCommand}"/>
+                <MenuItem Header="Save As..." Command="{Binding SaveAsPackFileCommand}"/>
+                <MenuItem Header="Exit" Command="{Binding ExitCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <TextBlock Text="{Binding SelectedPackFileName}" 
+            FontSize="10" 
+            FontWeight="Bold"
+            Margin="8,12,0,0"
+            Foreground="{Binding QuestPackNameColor}"
             Width="Auto"
-            MinHeight="400"
-            MinWidth="200">
-
-            <Menu Background="LightGray" Height="Auto">
-                <MenuItem Header="QuestPack">
-                    <MenuItem Header="New" Command="{Binding CreatePackFileCommand}"/>
-                    <MenuItem Header="Open" Command="{Binding SelectPackFileCommand}"/>
-                    <MenuItem Header="Save" Command="{Binding SavePackFileCommand}"/>
-                    <MenuItem Header="Save As..." Command="{Binding SaveAsPackFileCommand}"/>
-                    <MenuItem Header="Exit" Command="{Binding ExitCommand}"/>
-                </MenuItem>
-            </Menu>
-
-            <TextBlock Text="{Binding SelectedPackFileName}" 
-                FontSize="10" 
-                FontWeight="Bold"
-                Margin="8,12,0,0"
-                Foreground="{Binding QuestPackNameColor}"
-                Width="Auto"
-                Height="Auto"
-                MinHeight="40"
-                MinWidth="50"/>
-                    
-
-            <StackPanel Orientation="Horizontal" Margin="8,0,0,0">
-                <TextBox x:Name="NewQuestTextBox" Width="100" Height="20" 
-                        Focusable="{Binding IsPackFileSelected}"
-                        Text="{Binding NewQuestTag}"/>
-                <Button Content="+" Command="{Binding AddQuestCommand}"
-                        CommandParameter="{Binding NewQuestTag}" 
-                        Margin="8,2,0,4" 
-                        Height="20" Width="20"
-                        VerticalAlignment="Center"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Top" />
-            </StackPanel>
-
-            <ListBox x:Name="QuestPackList" 
-                ItemsSource="{Binding QuestTags}"
-                Margin="8,4,0,0" 
-                Height="Auto" 
-                MinHeight="200"
-                Width = "100"
-                VerticalAlignment="Top"
-                HorizontalAlignment="Left"
-                >
+            Height="Auto"
+            MinHeight="40"
+            MinWidth="50"/>
                 
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Margin" Value="0"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Button Content="-"
-                                                Command="{Binding DataContext.RemoveQuestCommand,
-                                                        RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                                CommandParameter="{Binding}"
-                                                Margin="4,0,0,0"
-                                                Height="20" Width="20"
-                                                VerticalAlignment="Center"
-                                                HorizontalContentAlignment="Center"
-                                                VerticalContentAlignment="Top"/>
-                                        <Border x:Name="Border"
-                                                Padding="2"
-                                                Margin="0,2,0,2"
-                                                BorderBrush="Gray"
-                                                BorderThickness="0">
-                                            <TextBlock Text="{Binding}" VerticalAlignment="Center" Padding="2"/>
-                                        </Border>   
-                                    </StackPanel>
 
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="Border" Property="BorderThickness" Value="1"/>
-                                            <Setter TargetName="Border" Property="BorderBrush" Value="DodgerBlue"/>
-                                            <Setter TargetName="Border" Property="Background" Value="#2200A0FF"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-            </ListBox>
+        <StackPanel Orientation="Horizontal" Margin="8,0,0,0">
+            <TextBox x:Name="NewQuestTextBox" Width="100" Height="20" 
+                    Focusable="{Binding IsPackFileSelected}"
+                    Text="{Binding NewQuestTag}"/>
+            <Button Content="+" Command="{Binding AddQuestCommand}"
+                    CommandParameter="{Binding NewQuestTag}" 
+                    Margin="8,2,0,4" 
+                    Height="20" Width="20"
+                    VerticalAlignment="Center"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Top" />
         </StackPanel>
+
+        <ListBox x:Name="QuestPackList" 
+            ItemsSource="{Binding QuestTags}"
+            SelectedItem="{Binding SelectedQuestTag, Mode=TwoWay}"
+            Margin="8,4,0,0" 
+            Height="Auto" 
+            MinHeight="200"
+            Width = "100"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Left"
+            >
+            
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="-"
+                                            Command="{Binding DataContext.RemoveQuestCommand,
+                                                    RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                            CommandParameter="{Binding}"
+                                            Margin="4,0,0,0"
+                                            Height="20" Width="20"
+                                            VerticalAlignment="Center"
+                                            HorizontalContentAlignment="Center"
+                                            VerticalContentAlignment="Top"/>
+                                    <Border x:Name="Border"
+                                            Padding="2"
+                                            Margin="0,2,0,2"
+                                            BorderBrush="Gray"
+                                            BorderThickness="0">
+                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" Padding="2"/>
+                                    </Border>   
+                                </StackPanel>
+
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Border" Property="BorderThickness" Value="1"/>
+                                        <Setter TargetName="Border" Property="BorderBrush" Value="DodgerBlue"/>
+                                        <Setter TargetName="Border" Property="Background" Value="#2200A0FF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+    </StackPanel>
 </UserControl>
 

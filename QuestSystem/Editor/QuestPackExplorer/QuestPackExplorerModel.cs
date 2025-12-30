@@ -32,6 +32,22 @@ namespace QuestEditor.QuestPackExplorer
             QuestTags = [];
         }
 
+        public static List<string> GetStagesOfCurrentQuest()
+        {
+            if(_selectedQuestPack == null || _currentQuest == null) return new();
+
+            var list = new List<string>();
+
+            foreach(var entry in _selectedQuestPack.Entries.Where(e => e.FullName.StartsWith(_currentQuest.Tag)))
+            {
+                var stream = entry.Open();
+                using var sr = new StreamReader(stream);
+                list.Add(sr.ReadToEnd());
+            }
+
+            return list;
+        }
+
         static void OpenTmpPack(string originalFileName, bool createNew)
         {
 
@@ -202,5 +218,20 @@ namespace QuestEditor.QuestPackExplorer
 
             QuestTags = [.._selectedQuestPack.Entries.Select(e=>e.FullName.Split(Path.AltDirectorySeparatorChar)[0]).Order().ToHashSet()];
         }
+        public static async Task SelectQuestAsync(string questTag)
+        {
+            Console.WriteLine("Selecting quest: " + questTag);
+            
+            if(_selectedQuestPack == null)
+            {
+                Clear();
+                return;
+            }
+
+            _currentQuest = await _selectedQuestPack
+                .GetQuestAsync(questTag)
+                .ConfigureAwait(false);
+        }
+
     }    
 }
