@@ -29,10 +29,10 @@ namespace QuestEditor.QuestPackExplorer
         public Brush QuestNameColor => string.IsNullOrEmpty(SelectedQuestTag) ? Brushes.Black : Brushes.Gray;
         public string SelectedPackFileName => QuestPackExplorerModel.SelectedPackFileName ?? "(No QuestPack Selected)";
         public bool IsPackFileSelected => !string.IsNullOrEmpty(QuestPackExplorerModel.SelectedPackFileName);
-        public int SelectedQuest => QuestPackExplorerModel.CurrentQuestTag != null ? QuestTags.IndexOf(QuestPackExplorerModel.CurrentQuestTag) : -1;
+        public int SelectedQuest => QuestPackExplorerModel.SelectedQuestTag != null ? QuestTags.IndexOf(QuestPackExplorerModel.SelectedQuestTag) : -1;
         public string SelectedQuestTag 
         {
-            get => QuestPackExplorerModel.CurrentQuestTag != null ? QuestPackExplorerModel.CurrentQuestTag : "(No Quest selected)";
+            get => QuestPackExplorerModel.SelectedQuestTag != null ? QuestPackExplorerModel.SelectedQuestTag : "(No Quest selected)";
             set
             {
                 // if(value == QuestPackExplorerModel.CurrentQuestTag) return;
