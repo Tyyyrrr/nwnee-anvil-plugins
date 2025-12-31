@@ -4,8 +4,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Threading;
+
+using QuestEditor.QuestPackExplorer;
+using QuestEditor.Shared;
 
 namespace QuestEditor;
 
@@ -18,9 +20,17 @@ public partial class App : Application
     [System.Runtime.InteropServices.DllImport("kernel32.dll")]
     public static extern bool AllocConsole();
 
+
+    private QuestPackExplorerService ExplorerService {get;} = new();
+    private QuestPackDialogService QuestPackDialogService {get;} = new();
+
+    public QuestPackExplorerViewModel ExplorerVM {get;}
+
     public App()
     {
         this.DispatcherUnhandledException += OnDispatcherUnhandledException;
+
+        ExplorerVM = new(ExplorerService, QuestPackDialogService);
 
         var logFilePath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(App))?.Location);
 
@@ -60,8 +70,10 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        QuestPackExplorer.QuestPackExplorerModel.Clear();
+        ExplorerService.Clear();
+
         _logWriter.Dispose();
+
         base.OnExit(e);
     }
 }

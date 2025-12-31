@@ -9,14 +9,18 @@
         mc:Ignorable="d"
         Title="Quest Editor" Height="450" Width="800"
         Background="LightGray">
-<Grid Background="LightGray" Margin="0,0,8,8">
-    <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="Auto"/>
-        <ColumnDefinition Width="*"/>
-    </Grid.ColumnDefinitions>
 
-    <explorer:QuestPackExplorerView x:Name="PackExplorer" Grid.Column="0"/>
-    <canvas:QuestCanvasView x:Name="EditorCanvas" Grid.Column="1"/>
-</Grid>
+    <Grid Background="LightGray" Margin="0,0,8,8">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <explorer:QuestPackExplorerView x:Name="ExplorerView" Grid.Column="0"/>
+
+        <canvas:QuestCanvasView x:Name="CanvasView" Grid.Column="1"/>
+
+    </Grid>
 
 </Window>

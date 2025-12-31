@@ -35,10 +35,9 @@
 
         <StackPanel Orientation="Horizontal" Margin="8,0,0,0">
             <TextBox x:Name="NewQuestTextBox" Width="100" Height="20" 
-                    Focusable="{Binding IsPackFileSelected}"
-                    Text="{Binding NewQuestTag}"/>
+                    IsEnabled="{Binding IsPackFileSelected}"
+                    Text="{Binding NewQuestTag, Mode=TwoWay}"/>
             <Button Content="+" Command="{Binding AddQuestCommand}"
-                    CommandParameter="{Binding NewQuestTag}" 
                     Margin="8,2,0,4" 
                     Height="20" Width="20"
                     VerticalAlignment="Center"

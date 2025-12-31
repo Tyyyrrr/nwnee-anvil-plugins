@@ -1,80 +1,107 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
-using System.Threading.Tasks;
 using System.Windows.Input;
+using QuestEditor.Shared;
 
 namespace QuestEditor.QuestPackExplorer
 {
     public sealed class QuestPackExplorerViewModel : ViewModelBase
     {
-        public QuestPackExplorerViewModel()
-        {
-            QuestTags = new ObservableCollection<string>(QuestPackExplorerModel.QuestTags ?? []);
+        private readonly QuestPackExplorerService _explorerService;
+        private readonly IDialogService _dialogService;
 
-            CreatePackFileCommand = new RelayCommand(_ => { QuestPackExplorerModel.CreatePackFile(); RefreshFromModel(); });
-            SelectPackFileCommand = new RelayCommand(_ => { QuestPackExplorerModel.SelectPackFile(); RefreshFromModel(); });
-            SavePackFileCommand = new RelayCommand(_ => { QuestPackExplorerModel.SaveCurrentPack(); RefreshFromModel(); }, _ => IsPackFileSelected);
-            SaveAsPackFileCommand = new RelayCommand(_ => { QuestPackExplorerModel.SaveCurrentPackAs(); RefreshFromModel(); }, _ => IsPackFileSelected);
+        public QuestPackExplorerViewModel(QuestPackExplorerService explorerService, IDialogService dialogService)
+        {
+            _explorerService = explorerService;
+            _dialogService = dialogService;
+
+            QuestTags = new ObservableCollection<string>(_explorerService.QuestTags);
+
+            CreatePackFileCommand = new RelayCommand(_ => { CreateNewPack(); RefreshFromModel(); });
+            SelectPackFileCommand = new RelayCommand(_ => { OpenExistingPack(); RefreshFromModel(); });
+            SavePackFileCommand = new RelayCommand(_ => { _explorerService.SaveCurrentPack(); RefreshFromModel(); }, _ => IsPackFileSelected);
+            SaveAsPackFileCommand = new RelayCommand(_ => { SaveCurrentPackAs(); RefreshFromModel(); }, _ => IsPackFileSelected);
            
             ExitCommand = new RelayCommand(_ => Environment.Exit(0));
            
-            AddQuestCommand = new AsyncRelayCommand<string>(AddQuestAsync, _=>CanAddNewQuestTag);
-            RemoveQuestCommand = new RelayCommand(param => RemoveQuest(param as string));
+            AddQuestCommand = new RelayCommand(AddNewQuest, _=> !string.IsNullOrEmpty(NewQuestTag));
+            RemoveQuestCommand = new RelayCommand(RemoveSelectedQuest, _=> IsQuestSelected);
         }
-
+        
         public ObservableCollection<string> QuestTags { get; }
 
+        public string SelectedPackFileName => _explorerService.PackName ?? "(No QuestPack Selected)";
         public Brush QuestPackNameColor => IsPackFileSelected ? Brushes.Black : Brushes.Gray;
-        public Brush QuestNameColor => string.IsNullOrEmpty(SelectedQuestTag) ? Brushes.Black : Brushes.Gray;
-        public string SelectedPackFileName => QuestPackExplorerModel.SelectedPackFileName ?? "(No QuestPack Selected)";
-        public bool IsPackFileSelected => !string.IsNullOrEmpty(QuestPackExplorerModel.SelectedPackFileName);
-        public int SelectedQuest => QuestPackExplorerModel.SelectedQuestTag != null ? QuestTags.IndexOf(QuestPackExplorerModel.SelectedQuestTag) : -1;
-        public string SelectedQuestTag 
+
+        public string? SelectedQuestTag 
         {
-            get => QuestPackExplorerModel.SelectedQuestTag != null ? QuestPackExplorerModel.SelectedQuestTag : "(No Quest selected)";
+            get => _explorerService.SelectedQuestTag;
             set
             {
-                // if(value == QuestPackExplorerModel.CurrentQuestTag) return;
-
-                // QuestPackExplorerModel.SelectQuestAsync(value)
-                //     .ConfigureAwait(false)
-                //     .GetAwaiter()
-                //     .GetResult();
-                //     // tmp: block UI until quest is loaded
-                try
-                {
-                    QuestPackExplorerModel.SelectQuestAsync(value)
-                        .ConfigureAwait(false)
-                        .GetAwaiter()
-                        .GetResult();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("ERROR in setter: " + ex);
-                    throw; // or handle
-                }
-
+                _explorerService.SelectQuest(value);
 
                 OnPropertyChanged(nameof(SelectedQuestTag));
+                OnPropertyChanged(nameof(SelectedQuestTagDisplay));
                 OnPropertyChanged(nameof(QuestNameColor));
-                OnRefreshFromModel?.Invoke();
+                OnPropertyChanged(nameof(IsQuestSelected));
 
-                Console.WriteLine("Quest selected in VM");
+                (RemoveQuestCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
-        }
+        }    
+
+        public string SelectedQuestTagDisplay => SelectedQuestTag ?? "(No Quest selected)";
+
+
+        public Brush QuestNameColor => string.IsNullOrEmpty(SelectedQuestTag) ? Brushes.Black : Brushes.Gray;
+        
+        public bool IsPackFileSelected => !string.IsNullOrEmpty(_explorerService.PackName);
+        public bool IsQuestSelected => !string.IsNullOrEmpty(_explorerService.SelectedQuestTag);
+
         string newQuestTag = string.Empty;
         public string NewQuestTag
         {
-            get => IsPackFileSelected ? newQuestTag : string.Empty;
+            get => newQuestTag;
             set
             {
-                if(value == newQuestTag) return;
-                newQuestTag = value;
+                newQuestTag = IsPackFileSelected ? value : string.Empty;
                 OnPropertyChanged(nameof(NewQuestTag));
+                (AddQuestCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
-        public bool CanAddNewQuestTag => !string.IsNullOrEmpty(NewQuestTag);
+
+        private void CreateNewPack(object? _ = null)
+        {
+            var defName = _explorerService.PackName ?? "NewQuestPack";
+            var filePath = _dialogService.ShowSaveFileDialog(defName);
+            _explorerService.CreatePackFile(filePath);
+            RefreshFromModel();
+        }
+
+        private void OpenExistingPack(object? _ = null)
+        {
+            var filePath = _dialogService.ShowOpenFileDialog();
+            _explorerService.SelectPackFile(filePath);
+            RefreshFromModel();
+        }
+
+        private void SaveCurrentPackAs()
+        {
+            var defName = _explorerService.PackName ?? "NewQuestPack";
+            var filePath = _dialogService.ShowSaveFileDialog(defName);
+            _explorerService.SaveCurrentPackAs(filePath);
+            RefreshFromModel();
+        }
+
+        private void AddNewQuest(object? _ = null){
+            if(_explorerService.AddQuest(NewQuestTag))
+                RefreshFromModel();
+        }
+
+        private void RemoveSelectedQuest(object? _ = null){
+            if(_explorerService.RemoveQuest(SelectedQuestTag))
+                RefreshFromModel();
+        }
 
         public ICommand CreatePackFileCommand { get; }
         public ICommand SelectPackFileCommand { get; }
@@ -84,38 +111,29 @@ namespace QuestEditor.QuestPackExplorer
         public ICommand AddQuestCommand { get; }
         public ICommand RemoveQuestCommand { get; }
 
-        private async Task AddQuestAsync(string? tag)
-        {
-            if (string.IsNullOrWhiteSpace(tag)) return;
 
-            if(await QuestPackExplorerModel.AddQuest(tag))
-                RefreshFromModel();
-        }
-
-        private void RemoveQuest(string? tag)
-        {
-            if (string.IsNullOrWhiteSpace(tag)) return;
-            if (QuestPackExplorerModel.RemoveQuest(tag))
-                RefreshFromModel();
-            
-        }
 
         private void RefreshFromModel()
         {
             QuestTags.Clear();
-            if (QuestPackExplorerModel.QuestTags != null)
+            if (_explorerService.QuestTags != null)
             {
-                foreach (var t in QuestPackExplorerModel.QuestTags) QuestTags.Add(t);
+                foreach (var t in _explorerService.QuestTags) QuestTags.Add(t);
             }
             OnPropertyChanged(nameof(SelectedPackFileName));
             OnPropertyChanged(nameof(QuestPackNameColor));
             OnPropertyChanged(nameof(IsPackFileSelected));
-            OnPropertyChanged(nameof(SelectedQuestTag));
             OnPropertyChanged(nameof(QuestNameColor));
+            OnPropertyChanged(nameof(SelectedQuestTagDisplay));
+            OnPropertyChanged(nameof(IsQuestSelected));
 
-            OnRefreshFromModel?.Invoke();
+
+            (AddQuestCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (RemoveQuestCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (SavePackFileCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (SaveAsPackFileCommand as RelayCommand)?.RaiseCanExecuteChanged();
+
         }
 
-        public event Action OnRefreshFromModel;
     }
 }
