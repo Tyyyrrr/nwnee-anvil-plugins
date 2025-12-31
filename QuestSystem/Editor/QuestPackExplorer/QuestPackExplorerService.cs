@@ -148,6 +148,8 @@ public sealed class QuestPackExplorerService
 
     public bool RemoveQuest(string? questTag)
     {
+        Console.WriteLine("Removing quest" + questTag);
+        // todo: debug
         if(EmptyState || string.IsNullOrEmpty(questTag) || !QuestTags.Contains(questTag))
             return false;
 
@@ -162,6 +164,7 @@ public sealed class QuestPackExplorerService
         _questPack = QuestPack.OpenRead(_temporaryQuestPackFile!);
 
         _questTags.Remove(questTag);
+        Console.WriteLine("success");
         return true;
     }
 

@@ -25,8 +25,8 @@ namespace QuestEditor.QuestPackExplorer
            
             ExitCommand = new RelayCommand(_ => Environment.Exit(0));
            
-            AddQuestCommand = new RelayCommand(AddNewQuest, _=> !string.IsNullOrEmpty(NewQuestTag));
-            RemoveQuestCommand = new RelayCommand(RemoveSelectedQuest, _=> IsQuestSelected);
+            AddQuestCommand = new RelayCommand(AddNewQuest, _=> CanAddNewQuest);
+            RemoveQuestCommand = new RelayCommand(RemoveSelectedQuest, _ => CanRemoveSelectedQuest);
         }
         
         public ObservableCollection<string> QuestTags { get; }
@@ -56,7 +56,10 @@ namespace QuestEditor.QuestPackExplorer
         public Brush QuestNameColor => string.IsNullOrEmpty(SelectedQuestTag) ? Brushes.Black : Brushes.Gray;
         
         public bool IsPackFileSelected => !string.IsNullOrEmpty(_explorerService.PackName);
-        public bool IsQuestSelected => !string.IsNullOrEmpty(_explorerService.SelectedQuestTag);
+        public bool IsQuestSelected {
+            get{
+                return _explorerService.SelectedQuestTag != null;
+        }}
 
         string newQuestTag = string.Empty;
         public string NewQuestTag
@@ -64,11 +67,15 @@ namespace QuestEditor.QuestPackExplorer
             get => newQuestTag;
             set
             {
-                newQuestTag = IsPackFileSelected ? value : string.Empty;
+                newQuestTag = value;
                 OnPropertyChanged(nameof(NewQuestTag));
+                OnPropertyChanged(nameof(CanAddNewQuest));
                 (AddQuestCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
+
+        public bool CanAddNewQuest => IsPackFileSelected && !string.IsNullOrEmpty(NewQuestTag) && !NewQuestTag.Contains('/'); // todo filter more invalid chars
+        public bool CanRemoveSelectedQuest => IsPackFileSelected && IsQuestSelected;
 
         private void CreateNewPack(object? _ = null)
         {
@@ -132,7 +139,6 @@ namespace QuestEditor.QuestPackExplorer
             (RemoveQuestCommand as RelayCommand)?.RaiseCanExecuteChanged();
             (SavePackFileCommand as RelayCommand)?.RaiseCanExecuteChanged();
             (SaveAsPackFileCommand as RelayCommand)?.RaiseCanExecuteChanged();
-
         }
 
     }

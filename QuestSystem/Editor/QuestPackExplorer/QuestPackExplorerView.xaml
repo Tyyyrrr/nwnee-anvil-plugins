@@ -36,8 +36,9 @@
         <StackPanel Orientation="Horizontal" Margin="8,0,0,0">
             <TextBox x:Name="NewQuestTextBox" Width="100" Height="20" 
                     IsEnabled="{Binding IsPackFileSelected}"
-                    Text="{Binding NewQuestTag, Mode=TwoWay}"/>
+                    Text="{Binding NewQuestTag, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
             <Button Content="+" Command="{Binding AddQuestCommand}"
+                    IsEnabled="{Binding CanAddNewQuest}"
                     Margin="8,2,0,4" 
                     Height="20" Width="20"
                     VerticalAlignment="Center"
@@ -67,7 +68,7 @@
                                     <Button Content="-"
                                             Command="{Binding DataContext.RemoveQuestCommand,
                                                     RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding DataContext.IsQuestSelected}"
                                             Margin="4,0,0,0"
                                             Height="20" Width="20"
                                             VerticalAlignment="Center"
