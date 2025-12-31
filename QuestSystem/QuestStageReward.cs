@@ -7,6 +7,10 @@ namespace QuestSystem
 {
     public sealed class QuestStageReward
     {
+
+        public static string? Serialize(QuestStageReward questStageReward) => QuestSerializer.Serialize(questStageReward);
+        public static QuestStageReward? Deserialize(string json) => QuestSerializer.Deserialize<QuestStageReward>(json);
+
         public int Xp {get;set;}
         public int Gold {get;set;}
         public int GoodEvilChange {get;set;}
