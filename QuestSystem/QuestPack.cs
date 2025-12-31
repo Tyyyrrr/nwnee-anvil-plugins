@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace QuestSystem
@@ -12,14 +11,7 @@ namespace QuestSystem
     public sealed class QuestPack : ZipArchive, IDisposable
     {
         private readonly bool _readOnly = false;
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions()
-        {
-            PreferredObjectCreationHandling = System.Text.Json.Serialization.JsonObjectCreationHandling.Populate,
-            WriteIndented = false,
-            AllowTrailingCommas = false,
-            MaxDepth = 6,
-            IncludeFields = false,
-        };
+
         public static readonly string FileExtension = ".qp";
 
 
@@ -33,9 +25,9 @@ namespace QuestSystem
 
 
 
-        internal static QuestPack OpenRead(string path)
+        public static QuestPack OpenRead(string path)
         {
-            var stream = File.OpenRead(path);
+            var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.Read, FileShare.None);
             return new QuestPack(stream,true);
         }
 
@@ -59,7 +51,9 @@ namespace QuestSystem
             if(entry == null) 
                 return null;
 
-            return await JsonSerializer.DeserializeAsync<Quest>(entry.Open());
+            using var sr = new StreamReader(entry.Open());
+            var json = await sr.ReadToEndAsync();
+            return Quest.Deserialize(json);
         }
 
 
@@ -75,7 +69,7 @@ namespace QuestSystem
                 return false;
             }
 
-            var json = JsonSerializer.Serialize(quest,_jsonOptions);
+            var json = Quest.Serialize(quest);
 
             var entry = CreateEntry($"{questFolder}q");
 
@@ -98,14 +92,16 @@ namespace QuestSystem
                 return null;
             }
 
-            var stage = await JsonSerializer.DeserializeAsync<QuestStage>(entry.Open(), _jsonOptions);
+            using var sr = new StreamReader(entry.Open());
+            var json = await sr.ReadToEndAsync();
+
+            var stage = QuestStage.Deserialize(json);
             if(stage == null)
             {
                 NLog.LogManager.GetCurrentClassLogger().Error("DESERIALIZATION FAILED");
             }
 
             return stage;
-            //return await JsonSerializer.DeserializeAsync<QuestStage>(entry.Open(), _jsonOptions);
         }
         public async Task<bool> SetStageAsync(string questTag, QuestStage stage)
         {
@@ -121,7 +117,7 @@ namespace QuestSystem
 
             string stagePath = $"{questFolder}{stage.ID}";
 
-            var json = JsonSerializer.Serialize(stage, _jsonOptions);
+            var json = QuestStage.Serialize(stage);
 
             var entry = Entries.FirstOrDefault(e=>e.FullName.StartsWith(stagePath, StringComparison.OrdinalIgnoreCase));
 
