@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-
+using System.Threading.Tasks;
 using Anvil.API;
 using NLog;
 
@@ -20,6 +20,10 @@ namespace QuestSystem.Objectives
     [JsonDerivedType(typeof(ObjectiveSpellcast),"$spellcast")]
     public abstract partial class Objective
     {
+        
+        public static string? Serialize(Objective questStageReward) => QuestSerializer.Serialize(questStageReward);
+        public static Objective? Deserialize(string json) => QuestSerializer.Deserialize<Objective>(json);
+
         internal QuestStage? QuestStage;
 
         protected static readonly Logger _log = LogManager.GetCurrentClassLogger();

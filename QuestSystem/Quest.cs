@@ -6,7 +6,11 @@ using Anvil.API;
 namespace QuestSystem
 {
     public sealed class Quest
-    {
+    {        
+        
+        public static string? Serialize(Quest quest) => QuestSerializer.Serialize(quest);
+        public static Quest? Deserialize(string json) => QuestSerializer.Deserialize<Quest>(json);
+
         private static readonly HashSet<Quest> _loadedQuests = new();
         internal static void RegisterQuest(Quest quest) => _loadedQuests.Add(quest);
         internal static void UnregisterQuest(Quest quest) => _loadedQuests.Remove(quest);

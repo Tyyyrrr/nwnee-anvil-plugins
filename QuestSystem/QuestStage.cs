@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Anvil.API;
 using NLog;
 using QuestSystem.Objectives;
@@ -9,6 +10,10 @@ namespace QuestSystem
 {
     public sealed class QuestStage
     {
+
+        public static string? Serialize(QuestStage questStage) => QuestSerializer.Serialize(questStage);
+        public static QuestStage? Deserialize(string json) => QuestSerializer.Deserialize<QuestStage>(json);
+
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         internal Quest? Quest;
