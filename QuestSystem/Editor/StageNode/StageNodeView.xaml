@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:QuestEditor.StageNode"
              xmlns:propList="clr-namespace:QuestEditor.PropertyList"
              xmlns:objective="clr-namespace:QuestEditor.ObjectiveBox"
+             xmlns:reward="clr-namespace:QuestEditor.RewardBox"
              mc:Ignorable="d">
 
     <UserControl.Resources>
@@ -17,9 +18,14 @@
             <DataTemplate DataType="{x:Type objective:ObjectiveBoxViewModel}">
                 <objective:ObjectiveBoxView />
             </DataTemplate>
+
+            <DataTemplate DataType="{x:Type reward:RewardBoxViewModel}">
+                <reward:RewardBoxView />
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
+    <Border BorderThickness="4" Background="LightBlue" BorderBrush="DarkBlue" CornerRadius="7">
     <StackPanel Background="DimGray">
         <Label Content="{Binding StageIDLabelDisplay}"/>
 
@@ -43,7 +49,7 @@
 
         <ListBox ItemsSource="{Binding Objectives}" SelectedItem="{Binding SelectedObjective}"/>
 
-        <propList:PropertyListView DataContext="{Binding Reward}" />
+        <reward:RewardBoxView DataContext="{Binding Reward}"/>
 
         <StackPanel Orientation="Horizontal">
             <Label Content="{Binding NextStageIDLabelDisplay}" />
@@ -51,5 +57,6 @@
                 Foreground="{Binding NextStageIDColor}"/>
         </StackPanel>
     </StackPanel>
+    </Border>
 
 </UserControl>

@@ -1,12 +1,66 @@
 <UserControl x:Class="QuestEditor.RewardBox.RewardBoxView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:QuestEditor.RewardBox"
-             mc:Ignorable="d">
-    <Grid>
+             xmlns:propList="clr-namespace:QuestEditor.PropertyList">
 
-    </Grid>
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type propList:PropertyListViewModel}">
+            <propList:PropertyListView />
+        </DataTemplate>
+    </UserControl.Resources>
+
+
+    <Border BorderThickness="2" BorderBrush="Orange" Background="Yellow">
+    <Expander Header="Reward" IsExpanded="false">
+        <StackPanel>
+            <propList:PropertyListView DataContext="{Binding Reward}"/>
+
+            <Expander Header="Items" IsExpanded="false">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="AddItemTextBox" MinWidth = "70" Text="{Binding ItemResRefToAdd, Mode=TwoWay}"/>
+                    <Button Width="20" Height="20" Content="+"
+                        Command="{Binding AddItemResRefCommand}" CommandParameter="{Binding Text, ElementName=AddItemTextBox}"/>
+                    <Button Width="20" Height="20" Content="-"
+                        Command="{Binding RemoveItemResRefCommand}" CommandParameter="{Binding SelectedItem, ElementName=ItemsList}" />
+                </StackPanel>
+                <ListBox x:Name="ItemsList" ItemsSource="{Binding Items}" Background="Orange">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderThickness="2" BorderBrush="Goldenrod">
+                                <propList:PropertyListView DataContext="{Binding Mode=OneWay}" />
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+            </Expander>
+
+            <Expander Header="Object visibility" IsExpanded="false">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="AddObjectTagTextBox" MinWidth = "70" Text="{Binding ObjectTagToAdd, Mode=TwoWay}"/>
+                    <Button Width="20" Height="20" Content="+"
+                        Command="{Binding AddObjectTagCommand}" CommandParameter="{Binding Text, ElementName=AddObjectTagTextBox}"/>
+                    <Button Width="20" Height="20" Content="-"
+                        Command="{Binding RemoveObjectTagCommand}" CommandParameter="{Binding SelectedItem, ElementName=ObjectVisibilityList}"/>
+                </StackPanel>
+                <ListBox x:Name="ObjectVisibilityList" ItemsSource="{Binding ObjectVisibility}" Background="Orange">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderThickness="2" BorderBrush="Cyan">
+                                <propList:PropertyListView DataContext="{Binding Mode=OneWay}"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+            </Expander>
+
+        </StackPanel>
+    </Expander>
+    </Border>
 
 </UserControl>

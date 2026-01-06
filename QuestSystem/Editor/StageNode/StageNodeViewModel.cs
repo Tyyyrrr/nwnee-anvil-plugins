@@ -7,6 +7,7 @@ using System.Windows.Media;
 using QuestEditor.ObjectiveBox;
 using QuestEditor.PropertyList;
 using QuestEditor.QuestCanvas;
+using QuestEditor.RewardBox;
 using QuestEditor.Shared;
 using QuestSystem;
 using QuestSystem.Objectives;
@@ -38,7 +39,7 @@ namespace QuestEditor.StageNode
             var stage = _model;
             var objectives = Objectives.Select(o=>o.GetQuestObjective()).Where(o=>o!=null).ToArray();
             stage.Objectives = objectives!;
-            stage.Reward = Reward.GetT<QuestStageReward>() ?? new();
+            stage.Reward = Reward.GetQuestStageReward() ?? new();//Reward.GetT<QuestStageReward>() ?? new();
             Console.WriteLine($"Got quest stage out from viewmodel. ID: {stage.ID}, objectives count: {stage.Objectives.Length}");
             return stage;
         }
@@ -70,7 +71,8 @@ namespace QuestEditor.StageNode
             }
         }
         
-        public PropertyListViewModel Reward {get;} = new(new QuestStageReward()){Header="Stage Reward"};
+        // public PropertyListViewModel Reward {get;} = new(new QuestStageReward()){Header="Stage Reward"};
+        public RewardBoxViewModel Reward {get;} = new(new QuestStageReward());
 
         public ICommand NewObjectiveCommand {get;}
         public ICommand DeleteObjectiveCommand{get;}

@@ -111,7 +111,7 @@ namespace QuestEditor.QuestCanvas
         {
             get => _questName;
             set {
-                if(_questName.Length == value.Length) return;
+                if(_questName == value) return;
                 _questName = value;
                 OnPropertyChanged(nameof(QuestName));
             }
@@ -153,6 +153,7 @@ namespace QuestEditor.QuestCanvas
 
             if(model != null)
             {
+                QuestName=model.Quest.Name;
                 foreach(var stage in model.Stages.Values)
                 {
                     var node = new StageNodeViewModel(stage,this);

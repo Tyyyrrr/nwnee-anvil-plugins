@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using QuestEditor.PropertyList;
+using QuestEditor.RewardBox;
 using QuestEditor.Shared;
 using QuestSystem;
 using QuestSystem.Objectives;
@@ -12,7 +13,8 @@ namespace QuestEditor.ObjectiveBox;
 public sealed class ObjectiveBoxViewModel : ViewModelBase
 {
     public PropertyListViewModel Objective {get;}
-    public PropertyListViewModel Reward {get;}
+    // public PropertyListViewModel Reward {get;}
+    public RewardBoxViewModel Reward {get;}
 
     public ObservableCollection<string> AreaTags {get;}=[];
     public ICommand AddAreaTagCommand {get;}
@@ -20,7 +22,7 @@ public sealed class ObjectiveBoxViewModel : ViewModelBase
     public ObjectiveBoxViewModel(Objective objective)
     {
         Objective = new(objective){Header = objective.GetType().Name};
-        Reward = new(objective.Reward) {Header = "Reward"};
+        Reward = new(objective.Reward);// {Header = "Reward"};
         AreaTags=new(objective.AreaTags);
         AddAreaTagCommand = new RelayCommand(AddAreaTag);
         RemoveAreaTagCommand = new RelayCommand(RemoveAreaTag);
@@ -41,7 +43,7 @@ public sealed class ObjectiveBoxViewModel : ViewModelBase
     public Objective? GetQuestObjective()
     {
         var objective = Objective.GetT<Objective>();
-        var reward = Reward.GetT<QuestStageReward>();
+        var reward = Reward.GetQuestStageReward();//Reward.GetT<QuestStageReward>();
 
         if(objective != null)
         {
