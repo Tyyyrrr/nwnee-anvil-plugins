@@ -9,7 +9,6 @@ namespace QuestSystem.Objectives
     {
         public string ResRef {get;set;} = string.Empty;
         public string Tag {get;set;} = string.Empty;
-        public string[] AreaTags {get;set;} = Array.Empty<string>();
         public int Amount {get;set;}
 
         private sealed class Progress : IObjectiveProgress

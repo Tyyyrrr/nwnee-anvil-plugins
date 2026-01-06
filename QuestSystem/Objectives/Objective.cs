@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Anvil.API;
 using NLog;
 
@@ -31,6 +30,10 @@ namespace QuestSystem.Objectives
         public string JournalEntry {get;set;} = string.Empty;
         public int NextStageID {get;set;} = -1;
         public bool PartyMembersAllowed {get;set;} = false;
+        public bool ShowInJournal {get;set;} = false;
+
+        public string[] AreaTags {get;set;} = Array.Empty<string>();
+        public QuestStageReward Reward{get;set;} = new();
 
         private readonly Dictionary<NwPlayer, IObjectiveProgress> _trackedProgress = new();
 
