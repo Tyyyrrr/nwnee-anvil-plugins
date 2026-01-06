@@ -4,7 +4,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:QuestEditor.QuestCanvas"
-             mc:Ignorable="d">
+             xmlns:sn="clr-namespace:QuestEditor.StageNode"
+             xmlns:shared="clr-namespace:QuestEditor.Shared"
+             mc:Ignorable="d"
+             IsEnabled="{Binding IsEnabled}">
+
+    <UserControl.Resources>
+            <DataTemplate DataType="{x:Type sn:StageNodeViewModel}">
+                <sn:StageNodeView />
+            </DataTemplate>
+    </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -15,41 +24,56 @@
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="25"/>
+            <ColumnDefinition Width="25"/>
         </Grid.ColumnDefinitions>
 
-        <Label 
+        <TextBox 
             Grid.Row="0"
             FontWeight="Bold"
-            Content="{Binding ExplorerVM.SelectedQuestTag}"
-            Foreground="{Binding ExplorerVM.QuestNameColor}"
-            MinHeight="75"
-            Height="Auto"
+            Text="{Binding QuestName, UpdateSourceTrigger=PropertyChanged}"
+            Foreground="{Binding QuestNameColor}"
+            Height="60"
             HorizontalContentAlignment="Left"
             VerticalContentAlignment="Bottom"
             Padding="4,4,4,4"/>
 
-        <ScrollViewer Grid.Row="1"                               
+        <ScrollViewer   
+                Grid.Row="1"                         
                     HorizontalScrollBarVisibility="Auto"
                     VerticalScrollBarVisibility="Auto"
                     Background="{Binding CanvasBorderBrush}"
                     Padding="4">
-
-            <ItemsControl ItemsSource="{Binding CanvasItems}">
+                    
+            <ItemsControl ItemsSource="{Binding StageNodes}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <Canvas Background="{Binding CanvasBackgroundBrush}"/>
+                        <Canvas 
+                            Background="{Binding CanvasBackgroundBrush}"
+                            MouseUp="OnMainCanvasMouseUp"
+                            Height="{Binding CanvasHeight}"
+                            Width="{Binding CanvasWidth}"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
 
-                <ItemsControl.ItemContainerStyle>
-                    <Style TargetType="FrameworkElement">
-                        <Setter Property="Canvas.Left" Value="{Binding X}"/>
-                        <Setter Property="Canvas.Top" Value="{Binding Y}"/>
-                    </Style>
-                </ItemsControl.ItemContainerStyle>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                    <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+
             </ItemsControl>
 
         </ScrollViewer>
+
+        <Canvas 
+                Grid.Row="1"
+                x:Name="OverlayCanvas"
+                Background="Transparent"
+                IsHitTestVisible="{Binding OverlayCapturesInput}"
+                MouseUp="OnOverlayMouseUp"/>
+
 
         <ScrollViewer
             Grid.Row="2" 
@@ -62,7 +86,8 @@
             MinLines="4"
             MaxLength="2000"
             TextWrapping="Wrap"
-            />
+            Text="{Binding JournalEntry, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+            DataContext="{Binding CurrentlyEditedNode}"/>
 
         </ScrollViewer>
     </Grid>

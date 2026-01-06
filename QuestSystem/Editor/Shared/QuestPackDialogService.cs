@@ -2,13 +2,7 @@ using QuestSystem;
 
 namespace QuestEditor.Shared;
 
-public interface IDialogService
-{
-    string? ShowOpenFileDialog();
-    string? ShowSaveFileDialog(string defaultFileName);
-}
-
-public sealed class QuestPackDialogService : IDialogService
+public sealed class QuestPackDialogService : IFileDialogService
 {
     public string? ShowOpenFileDialog()
     {

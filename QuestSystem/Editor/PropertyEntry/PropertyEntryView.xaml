@@ -1,0 +1,66 @@
+<UserControl x:Class="QuestEditor.PropertyEntry.PropertyEntryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:QuestEditor.PropertyEntry"
+             xmlns:propList="clr-namespace:QuestEditor.PropertyList"
+             >
+
+    <UserControl.Resources>
+
+        <!-- STRING -->
+        <DataTemplate x:Key="StringEditor">
+            <TextBox MinLines="1" MaxLength="2000" MaxWidth="250" MaxHeight="150" TextWrapping="wrap" Text="{Binding PropertyValue, UpdateSourceTrigger=PropertyChanged}" />
+        </DataTemplate>
+
+        <!-- NUMERIC -->
+        <DataTemplate x:Key="NumericEditor">
+            <TextBox Width="80"
+                Text="{Binding PropertyValue, UpdateSourceTrigger=PropertyChanged}" />
+        </DataTemplate>
+
+        <!-- BOOLEAN -->
+        <DataTemplate x:Key="BooleanEditor">
+            <CheckBox IsChecked="{Binding PropertyValue, Mode=TwoWay}" />
+        </DataTemplate>
+
+        <!-- ENUM -->
+        <DataTemplate x:Key="EnumEditor">
+            <ComboBox ItemsSource="{Binding EnumValues}"
+                SelectedItem="{Binding PropertyValue, Mode=TwoWay}" />
+        </DataTemplate>
+
+        <!-- UNSUPPORTED -->
+        <DataTemplate x:Key="ObjectEditor">
+            <Label Content="Unsupported type" />
+        </DataTemplate>
+
+        <!-- TEMPLATE SELECTOR -->
+        <local:PropertyEditorTemplateSelector x:Key="EditorSelector"
+            StringTemplate="{StaticResource StringEditor}"
+            NumericTemplate="{StaticResource NumericEditor}"
+            BooleanTemplate="{StaticResource BooleanEditor}"
+            EnumTemplate="{StaticResource EnumEditor}"
+            ObjectTemplate="{StaticResource ObjectEditor}" />
+
+    </UserControl.Resources>
+
+    <!-- Layout for a single entry -->
+    <Grid Margin="4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Label -->
+        <Label Content="{Binding PropertyName}"
+            VerticalAlignment="Center"
+            Margin="0,0,8,0"/>
+
+        <!-- Editor -->
+        <ContentPresenter Grid.Column="1"
+            Content="{Binding}"
+            ContentTemplateSelector="{StaticResource EditorSelector}" 
+            IsEnabled="{Binding CanWrite}" />
+    </Grid>
+
+</UserControl>

@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Threading;
-
+using QuestEditor.QuestCanvas;
 using QuestEditor.QuestPackExplorer;
 using QuestEditor.Shared;
 
@@ -25,12 +25,11 @@ public partial class App : Application
     private QuestPackDialogService QuestPackDialogService {get;} = new();
 
     public QuestPackExplorerViewModel ExplorerVM {get;}
+    public QuestCanvasViewModel CanvasVM {get;}
 
     public App()
     {
         this.DispatcherUnhandledException += OnDispatcherUnhandledException;
-
-        ExplorerVM = new(ExplorerService, QuestPackDialogService);
 
         var logFilePath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(App))?.Location);
 
@@ -55,6 +54,9 @@ public partial class App : Application
         Console.SetOut(_logWriter);
 
         Console.WriteLine("Quest Editor App started.");
+
+        CanvasVM = new();
+        ExplorerVM = new(ExplorerService, QuestPackDialogService);
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

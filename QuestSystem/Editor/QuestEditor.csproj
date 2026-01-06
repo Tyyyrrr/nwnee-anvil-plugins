@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <IsTool>true</IsTool>
+    <NotAPlugin>true</NotAPlugin>
     <AssemblyName>QuestEditor</AssemblyName>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
@@ -18,8 +18,11 @@
 
 
   <ItemGroup>
-    <PackageReference Include="NWN.Anvil" Version="8193.37.2" PrivateAssets="all" ExcludeAssets="runtime"/>
+    <PackageReference Include="NWN.Anvil" Version="8193.37.2" />
   </ItemGroup>
+  <!-- <ItemGroup>
+    <PackageReference Include="NWN.Anvil" Version="8193.37.2" PrivateAssets="all" ExcludeAssets="runtime"/>
+  </ItemGroup> -->
 
   <Target Name="CreateShortcut" AfterTargets="Build">
     <PropertyGroup>

@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuestEditor.QuestCanvas;
+using System.Text.Json;
+using System.Windows;
 using QuestSystem;
 
 namespace QuestEditor.QuestPackExplorer;
@@ -13,12 +14,7 @@ public sealed class QuestPackExplorerService
     public string? PackName {get; private set;} = null;
 
     private List<string> _questTags = [];
-    public IReadOnlyList<string> QuestTags => _questTags;
-
-    public string? SelectedQuestTag => Canvas?.Quest.Tag;
-    public QuestCanvasModel? Canvas { get; private set; } = null;
-
-
+    public IReadOnlyList<string> QuestTags => _questTags;   
 
     private string? _temporaryQuestPackFile = null;
     private string? _originalQuestPackFile = null;
@@ -41,8 +37,6 @@ public sealed class QuestPackExplorerService
             
         _temporaryQuestPackFile = null;
         _originalQuestPackFile = null;
-
-        Canvas = null;
         _questTags = [];
     }
 
@@ -129,7 +123,7 @@ public sealed class QuestPackExplorerService
         if(EmptyState || QuestTags.Contains(questTag))
             return false;
 
-        var json = Quest.Serialize(new());
+        var json = Quest.Serialize(new(){Tag = questTag});
 
         _questPack!.Dispose();
         var qp = QuestPack.OpenWrite(_temporaryQuestPackFile!);
@@ -148,8 +142,6 @@ public sealed class QuestPackExplorerService
 
     public bool RemoveQuest(string? questTag)
     {
-        Console.WriteLine("Removing quest" + questTag);
-        // todo: debug
         if(EmptyState || string.IsNullOrEmpty(questTag) || !QuestTags.Contains(questTag))
             return false;
 
@@ -164,18 +156,27 @@ public sealed class QuestPackExplorerService
         _questPack = QuestPack.OpenRead(_temporaryQuestPackFile!);
 
         _questTags.Remove(questTag);
-        Console.WriteLine("success");
         return true;
     }
 
     public bool SelectQuest(string? questTag)
     {
-        if(EmptyState || SelectedQuestTag==questTag || string.IsNullOrEmpty(questTag) || !QuestTags.Contains(questTag))
-            return false;
+        Console.WriteLine("Selecting quest " + questTag);
+
+        var canvasVM = ((App)Application.Current).CanvasVM;
+
+        if(string.IsNullOrEmpty(questTag))
+        {
+            canvasVM.SetModel(null);
+            return true;
+        }
+
+        if(!QuestTags.Contains(questTag)) throw new InvalidOperationException("Tag not in set");
 
         var entries = _questPack!.Entries.Where(e=>e.FullName.StartsWith(questTag, StringComparison.OrdinalIgnoreCase));
 
         Quest? quest = null;
+        QuestEditorMetadata? metadata = null;
         List<QuestStage> stages = [];
         bool succeeded = true;
         foreach(var entry in entries)
@@ -197,6 +198,13 @@ public sealed class QuestPackExplorerService
                 continue;
             }
 
+            if (entry.FullName.EndsWith("/editor.meta"))
+            {
+                metadata = JsonSerializer.Deserialize<QuestEditorMetadata>(json);
+                Console.WriteLine("Deserialized metadata: " + json);
+                continue;
+            }
+
             var stage = QuestStage.Deserialize(json);
             if(stage == null)
             {
@@ -204,19 +212,26 @@ public sealed class QuestPackExplorerService
                 succeeded = false;
                 break;
             }
+            else
+            {
+                Console.WriteLine("Deserialized stage with " + stage.Objectives.Length + " objectives");
+            }
             stages.Add(stage);
         }
 
-        if(succeeded)
+        if(succeeded && quest != null)
         {
-            Canvas = new(quest!, stages);
-            CanvasChanged?.Invoke();
+            Console.WriteLine("Deserialized quest with " + stages.Count + " stages");
+            canvasVM.SetModel(new(quest!,stages), metadata);
+            Console.WriteLine("Edit mode on");
+        }
+        else{
+            canvasVM.SetModel(null);
+            Console.WriteLine("Edit mode off");
         }
 
         return succeeded;
     }
-
-    public event Action? CanvasChanged;
 
     void RefreshQuestTags()
     {
@@ -230,5 +245,81 @@ public sealed class QuestPackExplorerService
             .Select(e => e.FullName.Split('/')[0])
             .Distinct()
             .OrderBy(x => x)];
+    }
+
+    public void ApplyChanges(string selectedQuestTag)
+    {
+        Console.WriteLine("Explorer forces applying changes...");
+        var qt = selectedQuestTag;
+        if(qt == null || !QuestTags.Contains(qt)) return;
+
+        Console.WriteLine("...quest tag found...");
+
+        var canvasVM = ((App)Application.Current).CanvasVM;
+        var canvas = canvasVM.ApplyChangesToModel();
+
+        Quest quest = canvas?.Quest ?? new(){Tag=qt};
+        QuestStage[] stages;
+
+        if(canvas == null)
+        {
+            Console.WriteLine("... canvas is null ...");
+            stages = [];
+        }
+        else
+        {
+            Console.WriteLine("... canvas is not null ...");
+
+            stages = new QuestStage[canvas.Stages.Count];
+
+            var ids = canvas.Stages.Keys.Order().ToArray();
+
+            for(int i =0; i < stages.Length; i++)
+            {
+                stages[i]=canvas.Stages[ids[i]];
+            }
+
+            Console.WriteLine(" ... quest now has " + stages.Length + " stages.");
+        }
+
+        _questPack?.Dispose();
+        
+        _questPack = QuestPack.OpenWrite(_temporaryQuestPackFile!);
+
+        var entriesToDelete = _questPack.Entries.Where(e=>e.FullName.StartsWith(qt)).ToArray();
+
+        foreach(var etd in entriesToDelete) etd.Delete();
+
+        Console.WriteLine("Saving quest " + quest.Tag);
+        _ = _questPack.AddQuestAsync(quest).GetAwaiter().GetResult();
+
+
+
+        foreach(var stage in stages)
+        {
+            Console.WriteLine("Saving stage " + stage.ID + " with " + stage.Objectives.Length + " objectives");
+            _ = _questPack.SetStageAsync(qt,stage).GetAwaiter().GetResult();
+        }
+
+        var metadata = new QuestEditorMetadata(canvasVM);
+
+        var json = JsonSerializer.Serialize(metadata);
+
+        Console.WriteLine("saved metadata: " + metadata.NodePositions.Count);
+        string str = "";
+        foreach(var kvp in metadata.NodePositions) str += "\n"+kvp.Key+"  " + kvp.Value.X + " | " + kvp.Value.Y;
+        Console.WriteLine(str);
+        Console.WriteLine("\nJSON:\n"+json);
+
+        var entry = _questPack.CreateEntry($"{qt}/editor.meta");
+        
+        using(var sw = new StreamWriter(entry.Open()))
+        {
+            sw.Write(json);
+        }
+
+        _questPack.Dispose();
+
+        _questPack = QuestPack.OpenRead(_temporaryQuestPackFile!);
     }
 }

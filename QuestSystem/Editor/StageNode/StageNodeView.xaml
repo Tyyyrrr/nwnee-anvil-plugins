@@ -4,9 +4,52 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:QuestEditor.StageNode"
+             xmlns:propList="clr-namespace:QuestEditor.PropertyList"
+             xmlns:objective="clr-namespace:QuestEditor.ObjectiveBox"
              mc:Ignorable="d">
-    <Grid>
 
-    </Grid>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <DataTemplate DataType="{x:Type propList:PropertyListViewModel}">
+                <propList:PropertyListView />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type objective:ObjectiveBoxViewModel}">
+                <objective:ObjectiveBoxView />
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Background="DimGray">
+        <Label Content="{Binding StageIDLabelDisplay}"/>
+
+        <Expander Header="Journal" IsExpanded="{Binding JournalEntryExpanded}">
+            <TextBox
+                MinWidth="50"
+                Text="{Binding JournalEntry, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+        </Expander>
+
+        <StackPanel Orientation="Horizontal">
+            <Label Content="New objective type:"/>
+            <ComboBox ItemsSource="{Binding ObjectiveTypeNames}" SelectedItem="{Binding SelectedNewObjectiveTypeName, Mode=OneWayToSource}" IsReadOnly="true" IsEditable="false" />
+        </StackPanel>
+        
+
+        <StackPanel Orientation="Horizontal">
+            <Button Content="New objective" Command="{Binding NewObjectiveCommand}"
+                CommandParameter="{Binding NewObjectiveType}"/>
+            <Button Content="Delete objective" Command="{Binding DeleteObjectiveCommand}"/>
+        </StackPanel>
+
+        <ListBox ItemsSource="{Binding Objectives}" SelectedItem="{Binding SelectedObjective}"/>
+
+        <propList:PropertyListView DataContext="{Binding Reward}" />
+
+        <StackPanel Orientation="Horizontal">
+            <Label Content="{Binding NextStageIDLabelDisplay}" />
+            <TextBox Text="{Binding NextStageID, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
+                Foreground="{Binding NextStageIDColor}"/>
+        </StackPanel>
+    </StackPanel>
 
 </UserControl>

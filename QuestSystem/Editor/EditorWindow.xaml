@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:QuestEditor"
         xmlns:explorer="clr-namespace:QuestEditor.QuestPackExplorer"
         xmlns:canvas="clr-namespace:QuestEditor.QuestCanvas"
+        xmlns:propList="clr-namespace:QuestEditor.PropertyList"
         mc:Ignorable="d"
         Title="Quest Editor" Height="450" Width="800"
         Background="LightGray">
@@ -19,7 +20,10 @@
 
         <explorer:QuestPackExplorerView x:Name="ExplorerView" Grid.Column="0"/>
 
-        <canvas:QuestCanvasView x:Name="CanvasView" Grid.Column="1"/>
+        <canvas:QuestCanvasView x:Name="CanvasView" Grid.Column="1" 
+            AddStageCommand="{Binding AddStageCommand}"
+            RemoveStageCommand="{Binding RemoveStageCommand}"
+            OverlayCapturesInput="{Binding OverlayCapturesInput, Mode=TwoWay}" />
 
     </Grid>
 

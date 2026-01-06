@@ -2,6 +2,7 @@
 using System.Windows;
 using QuestEditor.QuestCanvas;
 using QuestEditor.QuestPackExplorer;
+using QuestSystem;
 
 namespace QuestEditor;
 
@@ -16,8 +17,8 @@ public partial class EditorWindow : Window
         
         var app = (App)Application.Current;
 
-        ExplorerView.ViewModel = app.ExplorerVM;
-        //CanvasView.ViewModel = app.CanvasVM; // example
+        ExplorerView.DataContext = app.ExplorerVM;
+        CanvasView.DataContext = app.CanvasVM;
 
         Console.WriteLine("EditorWindow initialized.");
     }

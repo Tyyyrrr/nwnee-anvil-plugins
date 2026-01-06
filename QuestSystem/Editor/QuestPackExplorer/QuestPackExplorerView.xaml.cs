@@ -14,8 +14,6 @@ namespace QuestEditor.QuestPackExplorer
         public QuestPackExplorerView()
         {
             InitializeComponent();
-
-            Console.WriteLine("QuestPackExplorerView initialized.");
         }
     }
 }

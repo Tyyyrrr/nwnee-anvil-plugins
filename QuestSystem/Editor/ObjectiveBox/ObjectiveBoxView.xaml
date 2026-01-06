@@ -1,11 +1,43 @@
 <UserControl x:Class="QuestEditor.ObjectiveBox.ObjectiveBoxView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:QuestEditor.ObjectiveBox"
-             mc:Ignorable="d">
-    <Grid>
+             xmlns:propList="clr-namespace:QuestEditor.PropertyList"
+             >
+
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type propList:PropertyListViewModel}">
+            <propList:PropertyListView />
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Border BorderThickness="4">
+        <StackPanel>
+            <propList:PropertyListView DataContext="{Binding Objective}" />
             
-    </Grid>
+            <Expander Header="Area tags" IsExpanded="false">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="AddTagTextBox" MinWidth = "70" Text="{Binding AreaTagToAdd, Mode=TwoWay}"/>
+                    <Button Width="20" Height="20" Content="+"
+                        Command="{Binding AddAreaTagCommand}" CommandParameter="{Binding Text, ElementName=AddTagTextBox}"/>
+                    <Button Width="20" Height="20" Content="-"
+                        Command="{Binding RemoveAreaTagCommand}" CommandParameter="{Binding SelectedItem, ElementName=AreaTagsList}"/>
+                </StackPanel>
+                <ListBox x:Name="AreaTagsList" ItemsSource="{Binding AreaTags}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Label Content="{Binding Mode=OneWay}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+            </Expander>
+
+            <propList:PropertyListView DataContext="{Binding Reward}" />
+
+
+        </StackPanel>
+    </Border>
+
 </UserControl>
