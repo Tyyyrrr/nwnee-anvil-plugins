@@ -17,7 +17,8 @@
         <StackPanel>
             <propList:PropertyListView DataContext="{Binding Reward}"/>
 
-            <Expander Header="Items" IsExpanded="false">
+            <Expander Header="Items" IsExpanded="false"
+                ToolTip="List of items from the pallette to be given to the player as a reward">
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <TextBox x:Name="AddItemTextBox" MinWidth = "70" Text="{Binding ItemResRefToAdd, Mode=TwoWay}"/>
@@ -38,7 +39,8 @@
             </StackPanel>
             </Expander>
 
-            <Expander Header="Object visibility" IsExpanded="false">
+            <Expander Header="Object visibility" IsExpanded="false"
+                ToolTip="Override default visibility of objects after the reward is granted.">
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <TextBox x:Name="AddObjectTagTextBox" MinWidth = "70" Text="{Binding ObjectTagToAdd, Mode=TwoWay}"/>
@@ -47,7 +49,7 @@
                     <Button Width="20" Height="20" Content="-"
                         Command="{Binding RemoveObjectTagCommand}" CommandParameter="{Binding SelectedItem, ElementName=ObjectVisibilityList}"/>
                 </StackPanel>
-                <ListBox x:Name="ObjectVisibilityList" ItemsSource="{Binding ObjectVisibility}" Background="Orange">
+                <ListBox x:Name="ObjectVisibilityList" ItemsSource="{Binding ObjectVisibility}" Background="Orange" >
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border BorderThickness="2" BorderBrush="Cyan">

@@ -29,7 +29,7 @@
     <StackPanel Background="DimGray">
         <Label Content="{Binding StageIDLabelDisplay}"/>
 
-        <Expander Header="Journal" IsExpanded="{Binding JournalEntryExpanded}">
+        <Expander Header="Journal" IsExpanded="{Binding JournalEntryExpanded}" ToolTip="Text shown above list of objectives in the player's journal.">
             <TextBox
                 MinWidth="50"
                 Text="{Binding JournalEntry, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
@@ -51,7 +51,7 @@
 
         <reward:RewardBoxView DataContext="{Binding Reward}"/>
 
-        <StackPanel Orientation="Horizontal">
+        <StackPanel Orientation="Horizontal" ToolTip="Jump to given stage after completing all non-optional objectives (Optional objectives can have their own NextStageID set to 0 or greater. Those have higher priority!)">
             <Label Content="{Binding NextStageIDLabelDisplay}" />
             <TextBox Text="{Binding NextStageID, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
                 Foreground="{Binding NextStageIDColor}"/>

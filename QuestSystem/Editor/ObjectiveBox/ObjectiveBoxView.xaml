@@ -16,7 +16,8 @@
         <StackPanel>
             <propList:PropertyListView DataContext="{Binding Objective}" />
             
-            <Expander Header="Area tags" IsExpanded="false">
+            <Expander Header="Area tags" IsExpanded="false"
+                ToolTip="Objective will be tracked only in specific areas (or in every area, if the list is empty)">
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <TextBox x:Name="AddTagTextBox" MinWidth = "70" Text="{Binding AreaTagToAdd, Mode=TwoWay}"/>
@@ -36,7 +37,7 @@
             </Expander>
 
             <!-- <propList:PropertyListView DataContext="{Binding Reward}" /> -->
-            <rewardBox:RewardBoxView DataContext="{Binding Reward}"/>
+            <rewardBox:RewardBoxView DataContext="{Binding Reward}" ToolTip="Award for completion of this objective only. (Does not override other rewards)"/>
 
 
         </StackPanel>
