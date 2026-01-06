@@ -5,7 +5,6 @@ namespace QuestSystem.Objectives
 {
     public sealed class ObjectiveExplore : Objective
     {
-        public string AreaTag {get;set;} = string.Empty;
         public int AreaExplorePercentage {get;set;}
 
         protected internal override void Subscribe()
