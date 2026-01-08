@@ -52,6 +52,17 @@ namespace QuestSystem
 
             if (!_charactersRegistry.KickPlayerIfCharacterNotRegistered(player, out var pc))
                 return;
+                
+            if(IsOnQuest(player,"test_quest_1", out var stageId))
+            {
+                await ResumeNotCompletedQuestTask(player,"test_quest_1",stageId);
+            }
+            else if(HasCompletedQuest(player,"test_quest_1",out stageId))
+            {
+                _questMan.MarkQuestAsCompleted(player, "test_quest_1", stageId);
+            }
+
+            return;
 
             _mySQL.QueryBuilder.Select("", ",,,")
                 .Where(ServerData.DataProviders.PlayerSQLMap.UUID, pc.UUID.ToUUIDString());
