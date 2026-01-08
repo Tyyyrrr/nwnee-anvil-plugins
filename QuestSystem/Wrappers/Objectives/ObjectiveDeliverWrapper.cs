@@ -9,12 +9,14 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Subscribe()
         {
-            throw new System.NotImplementedException();
+            NLog.LogManager.GetCurrentClassLogger().Info("Fake subscribe...");
+            return;
         }
 
         protected override void Unsubscribe()
         {
-            throw new System.NotImplementedException();
+            NLog.LogManager.GetCurrentClassLogger().Info("Fake unsubscribe...");
+            return;
         }
     }
 }

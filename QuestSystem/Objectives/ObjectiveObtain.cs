@@ -1,3 +1,4 @@
+using System;
 using QuestSystem.Wrappers;
 using QuestSystem.Wrappers.Objectives;
 
@@ -9,11 +10,27 @@ namespace QuestSystem.Objectives
         public string ItemTag { get; set; } = string.Empty;
         public int RequiredAmount { get; set; }
 
-        internal override IObjectiveProgress CreateProgressTrack()
-        {
-            throw new System.NotImplementedException();
-        }
-
         internal override ObjectiveObtainWrapper Wrap() => new(this);
+
+        internal override IObjectiveProgress CreateProgressTrack() => new Progress(this);
+
+        private sealed class Progress : IObjectiveProgress
+        {
+            private readonly ObjectiveObtain _objective;
+            public Progress(ObjectiveObtain objective) { _objective = objective; }
+            public event Action<IObjectiveProgress>? OnUpdate;
+            int amount = 0;
+
+            public bool IsCompleted => amount >= _objective.RequiredAmount;
+
+            public void Proceed(object? parameter)
+            {
+                if (parameter is int amt && amt != amount)
+                {
+                    amount = amt;
+                    OnUpdate?.Invoke(this);
+                }
+            }
+        }
     }
 }

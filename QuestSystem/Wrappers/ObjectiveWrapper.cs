@@ -31,7 +31,7 @@ namespace QuestSystem.Wrappers
         private readonly Dictionary<NwPlayer, IObjectiveProgress> _trackedProgress = new();
         public bool IsTracking(NwPlayer player) => _trackedProgress.ContainsKey(player);
         public bool IsActive => _trackedProgress.Count > 0;
-        public bool IsCompleted(NwPlayer player) => _trackedProgress.TryGetValue(player, out var progress) && progress.IsCompleted(this.Objective);
+        public bool IsCompleted(NwPlayer player) => _trackedProgress.TryGetValue(player, out var progress) && progress.IsCompleted;
 
         protected abstract void Subscribe();
         protected abstract void Unsubscribe();
