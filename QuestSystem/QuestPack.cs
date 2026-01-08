@@ -18,7 +18,7 @@ namespace QuestSystem
         public sealed class ReadOnlyException : Exception
         {
             private static readonly string _msg = $"{nameof(QuestPack)} is open in read-only mode. Write access is prohibited.";
-            internal ReadOnlyException() : base(_msg) {}
+            internal ReadOnlyException() : base(_msg) { }
         }
         public void ThrowIfReadOnly() { if (_readOnly) ThrowReadOnly(); }
         [DoesNotReturn] private static void ThrowReadOnly() => throw new ReadOnlyException();
@@ -28,27 +28,27 @@ namespace QuestSystem
         public static QuestPack OpenRead(string path)
         {
             var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.Read, FileShare.None);
-            return new QuestPack(stream,true);
+            return new QuestPack(stream, true);
         }
 
         public static QuestPack OpenWrite(string path)
         {
-            var stream = File.Open(path, FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None);
+            var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
             return new QuestPack(stream, false);
         }
-        
+
         private QuestPack(Stream stream, bool readOnly) : base(stream, readOnly ? ZipArchiveMode.Read : ZipArchiveMode.Update, false, Encoding.UTF8) { _readOnly = readOnly; }
-    
-        
+
+
         public async Task<Quest?> GetQuestAsync(string questTag)
         {
             string questPath = $"{questTag}/q";
 
             NLog.LogManager.GetCurrentClassLogger().Warn("Getting quest at path " + questPath);
 
-            var entry = Entries.FirstOrDefault(e=>string.Equals(e.FullName, questPath, StringComparison.OrdinalIgnoreCase));
-            
-            if(entry == null) 
+            var entry = Entries.FirstOrDefault(e => string.Equals(e.FullName, questPath, StringComparison.OrdinalIgnoreCase));
+
+            if (entry == null)
                 return null;
 
             using var sr = new StreamReader(entry.Open());
@@ -61,9 +61,9 @@ namespace QuestSystem
         {
             ThrowIfReadOnly();
 
-            string questFolder = quest.Tag+'/';
-            
-            if(Entries.Any(e=>e.FullName.StartsWith(questFolder, StringComparison.OrdinalIgnoreCase)))
+            string questFolder = quest.Tag + '/';
+
+            if (Entries.Any(e => e.FullName.StartsWith(questFolder, StringComparison.OrdinalIgnoreCase)))
             {
                 // todo: add logging
                 return false;
@@ -78,15 +78,26 @@ namespace QuestSystem
             return true;
         }
 
+        public bool TryGetStageImmediate(string questTag, int stageID, [NotNullWhen(true)] out QuestStage? stage)
+        {
+            var stagePath = $"{questTag}/{stageID}";
+
+            var entry = GetEntry(stagePath);
+
+            stage = entry == null ? null : QuestStage.Deserialize(entry.Open());
+
+            return stage != null;
+        }
+
         public async Task<QuestStage?> GetStageAsync(string questTag, int stageID)
         {
             var stagePath = $"{questTag}/{stageID}";
 
             NLog.LogManager.GetCurrentClassLogger().Warn("Getting stage at path " + stagePath);
 
-            var entry = Entries.FirstOrDefault(e=>string.Equals(e.FullName, stagePath));
+            var entry = Entries.FirstOrDefault(e => string.Equals(e.FullName, stagePath));
 
-            if(entry == null)
+            if (entry == null)
             {
                 NLog.LogManager.GetCurrentClassLogger().Error("NO ENTRY");
                 return null;
@@ -96,7 +107,7 @@ namespace QuestSystem
             var json = await sr.ReadToEndAsync();
 
             var stage = QuestStage.Deserialize(json);
-            if(stage == null)
+            if (stage == null)
             {
                 NLog.LogManager.GetCurrentClassLogger().Error("DESERIALIZATION FAILED");
             }
@@ -107,9 +118,9 @@ namespace QuestSystem
         {
             ThrowIfReadOnly();
 
-            string questFolder = questTag+'/';
+            string questFolder = questTag + '/';
 
-            if(!Entries.Any(e=>e.FullName.StartsWith(questFolder, StringComparison.OrdinalIgnoreCase)))
+            if (!Entries.Any(e => e.FullName.StartsWith(questFolder, StringComparison.OrdinalIgnoreCase)))
             {
                 // todo: add logging
                 return false;
@@ -119,10 +130,10 @@ namespace QuestSystem
 
             var json = QuestStage.Serialize(stage);
 
-            var entry = Entries.FirstOrDefault(e=>e.FullName.StartsWith(stagePath, StringComparison.OrdinalIgnoreCase));
+            var entry = Entries.FirstOrDefault(e => e.FullName.StartsWith(stagePath, StringComparison.OrdinalIgnoreCase));
 
-            if(entry != default) entry.Delete();
-                
+            if (entry != default) entry.Delete();
+
             entry = CreateEntry(stagePath);
 
             await using var sw = new StreamWriter(entry.Open());
@@ -136,9 +147,9 @@ namespace QuestSystem
 
             string stagePath = $"{questTag}/{stageID}";
 
-            var entry = Entries.FirstOrDefault(e=>e.FullName.StartsWith(stagePath));
+            var entry = Entries.FirstOrDefault(e => e.FullName.StartsWith(stagePath));
 
-            if(entry == null) return false;
+            if (entry == null) return false;
 
             entry.Delete();
 

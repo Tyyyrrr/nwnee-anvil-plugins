@@ -1,25 +1,17 @@
-using System;
-using Anvil.API;
+using QuestSystem.Wrappers;
+using QuestSystem.Wrappers.Objectives;
 
 namespace QuestSystem.Objectives
 {
     public sealed class ObjectiveExplore : Objective
     {
-        public int AreaExplorePercentage {get;set;}
+        public int AreaExplorePercentage { get; set; }
 
-        protected internal override void Subscribe()
+        internal override IObjectiveProgress CreateProgressTrack()
         {
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
 
-        protected internal override void Unsubscribe()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal override IObjectiveProgress CreateProgress()
-        {
-            throw new NotImplementedException();
-        }
+        internal override ObjectiveExploreWrapper Wrap() => new(this);
     }
 }

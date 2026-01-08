@@ -1,26 +1,19 @@
-using System;
+using QuestSystem.Wrappers;
+using QuestSystem.Wrappers.Objectives;
 
 namespace QuestSystem.Objectives
 {
     public sealed class ObjectiveObtain : Objective
     {
-        public string ItemResRef {get;set;} = string.Empty;
-        public string ItemTag {get;set;} = string.Empty;
-        public int RequiredAmount {get;set;}
+        public string ItemResRef { get; set; } = string.Empty;
+        public string ItemTag { get; set; } = string.Empty;
+        public int RequiredAmount { get; set; }
 
-        protected internal override void Subscribe()
+        internal override IObjectiveProgress CreateProgressTrack()
         {
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
 
-        protected internal override void Unsubscribe()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal override IObjectiveProgress CreateProgress()
-        {
-            throw new NotImplementedException();
-        }
+        internal override ObjectiveObtainWrapper Wrap() => new(this);
     }
 }
