@@ -20,8 +20,6 @@ namespace QuestSystem.Wrappers
         private readonly List<QuestStageWrapper> _stages = new();
         internal IReadOnlyList<QuestStageWrapper> Stages => _stages;
 
-        //internal readonly QuestPack? Pack;
-
         /// <summary>
         /// Store the stage in RAM memory
         /// </summary>

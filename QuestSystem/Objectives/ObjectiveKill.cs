@@ -1,7 +1,4 @@
 using System;
-using System.Linq;
-using Anvil.API;
-using Anvil.API.Events;
 using QuestSystem.Wrappers;
 using QuestSystem.Wrappers.Objectives;
 
@@ -13,19 +10,22 @@ namespace QuestSystem.Objectives
         public string Tag { get; set; } = string.Empty;
         public int Amount { get; set; }
 
-        internal sealed class Progress : IObjectiveProgress
+        internal override ObjectiveKillWrapper Wrap() => new(this);
+
+        internal override IObjectiveProgress CreateProgressTrack() => new Progress(this);
+
+        private sealed class Progress : IObjectiveProgress
         {
+            private readonly ObjectiveKill _objective;
+            public Progress(ObjectiveKill objective) { _objective = objective; }
             private int _kills = 0;
+            public bool IsCompleted => _kills >= _objective.Amount;
             public event Action<IObjectiveProgress>? OnUpdate;
-            public bool IsCompleted(Objective objective) => _kills >= ((ObjectiveKill)objective).Amount;
             public void Proceed(object? _ = null)
             {
                 _kills++;
                 OnUpdate?.Invoke(this);
             }
         }
-        internal override IObjectiveProgress CreateProgressTrack() => new Progress();
-
-        internal override ObjectiveKillWrapper Wrap() => new(this);
     }
 }

@@ -19,13 +19,15 @@ namespace QuestSystem.Objectives
         public string ResRef { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
 
-        internal sealed class Progress : IObjectiveProgress
+        internal override ObjectiveInteractWrapper Wrap() => new(this);
+
+        internal override IObjectiveProgress CreateProgressTrack() => new Progress();
+
+        private sealed class Progress : IObjectiveProgress
         {
             private bool _interacted = false;
+            public bool IsCompleted => _interacted;
             public event Action<IObjectiveProgress>? OnUpdate;
-
-            public bool IsCompleted(Objective _) => _interacted;
-
             public void Proceed(object? _ = null)
             {
                 if (_interacted) return;
@@ -34,7 +36,5 @@ namespace QuestSystem.Objectives
             }
         }
 
-        internal override IObjectiveProgress CreateProgressTrack() => new Progress();
-        internal override ObjectiveInteractWrapper Wrap() => new(this);
     }
 }
