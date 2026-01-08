@@ -10,7 +10,9 @@
 
   <ItemGroup>
     <PackageReference Include="NWN.Anvil" Version="8193.37.2" ExcludeAssets="runtime" PrivateAssets="all" />
-    <Reference Include="NWN.Core" ExcludeAssets="runtime" PrivateAssets="all" />
+    
+    <!-- you'll need the binaries in the same directory as this .csproj for development, but NOT in your server's "../anvil/Plugins/YourPlugin/" !-->
+    <Reference Include="NWN.Core" Private="false"/>
   </ItemGroup>
 
   <ItemGroup>
