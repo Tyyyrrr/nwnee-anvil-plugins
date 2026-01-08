@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using QuestSystem.Objectives;
@@ -33,17 +34,24 @@ namespace QuestSystem
             "null"
         }.ToFrozenSet();
 
-        private static bool IsValidType(Type type) => _validTypes.Any(t=>t.IsAssignableFrom(type));
+        private static bool IsValidType(Type type) => _validTypes.Any(t => t.IsAssignableFrom(type));
         internal static string? Serialize<T>(T obj) where T : class
         {
-            if(!IsValidType(typeof(T))) return null;
-            var str = JsonSerializer.Serialize(obj,_jsonOptions);
+            if (!IsValidType(typeof(T))) return null;
+            var str = JsonSerializer.Serialize(obj, _jsonOptions);
             return (string.IsNullOrEmpty(str) || _emptyJsonValues.Contains(str)) ? null : str;
         }
 
         internal static T? Deserialize<T>(string json) where T : class
         {
-            return IsValidType(typeof(T)) ? JsonSerializer.Deserialize<T>(json,_jsonOptions) : null;
+            return IsValidType(typeof(T)) ? JsonSerializer.Deserialize<T>(json, _jsonOptions) : null;
+        }
+
+        internal static T? Deserialize<T>(Stream stream) where T : class
+        {
+            var t = IsValidType(typeof(T)) ? JsonSerializer.Deserialize<T>(stream, _jsonOptions) : null;
+            stream.Close();
+            return t;
         }
     }
 }
