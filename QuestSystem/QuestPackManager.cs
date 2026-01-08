@@ -15,17 +15,37 @@ namespace QuestSystem
         {
             var list = new List<QuestPack>();
 
-            foreach (var fInfo in Directory.GetFiles(directory))
+            foreach (var fPath in Directory.GetFiles(directory))
             {
-                var fExt = Path.GetExtension(fInfo);
+                var fExt = Path.GetExtension(fPath);
 
                 if (fExt != QuestPack.FileExtension) continue;
 
-                var pack = QuestPack.OpenRead(fInfo);
+                var lastWriteTime = File.GetLastWriteTime(fPath);
+                var fName = Path.GetFileNameWithoutExtension(fPath);
+
+                var pack = QuestPack.OpenRead(fPath);
                 list.Add(pack);
+                
+                pack.Comment = $"{fName} (modified at {lastWriteTime})";
             }
 
             _packs = list.ToArray();
+
+            string str = "Loaded " + _packs.Length + " quest packs:";
+            foreach(var pack in _packs)
+            {
+                str += $"\n{pack.Comment}\n - Quests:";
+
+                foreach(var entry in pack.Entries.Where(e => e.FullName.EndsWith("/q")))
+                {
+                    var s = new string(entry.FullName.Take(entry.FullName.Length-2).ToArray());
+
+                    str += $"\n - - {s}";
+                }
+            }
+
+            NLog.LogManager.GetCurrentClassLogger().Info(str);
         }
 
         public void Dispose()
