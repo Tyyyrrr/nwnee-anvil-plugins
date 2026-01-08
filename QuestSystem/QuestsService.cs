@@ -1,236 +1,501 @@
 using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Anvil.API;
 using Anvil.API.Events;
 using Anvil.Services;
 
-using CharactersRegistry;
+using NLog;
+
+using NWN.Core;
+
 using MySQLClient;
-using QuestSystem.Objectives;
+using CharactersRegistry;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using QuestSystem.Wrappers;
 
 namespace QuestSystem
 {
     [ServiceBinding(typeof(QuestsService))]
-    internal sealed class QuestsService
+    internal sealed class QuestsService : IDisposable
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private readonly MySQLService _mySQL;
         private readonly CharactersRegistryService _charactersRegistry;
 
-        //tmp:
-        async void InitializeTestAsync(string questPacksPath)
-        {            
-            /// create test quest pack
-            using (var newpack = QuestPack.OpenWrite(Path.Combine(questPacksPath, "testQuestPack"+QuestPack.FileExtension)))
-            {
-                var newquest = new Quest();
-                newquest.Tag = "test_quest_1";
-                newquest.Name = "Test Quest";
-                newquest.JournalEntry = " Test Quest Journal Entry";
-                
-                await newpack.AddQuestAsync(newquest);
-                
-                var stage1 = new QuestStage();
-                stage1.ID = 0;
-                stage1.NextStageID = 1;
-                stage1.JournalEntry = "Stage 1 Journal Entry";
-                var obj1 = new ObjectiveInteract();
-                obj1.Interaction = ObjectiveInteract.InteractionType.ObjectExamine;
-                obj1.Tag = "PLC_BTLR_MIRROR";
-                obj1.ResRef = "btlr_mirror";
-                obj1.PartyMembersAllowed = false;
-                obj1.AreaTags = new string[]{"_test_area"};
-                obj1.JournalEntry = "Objective journal entry";
+        private readonly QuestPackManager _questPackMan;
+        private readonly QuestManager _questMan;
 
-                stage1.Objectives = new Objective[]{obj1};
-
-                await newpack.SetStageAsync(newquest.Tag,stage1);
-
-                string s = "ENTRIES:\n";
-                foreach(var e in newpack.Entries)
-                {
-
-                    using (var sr = new StreamReader(e.Open()))
-                    {
-                        
-                        s += e.FullName + " : \n " + sr.ReadToEnd();
-                    }
-                }
-
-                NLog.LogManager.GetCurrentClassLogger().Warn(s);
-            }
-
-            await NwTask.SwitchToMainThread();
-            
-            QuestPackManager.GetPacks(questPacksPath); 
-
-            var pack = QuestPackManager.FindPack("test_quest_1") ?? throw new Exception("pack not found by quest tag");
-
-            var quest = await pack.GetQuestAsync("test_quest_1") ?? throw new Exception("pack does not have test quest");
-
-            var stage = await pack.GetStageAsync(quest.Tag, 0) ?? throw new Exception("stage 1 not found in test quest in pack");
-
-            var obj = stage.Objectives.FirstOrDefault() ?? throw new Exception("No objectives in stage");
-
-            foreach(var o in stage.Objectives)
-                o.QuestStage = stage;
-
-            stage.Quest = quest;
-
-            string str = $@"QUEST TAG: {quest.Tag}
-            QUEST NAME: {quest.Name}
-            QUEST JOURNAL ENTRY: {quest.JournalEntry}
-            STAGE ID: {stage.ID}
-            NEXT STAGE ID: {stage.NextStageID}
-            STAGE JOURNAL ENTRY: {stage.JournalEntry}
-            OBJECTIVE TYPE: {obj.GetType().Name}
-            OBJECTIVE NEXT STAGE ID: {obj.NextStageID}
-            OBJECTIVE JOURNAL ENTRY: {obj.JournalEntry}
-            OBJECTIVE PARTY MEMBERS ALLOWED: {obj.PartyMembersAllowed}
-            REWARD XP: {stage.Reward.Xp}
-            REWARD GOLD: {stage.Reward.Gold}
-            REWARD GE CHANGE: {stage.Reward.GoodEvilChange}
-            REWARD LC CHANGE: {stage.Reward.LawChaosChange}
-            REWARD ITEMS: {string.Join(',',stage.Reward.Items.Keys)}
-            REWARD ITEMS AMOUNTS: {string.Join(',',stage.Reward.Items.Values)}";
-
-            NLog.LogManager.GetCurrentClassLogger().Warn("DEBUGGING QUEST READ FROM PACK:\n"+str);
-        }
         public QuestsService(MySQLService mySQL, CharactersRegistryService charactersRegistry, PluginStorageService pluginStorage)
         {
             string questPacksPath = pluginStorage.GetPluginStoragePath(typeof(QuestsService).Assembly);
 
-            //QuestPackManager.GetPacks(questPacksPath);
+            _questPackMan = new(pluginStorage.GetPluginStoragePath(typeof(QuestsService).Assembly));
 
             _mySQL = mySQL;
             _charactersRegistry = charactersRegistry;
 
             NwModule.Instance.OnClientEnter += OnClientEnter;
             NwModule.Instance.OnClientLeave += OnClientLeave;
-        
-            // testing:
-            InitializeTestAsync(questPacksPath);
+
+            _questMan = new();
         }
 
         void OnClientEnter(ModuleEvents.OnClientEnter data)
         {
-            LoadQuestsAsync(data.Player);
+            _ = LoadQuestsAsync(data.Player);
         }
 
-        async void LoadQuestsAsync(NwPlayer player)
+        async Task LoadQuestsAsync(NwPlayer player)
         {
-            // todo: read pc quests from database, load current quest stages into memory
+            await NwTask.Delay(TimeSpan.FromMilliseconds(200));
 
-            // test:
-            var testTag = "test_quest_1";
-            var testStage = 0;
+            if (!_charactersRegistry.KickPlayerIfCharacterNotRegistered(player, out var pc))
+                return;
 
-            var result = await SetPCOnQuestAsync(player, testTag, testStage);
+            _mySQL.QueryBuilder.Select("", ",,,")
+                .Where(ServerData.DataProviders.PlayerSQLMap.UUID, pc.UUID.ToUUIDString());
 
-            if(!result) NLog.LogManager.GetCurrentClassLogger().Error($"Failed to set PC on stage {testStage} of quest {testTag}");
-            else NLog.LogManager.GetCurrentClassLogger().Warn($"Successfully set PC on stage {testStage} of quest {testTag}");
-        }
+            List<Task<bool>> resumeNotCompletedQuestsTasks = new();
+            List<Task<bool>> writeCompletedQuestsTasks = new();
 
-        void OnClientLeave(ModuleEvents.OnClientLeave data)
-        {
-            Quest.ClearPlayer(data.Player);
-        }
-
-        static async ValueTask<bool> SetPCOnQuestAsync(NwPlayer player, string questTag, int stageID)
-        {
-            var log = NLog.LogManager.GetCurrentClassLogger();
-            log.Warn($"Setting player on stage {stageID} of quest {questTag}");
-            if(!player.IsValid) return false;
-
-            var questStage = await GetOrLoadStageAsync(questTag, stageID);
-            await NwTask.SwitchToMainThread();
-
-            if(questStage == null)
+            using (var result = _mySQL.ExecuteQuery())
             {
-                log.Error($"Failed to obtain quest stage");
-                return false;
+                if (!result.HasData) return;
+
+                foreach (var row in result)
+                {
+                    if (row.TryGet<string>(0, out var questTag)
+                        && row.TryGet<int>(1, out var stage)
+                        && row.TryGet<bool>(2, out var isCompleted))
+                    {
+                        if (!isCompleted) resumeNotCompletedQuestsTasks.Add(ResumeNotCompletedQuestTask(player, questTag, stage));
+                        else _questMan.MarkQuestAsCompleted(player, questTag, stage);
+                    }
+                }
             }
-            log.Info($"Quest stage obtained!");
+
+            await NwTask.WhenAll(resumeNotCompletedQuestsTasks);
+            await NwTask.WhenAll(writeCompletedQuestsTasks);
+        }
+
+        async Task<bool> ResumeNotCompletedQuestTask(NwPlayer player, string questTag, int stageId)
+        {
+            var quest = _questMan.GetCachedQuest(questTag);
+            bool shouldRegisterQuest = quest == null;
+            if (quest == null)
+            {
+                if (!_questPackMan.TryGetQuestImmediate(questTag, out var q))
+                    return false;
+                quest = new(q);
+            }
+
+            var stage = quest.GetStage(stageId);
+            bool shouldRegisterStage = stage == null;
+            if (stage == null)
+            {
+                if (!_questPackMan.TryGetQuestStageImmediate(quest.Tag, stageId, out var s))
+                    return false;
+                stage = new(s);
+            }
+
+            if (shouldRegisterQuest && !_questMan.RegisterQuest(quest)) return false;
+            if (shouldRegisterStage && !quest.RegisterStage(stage)) return false;
+
+            await NwTask.SwitchToMainThread();
 
             if (!player.IsValid)
             {
-                log.Error($"Player invalidated");
-                Quest.ClearPlayer(player);
+                if (shouldRegisterStage) quest.UnregisterStage(stage);
+                if (shouldRegisterQuest) _questMan.UnregisterQuest(quest);
                 return false;
             }
 
-            questStage.TrackProgress(player);
+            stage.TrackProgress(player);
 
             return true;
         }
 
-        static async ValueTask<QuestStage?> GetOrLoadStageAsync(string questTag, int stageID)
+
+        void OnClientLeave(ModuleEvents.OnClientLeave data) => _questMan.ClearPlayer(data.Player);
+
+
+        [ScriptHandler("qs_at")]
+        ScriptHandleResult QuestSystem_ActionTaken(CallInfo data)
         {
-            var log = NLog.LogManager.GetCurrentClassLogger();
-            log.Warn($"Searching for stage {stageID} of quest {questTag}");
+            var pc = NWScript.GetPCSpeaker().ToNwObjectSafe<NwCreature>();
 
-            // fast path (quest stage can be already cached in memory):
-            var quest = Quest.GetQuest(questTag);
-
-            if(quest != null)
+            if (pc == null || !pc.IsValid)
             {
-                log.Info($"Quest found in cache!");
-                var stage = quest.GetStage(stageID);
+                _log.Error("No PC speaker");
+                return ScriptHandleResult.NotHandled;
+            }
 
-                if(stage != null)
+            var player = pc.ControllingPlayer;
+            if (player == null || !player.IsValid)
+            {
+                _log.Error("No controlling player");
+                return ScriptHandleResult.NotHandled;
+            }
+
+            bool validParams = true;
+            if (TryParseParameters(data.ScriptParams["CompleteQuest"], out var parsedCompleteQuestParams)
+            & TryParseParameters(data.ScriptParams["ClearQuest"], out var parsedClearQuestParams)
+            & TryParseParameters(data.ScriptParams["GiveQuest"], out var parsedGiveQuestParams))
+            {
+                if (parsedCompleteQuestParams != null && parsedCompleteQuestParams.Values.Any(arr => arr.Length == 0))
                 {
-                    log.Info($"Stage found in cache!");
-                    return stage;
+                    _log.Error("\'CompleteQuest\' action must take at least one stage ID as parameter.");
+                    validParams = false;
                 }
-                else log.Info($"Stage not found in cache!");
-            }
-            else log.Info("Quest not found in cache.");
 
-            var pack = QuestPackManager.FindPack(questTag);
-
-            if(pack == null)
-            {
-                log.Error("Pack not found");
-                return null; // return if none of packs
-            }
-
-
-            // slow path (read from .zip archive and store quest and questStage in RAM asynchronously):
-            if(quest != null)
-            {
-                var stage = await pack.GetStageAsync(questTag, stageID);
-                if(stage == null)
+                if (parsedClearQuestParams != null && parsedClearQuestParams.Values.Any(arr => arr.Length > 0))
                 {
-                    log.Error("Failed to load stage.");
-                    return null;
+
+                    _log.Error("\'ClearQuest\' action can't take stage ID as parameter.");
+                    validParams = false;
                 }
 
-                quest.RegisterStage(stage);
-
-                return stage;
-            }
-            else
-            {
-                quest = await pack.GetQuestAsync(questTag);
-                if(quest == null)
+                if (parsedGiveQuestParams != null && parsedGiveQuestParams.Values.Any(arr => arr.Length != 1))
                 {
-                    log.Error("Failed to load quest");
-                    return null;
+                    _log.Error("\'GiveQuest\' action must take exactly one stage ID as parameter.");
+                    validParams = false;
                 }
 
-                var stage = await pack.GetStageAsync(questTag, stageID);
-                if(stage == null)
-                { 
-                    log.Error("Failed to load stage");
-                    return null;
-                }
-
-                Quest.RegisterQuest(quest);
-                quest.RegisterStage(stage);
-
-                return stage;
             }
+
+            if (!validParams)
+            {
+                _log.Warn("Failed to parse script parameters for conversation action. See \'qs_at.nss\' for formatting instructions.");
+                return ScriptHandleResult.NotHandled;
+            }
+
+            if (parsedCompleteQuestParams != null)
+            {
+                foreach (var kvp in parsedCompleteQuestParams)
+                {
+                    var quest = _questMan.GetCachedQuest(kvp.Key);
+                    if (quest == null) continue;
+                    foreach (var id in kvp.Value)
+                    {
+                        var stage = quest.GetStage(id);
+                        if (stage != null && stage.IsTracking(player))
+                        {
+                            _ = CompleteQuestOnStage(player, kvp.Key, id);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (parsedClearQuestParams != null)
+            {
+                foreach (var key in parsedClearQuestParams.Keys)
+                    _ = ClearQuest(player, key);
+            }
+
+            if (parsedGiveQuestParams != null)
+            {
+                foreach (var kvp in parsedGiveQuestParams)
+                    _ = SetQuestStage(player, kvp.Key, kvp.Value[0]);
+            }
+
+            return ScriptHandleResult.Handled;
+        }
+
+        [ScriptHandler("qs_taw")]
+        ScriptHandleResult QuestSystem_TextAppearWhen(CallInfo data)
+        {
+            var pc = NWScript.GetPCSpeaker().ToNwObjectSafe<NwCreature>();
+
+            if (pc == null || !pc.IsValid)
+            {
+                _log.Error("No PC speaker");
+                return ScriptHandleResult.NotHandled;
+            }
+
+            var player = pc.ControllingPlayer;
+            if (player == null || !player.IsValid)
+            {
+                _log.Error("No controlling player");
+                return ScriptHandleResult.NotHandled;
+            }
+
+            bool validParams =
+                TryParseParameters(data.ScriptParams["IsOnQuest"], out var parsedIsOnQuestParams) &
+                TryParseParameters(data.ScriptParams["IsNotOnQuest"], out var parsedIsNotOnQuestParams) &
+                TryParseParameters(data.ScriptParams["CompletedQuest"], out var parsedCompletedQuestParams) &
+                TryParseParameters(data.ScriptParams["NotCompletedQuest"], out var parsedNotCompletedQuestParams);
+
+            if (!validParams)
+            {
+                _log.Warn("Failed to parse script parameters for conversation action. See \'qs_at.nss\' for formatting instructions.");
+                return ScriptHandleResult.NotHandled;
+            }
+
+
+            if (parsedIsOnQuestParams != null)
+            {
+                bool isOnQuest = false;
+
+                foreach (var kvp in parsedIsOnQuestParams)
+                {
+                    if (IsOnQuest(player, kvp.Key, out var stageId)
+                        && (kvp.Value.Length == 0 || kvp.Value.Contains(stageId)))
+                    {
+                        isOnQuest = true;
+                        break;
+                    }
+                }
+
+                if (!isOnQuest) return ScriptHandleResult.False;
+            }
+
+            if (parsedIsNotOnQuestParams != null)
+            {
+                foreach (var kvp in parsedIsNotOnQuestParams)
+                {
+                    if (IsOnQuest(player, kvp.Key, out var stageId)
+                        && (kvp.Value.Length == 0 || kvp.Value.Contains(stageId)))
+                        return ScriptHandleResult.False;
+                }
+            }
+
+            if (parsedCompletedQuestParams != null)
+            {
+                bool completed = false;
+
+                foreach (var kvp in parsedCompletedQuestParams)
+                {
+                    if (HasCompletedQuest(player, kvp.Key, out var stageId)
+                        && (kvp.Value.Length == 0 || kvp.Value.Contains(stageId)))
+                    {
+                        completed = true;
+                        break;
+                    }
+                }
+
+                if (!completed) return ScriptHandleResult.False;
+            }
+
+            if (parsedNotCompletedQuestParams != null)
+            {
+                foreach (var kvp in parsedNotCompletedQuestParams)
+                {
+                    if (HasCompletedQuest(player, kvp.Key, out var stageId)
+                        && (kvp.Value.Length == 0 || kvp.Value.Contains(stageId)))
+                        return ScriptHandleResult.False;
+                }
+            }
+
+            return ScriptHandleResult.True;
+        }
+
+        private static bool TryParseParameters(string? parameters, out Dictionary<string, int[]>? parsedParameters)
+        {
+            parsedParameters = null;
+
+            if (string.IsNullOrEmpty(parameters)) return true;
+
+
+            var dict = new Dictionary<string, int[]>();
+
+            bool failed = false;
+
+            var args = parameters.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var arg in args)
+            {
+                var split = arg.Split(':', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+                if (split.Length == 0 || split.Length > 2)
+                {
+                    _log.Warn($"Invalid format: \"{arg}\"");
+                    failed = true;
+                    continue;
+                }
+
+                string questTag = split[0];
+
+                if (!string.IsNullOrWhiteSpace(questTag))
+                {
+                    _log.Warn($"Invalid quest tag \'{split[0]}\'");
+                }
+                else if (split.Length == 1 && !failed)
+                {
+                    dict.Add(questTag, Array.Empty<int>());
+                }
+                else if (split.Length == 2)
+                {
+                    var ids = split[1].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                    var arr = new int[ids.Length];
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        if (!int.TryParse(ids[i], out arr[i]))
+                        {
+                            _log.Warn($"Invalid stage ID: \'{ids[i]}\'");
+                            failed = true;
+                            break;
+                        }
+                    }
+
+                    if (!failed) dict.Add(questTag, arr);
+                }
+            }
+
+            failed = !(dict.Count > 0 && !failed);
+
+            if (!failed) parsedParameters = dict;
+
+            return !failed;
+        }
+
+
+        private bool SetQuestStage(NwPlayer player, string questTag, int stageId)
+        {
+            QuestWrapper? quest = _questMan.GetCachedQuest(questTag);
+
+            bool shouldRegisterQuest = quest == null;
+            if (quest == null)
+            {
+                if (!_questPackMan.TryGetQuestImmediate(questTag, out var q))
+                    return false;
+
+                quest = new(q);
+            }
+
+            var stage = quest.GetStage(stageId);
+            bool shouldRegisterStage = stage == null;
+            if (stage == null)
+            {
+                if (!_questPackMan.TryGetQuestStageImmediate(quest.Tag, stageId, out var s))
+                    return false;
+
+                stage = new(s);
+            }
+
+
+            if (shouldRegisterQuest && !_questMan.RegisterQuest(quest))
+                return false;
+
+            if (shouldRegisterStage && !quest.RegisterStage(stage))
+                return false;
+
+            stage.TrackProgress(player);
+            stage.ScheduleJournalUpdate(player);
+            // todo: schedule lazy database update
+
+            return true;
+        }
+
+        /// <summary>
+        /// Reset data for the player, so they can start the quest again.
+        /// </summary>
+        /// <returns>False if the player is not on this quest</returns>
+        public bool ClearQuest(NwPlayer player, string questTag)
+        {
+            if (IsOnQuest(player, questTag, out var stageId))
+            {
+                var stage = (_questMan.GetCachedQuest(questTag)?.GetStage(stageId)) ?? throw new InvalidOperationException("Failed to get stage by id returned from IsOnQuest");
+                stage.StopTracking(player);
+                if (!stage.IsActive)
+                {
+                    var quest = stage.Quest ?? throw new InvalidOperationException("Stage returned it from GetStage(id) has no parent");
+                    if (!quest.UnregisterStage(stage)) throw new InvalidOperationException("Failed to unregister stage");
+                    if (!_questMan.UnregisterQuest(quest)) throw new InvalidOperationException("Failed to unregister quest");
+                }
+            }
+            return false;
+        }
+
+        private bool CompleteQuestOnStage(NwPlayer player, string questTag, int stageId)
+        {
+            //if(!IsOnQuestStage(player,questTag,stageId)) return false;
+
+            var quest = _questMan.GetCachedQuest(questTag);
+            var stage = quest?.GetStage(stageId);
+
+            if (
+                quest == null
+                || stage == null
+                || stage.IsTracking(player)
+                || !player.IsValid
+                || player.ControlledCreature == null
+                || !player.ControlledCreature.IsValid
+                )
+                return false;
+
+
+            //stage.Reward.GrantReward(player.ControlledCreature!);
+
+            // grant reward
+
+            // save to database
+
+            return true;
+        }
+
+
+        // public async ValueTask GrantReward(NwCreature creature)
+        // {
+        //     creature.Xp += Math.Max(0, Xp);
+
+        //     creature.GiveGold(Math.Max(0, Gold));
+
+        //     creature.GoodEvilValue = Math.Clamp(creature.GoodEvilValue + GoodEvilChange, 0, 100);
+        //     creature.LawChaosValue = Math.Clamp(creature.LawChaosValue + LawChaosChange, 0, 100);
+
+        //     if (Items.Count == 0) return;
+
+        //     foreach (var kvp in Items)
+        //     {
+        //         _ = await NwItem.Create(kvp.Key, creature);
+        //     }
+        // }
+
+
+
+
+
+
+
+        /// <summary>
+        /// Check if player is currently on any stage of specified quest (not including completed quests).
+        /// </summary>
+        /// <param name="stageId">Stage of the quest the player is currently on, -1 if not on the quest.</param>
+        public bool IsOnQuest(NwPlayer player, string questTag, out int stageId)
+        {
+            stageId = -1;
+            var quest = _questMan.GetCachedQuest(questTag);
+            if (quest == null) return false;
+            var qs = quest.Stages.FirstOrDefault(s => s.IsTracking(player));
+            if (qs != null)
+            {
+                stageId = qs.ID;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Check if player is currently on the exact stage of specified quest (not including completed quests).
+        /// </summary>
+        public bool IsOnQuestStage(NwPlayer player, string questTag, int stageId)
+        {
+            var quest = _questMan.GetCachedQuest(questTag);
+            if (quest == null) return false;
+            var stage = quest.GetStage(stageId);
+            return stage != null && stage.IsTracking(player);
+        }
+
+        /// <summary>Check if the player has completed a quest with specified tag, and output the stage ID if so.</summary>
+        /// <param name="stageId">Stage on which the quest was completed, or -1 if quest was not completed by the player</param>
+        /// <returns>True if the player has completed the quest</returns>
+        public bool HasCompletedQuest(NwPlayer player, string questTag, out int stageId) => _questMan.HasCompletedQuest(player, questTag, out stageId);
+
+        public void Dispose()
+        {
+            _questPackMan.Dispose();
         }
     }
 }

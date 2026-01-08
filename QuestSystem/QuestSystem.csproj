@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="NWN.Anvil" Version="8193.37.2" ExcludeAssets="runtime" PrivateAssets="all" />
+    <Reference Include="NWN.Core" ExcludeAssets="runtime" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
