@@ -1,26 +1,19 @@
-using System;
+using QuestSystem.Wrappers;
+using QuestSystem.Wrappers.Objectives;
 
 namespace QuestSystem.Objectives
 {
     public sealed class ObjectiveSpellcast : Objective
     {
-        public string TargetResRef {get;set;} = string.Empty;
-        public string TargetTag {get;set;} = string.Empty;
-        public int SpellID {get;set;} = -1;
+        public string TargetResRef { get; set; } = string.Empty;
+        public string TargetTag { get; set; } = string.Empty;
+        public int SpellID { get; set; } = -1;
 
-        protected internal override void Subscribe()
+        internal override IObjectiveProgress CreateProgressTrack()
         {
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
 
-        protected internal override void Unsubscribe()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal override IObjectiveProgress CreateProgress()
-        {
-            throw new NotImplementedException();
-        }
+        internal override ObjectiveSpellcastWrapper Wrap() => new(this);
     }
 }
