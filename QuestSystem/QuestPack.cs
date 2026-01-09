@@ -53,7 +53,7 @@ namespace QuestSystem
 
             using var sr = new StreamReader(entry.Open());
             var json = await sr.ReadToEndAsync();
-            return Quest.Deserialize(json);
+            return QuestSerializer.Deserialize<Quest>(json);
         }
 
 
@@ -69,7 +69,7 @@ namespace QuestSystem
                 return false;
             }
 
-            var json = Quest.Serialize(quest);
+            var json = QuestSerializer.Serialize(quest);
 
             var entry = CreateEntry($"{questFolder}q");
 
@@ -84,7 +84,7 @@ namespace QuestSystem
 
             var entry = GetEntry(stagePath);
 
-            stage = entry == null ? null : QuestStage.Deserialize(entry.Open());
+            stage = entry == null ? null : QuestSerializer.Deserialize<QuestStage>(entry.Open());
 
             return stage != null;
         }
@@ -106,7 +106,7 @@ namespace QuestSystem
             using var sr = new StreamReader(entry.Open());
             var json = await sr.ReadToEndAsync();
 
-            var stage = QuestStage.Deserialize(json);
+            var stage = QuestSerializer.Deserialize<QuestStage>(json);
             if (stage == null)
             {
                 NLog.LogManager.GetCurrentClassLogger().Error("DESERIALIZATION FAILED");
@@ -128,7 +128,7 @@ namespace QuestSystem
 
             string stagePath = $"{questFolder}{stage.ID}";
 
-            var json = QuestStage.Serialize(stage);
+            var json = QuestSerializer.Serialize(stage);
 
             var entry = Entries.FirstOrDefault(e => e.FullName.StartsWith(stagePath, StringComparison.OrdinalIgnoreCase));
 

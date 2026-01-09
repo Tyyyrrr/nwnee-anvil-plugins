@@ -14,6 +14,8 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Subscribe()
         {
+            NLog.LogManager.GetCurrentClassLogger().Info("Fake subscribe...");
+            return;
             switch (Objective.Interaction)
             {
                 case ObjectiveInteract.InteractionType.PlaceableUse:
@@ -33,6 +35,8 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Unsubscribe()
         {
+            NLog.LogManager.GetCurrentClassLogger().Info("Fake unsubscribe...");
+            return;
             switch (Objective.Interaction)
             {
                 case ObjectiveInteract.InteractionType.PlaceableUse:
@@ -117,10 +121,10 @@ namespace QuestSystem.Wrappers.Objectives
                 {
                     var controlledCreature = member.ControlledCreature;
                     if (controlledCreature == null || userArea != controlledCreature.Area) continue;
-                    (GetTrackedProgress(member) as ObjectiveInteract.Progress)?.Proceed();
+                    GetTrackedProgress(member)?.Proceed();
                 }
             }
-            else (GetTrackedProgress(usingPlayer) as ObjectiveInteract.Progress)?.Proceed();
+            else GetTrackedProgress(usingPlayer)?.Proceed();
         }
 
         void OnPlaceableEnterArea(AreaEvents.OnEnter data)
@@ -172,12 +176,12 @@ namespace QuestSystem.Wrappers.Objectives
                     {
                         var controlledCreature = player.ControlledCreature;
                         if (controlledCreature == null || controlledCreature.Area != triggerArea) continue;
-                        (GetTrackedProgress(player) as ObjectiveInteract.Progress)?.Proceed();
+                        GetTrackedProgress(player)?.Proceed();
                     }
                 }
                 else
                 {
-                    (GetTrackedProgress(enteringPlayer) as ObjectiveInteract.Progress)?.Proceed();
+                    GetTrackedProgress(enteringPlayer)?.Proceed();
                 }
             }
         }
@@ -215,12 +219,12 @@ namespace QuestSystem.Wrappers.Objectives
                     {
                         var controlledCreature = player.ControlledCreature;
                         if (controlledCreature == null || controlledCreature.Area != area) continue;
-                        (GetTrackedProgress(member) as ObjectiveInteract.Progress)?.Proceed();
+                        GetTrackedProgress(member)?.Proceed();
                     }
                 }
                 else
                 {
-                    (GetTrackedProgress(player) as ObjectiveInteract.Progress)?.Proceed();
+                    GetTrackedProgress(player)?.Proceed();
                 }
             }
         }

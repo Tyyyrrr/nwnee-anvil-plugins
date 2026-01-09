@@ -13,6 +13,8 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Subscribe()
         {
+            NLog.LogManager.GetCurrentClassLogger().Info("Fake subscribe...");
+            return;
             foreach (var area in NwModule.Instance.Areas)
             {
                 if (Objective.AreaTags.Length > 0 && !Objective.AreaTags.Contains(area.Tag)) continue;
@@ -37,6 +39,8 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Unsubscribe()
         {
+            NLog.LogManager.GetCurrentClassLogger().Info("Fake unsubscribe...");
+            return;
             foreach (var area in NwModule.Instance.Areas)
             {
                 if (Objective.AreaTags.Length > 0 && !Objective.AreaTags.Contains(area.Tag)) continue;
@@ -89,12 +93,12 @@ namespace QuestSystem.Wrappers.Objectives
                 {
                     var controlledCreature = player.ControlledCreature;
                     if (controlledCreature == null || killerArea != controlledCreature.Area) continue;
-                    (GetTrackedProgress(player) as ObjectiveKill.Progress)?.Proceed();
+                    GetTrackedProgress(player)?.Proceed();
                 }
             }
             else
             {
-                (GetTrackedProgress(killerPlayer) as ObjectiveKill.Progress)?.Proceed();
+                GetTrackedProgress(killerPlayer)?.Proceed();
             }
 
 

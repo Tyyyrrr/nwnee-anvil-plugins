@@ -10,7 +10,8 @@ namespace QuestSystem.Wrappers
 
         public void GrantReward(NwPlayer player)
         {
-            throw new NotImplementedException();
+            NLog.LogManager.GetCurrentClassLogger().Info("Fake reward grant");
+            return;
         }
     }
 }

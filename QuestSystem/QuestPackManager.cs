@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace QuestSystem
 {
@@ -15,17 +16,37 @@ namespace QuestSystem
         {
             var list = new List<QuestPack>();
 
-            foreach (var fInfo in Directory.GetFiles(directory))
+            foreach (var fPath in Directory.GetFiles(directory))
             {
-                var fExt = Path.GetExtension(fInfo);
+                var fExt = Path.GetExtension(fPath);
 
                 if (fExt != QuestPack.FileExtension) continue;
 
-                var pack = QuestPack.OpenRead(fInfo);
+                var lastWriteTime = File.GetLastWriteTime(fPath);
+                var fName = Path.GetFileNameWithoutExtension(fPath);
+
+                var pack = QuestPack.OpenRead(fPath);
                 list.Add(pack);
+                
+                pack.Comment = $"{fName} (last modified: {lastWriteTime})";
             }
 
             _packs = list.ToArray();
+
+            string str = "Loaded " + _packs.Length + " quest packs:";
+            foreach(var pack in _packs)
+            {
+                str += $"\n{pack.Comment}\n - Quests:";
+
+                foreach(var entry in pack.Entries.Where(e => e.FullName.EndsWith("/q")))
+                {
+                    var s = new string(entry.FullName.Take(entry.FullName.Length-2).ToArray());
+
+                    str += $"\n - - {s}";
+                }
+            }
+
+            NLog.LogManager.GetCurrentClassLogger().Info(str);
         }
 
         public void Dispose()
@@ -36,52 +57,67 @@ namespace QuestSystem
 
         public QuestPack? FindPack(string questTag)
         {
-            var questDir = questTag + '/';
+            var questPath = questTag + "/q";
             foreach (var pack in _packs)
             {
-                if (pack.Entries.Any(e => e.FullName.StartsWith(questDir, StringComparison.OrdinalIgnoreCase)))
+                if(pack.GetEntry(questPath) != null)
                     return pack;
+            }
+            return null;
+        }
+
+        private ZipArchiveEntry? FindEntryInPacks(string entryPath)
+        {
+            foreach(var pack in _packs)
+            {
+                var entry = pack.GetEntry(entryPath);
+                if(entry != null) return entry;
             }
             return null;
         }
 
         public bool TryGetQuestImmediate(string questTag, [NotNullWhen(true)] out Quest? quest)
         {
-            string questPath = $"{questTag}/q";
-
             quest = null;
-            ZipArchiveEntry? entry = null;
-
-            foreach (var pack in _packs)
-            {
-                entry = pack.GetEntry(questPath);
-                if (entry != null) break;
-            }
+         
+            ZipArchiveEntry? entry = FindEntryInPacks(questTag+"/q");
 
             if (entry == null) return false;
 
-            quest = Quest.Deserialize(entry.Open());
+            quest = QuestSerializer.Deserialize<Quest>(entry.Open());
 
             return quest != null;
+        }
+
+        public async Task<Quest?> TryGetQuestAsync(string questTag)
+        {
+            ZipArchiveEntry? entry = FindEntryInPacks(questTag+"/q");
+
+            if (entry == null) return null;
+
+            return await QuestSerializer.DeserializeAsync<Quest>(entry.Open());
         }
 
         public bool TryGetQuestStageImmediate(string questTag, int stageId, [NotNullWhen(true)] out QuestStage? stage)
         {
             stage = null;
-
-            var pack = FindPack(questTag);
-
-            if (pack == null) return false;
-
-            string stagePath = $"{questTag}/{stageId}";
-
-            var entry = pack.GetEntry(stagePath);
+         
+            ZipArchiveEntry? entry = FindEntryInPacks($"{questTag}/{stageId}");
 
             if (entry == null) return false;
 
-            stage = QuestStage.Deserialize(entry.Open());
+            stage = QuestSerializer.Deserialize<QuestStage>(entry.Open());
 
             return stage != null;
+        }
+
+        public async Task<QuestStage?> TryGetQuestStageAsync(string questTag, int stageId)
+        {
+            ZipArchiveEntry? entry = FindEntryInPacks($"{questTag}/{stageId}");
+
+            if (entry == null) return null;
+
+            return await QuestSerializer.DeserializeAsync<QuestStage>(entry.Open());
         }
     }
 }

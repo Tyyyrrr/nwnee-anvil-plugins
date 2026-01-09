@@ -1,3 +1,4 @@
+using System;
 using QuestSystem.Wrappers;
 using QuestSystem.Wrappers.Objectives;
 
@@ -9,11 +10,24 @@ namespace QuestSystem.Objectives
         public string TargetTag { get; set; } = string.Empty;
         public int SpellID { get; set; } = -1;
 
-        internal override IObjectiveProgress CreateProgressTrack()
+        internal override ObjectiveSpellcastWrapper Wrap() => new(this);
+
+        internal override IObjectiveProgress CreateProgressTrack() => new Progress();
+
+        private sealed class Progress : IObjectiveProgress
         {
-            throw new System.NotImplementedException();
+            private bool _completed = false;
+            public bool IsCompleted => _completed;
+            public event Action<IObjectiveProgress>? OnUpdate;
+            public void Proceed(object? _)
+            {
+                if (_completed == false)
+                {
+                    _completed = true;
+                    OnUpdate?.Invoke(this);
+                }
+            }
         }
 
-        internal override ObjectiveSpellcastWrapper Wrap() => new(this);
     }
 }
