@@ -131,10 +131,12 @@ namespace QuestEditor.QuestPackExplorer
                 RefreshFromModel();
         }
 
-        private void RemoveSelectedQuest(object? _ = null){
+        private void RemoveSelectedQuest(object? questTag){
+            if(questTag is not string str) throw new InvalidOperationException("Invalid command parameter binding");
             if(IsQuestSelected) _explorerService.ApplyChanges(_selectedQuestTag!);
-            if(_explorerService.RemoveQuest(SelectedQuestTag))
+            if(_explorerService.RemoveQuest(str))
                 RefreshFromModel();
+            else Console.WriteLine("Failed to remove quest " + str);
         }
 
         public ICommand CreatePackFileCommand { get; }

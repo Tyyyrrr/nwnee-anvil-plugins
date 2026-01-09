@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Windows.Input;
 using System.Windows.Media;
 using QuestEditor.ObjectiveBox;
-using QuestEditor.PropertyList;
 using QuestEditor.QuestCanvas;
 using QuestEditor.RewardBox;
 using QuestEditor.Shared;
@@ -39,6 +38,7 @@ namespace QuestEditor.StageNode
             var stage = _model;
             var objectives = Objectives.Select(o=>o.GetQuestObjective()).Where(o=>o!=null).ToArray();
             stage.Objectives = objectives!;
+            stage.ShowInJournal = ShowInJournal;
             stage.Reward = Reward.GetQuestStageReward() ?? new();//Reward.GetT<QuestStageReward>() ?? new();
             Console.WriteLine($"Got quest stage out from viewmodel. ID: {stage.ID}, objectives count: {stage.Objectives.Length}");
             return stage;
@@ -55,6 +55,22 @@ namespace QuestEditor.StageNode
                     _journalEntry = value;
                     _model.JournalEntry = value;
                     OnPropertyChanged(nameof(JournalEntry));
+                }
+            }
+        }
+
+        private bool _showInJournal;
+        public bool ShowInJournal
+        {
+            get=>_showInJournal;
+            set
+            {
+                if(_showInJournal != value)
+                {
+                    _showInJournal = value;
+                    _model.ShowInJournal = value;
+                    if(!value) JournalEntryExpanded = false;
+                    OnPropertyChanged(nameof(ShowInJournal));
                 }
             }
         }
@@ -151,6 +167,8 @@ namespace QuestEditor.StageNode
             NextStageID = _model.NextStageID.ToString();
 
             Objectives = new(_model.Objectives.Select(o=>new ObjectiveBoxViewModel(o)));
+            
+            ShowInJournal = _model.ShowInJournal;
         }
 
         void NewObjective(object? _)

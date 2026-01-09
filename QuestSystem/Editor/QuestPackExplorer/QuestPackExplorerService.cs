@@ -123,7 +123,7 @@ public sealed class QuestPackExplorerService
         if(EmptyState || QuestTags.Contains(questTag))
             return false;
 
-        var json = Quest.Serialize(new(){Tag = questTag});
+        var json = QuestSerializer.Serialize(new Quest(){Tag = questTag});
 
         _questPack!.Dispose();
         var qp = QuestPack.OpenWrite(_temporaryQuestPackFile!);
@@ -148,7 +148,8 @@ public sealed class QuestPackExplorerService
         _questPack!.Dispose();
         var qp = QuestPack.OpenWrite(_temporaryQuestPackFile!);
 
-        var entriesToDelete = qp.Entries.Where(e=>e.FullName.StartsWith(questTag, StringComparison.OrdinalIgnoreCase)).ToList();
+        string questPath = questTag+"/";
+        var entriesToDelete = qp.Entries.Where(e=>e.FullName.StartsWith(questPath, StringComparison.OrdinalIgnoreCase)).ToList();
         
         foreach(var entry in entriesToDelete) entry.Delete();
 
@@ -186,7 +187,7 @@ public sealed class QuestPackExplorerService
 
             if (entry.FullName.EndsWith("/q"))
             {
-                quest = Quest.Deserialize(json);
+                quest = QuestSerializer.Deserialize<Quest>(json);
 
                 if(quest == null)
                 {
@@ -205,7 +206,7 @@ public sealed class QuestPackExplorerService
                 continue;
             }
 
-            var stage = QuestStage.Deserialize(json);
+            var stage = QuestSerializer.Deserialize<QuestStage>(json);
             if(stage == null)
             {
                 Console.WriteLine("Failed to deserialize stage no."+entry.FullName[^1]);

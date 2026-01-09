@@ -28,8 +28,10 @@
     <Border BorderThickness="4" Background="LightBlue" BorderBrush="DarkBlue" CornerRadius="7">
     <StackPanel Background="DimGray">
         <Label Content="{Binding StageIDLabelDisplay}"/>
-
-        <Expander Header="Journal" IsExpanded="{Binding JournalEntryExpanded}" ToolTip="Text shown above list of objectives in the player's journal.">
+        
+        <CheckBox IsChecked="{Binding ShowInJournal, Mode=TwoWay}" Content="Show in journal" />
+        
+        <Expander Header="Journal" IsEnabled="{Binding ShowInJournal, Mode=OneWay}" IsExpanded="{Binding JournalEntryExpanded}" ToolTip="Text shown above list of objectives in the player's journal.">
             <TextBox
                 MinWidth="50"
                 Text="{Binding JournalEntry, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
