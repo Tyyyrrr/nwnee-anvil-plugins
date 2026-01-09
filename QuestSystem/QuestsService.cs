@@ -148,12 +148,19 @@ namespace QuestSystem
 
             bool validParams = true;
             if (TryParseParameters(data.ScriptParams["CompleteQuest"], out var parsedCompleteQuestParams)
+            & TryParseParameters(data.ScriptParams["CompleteStage"], out var parsedCompleteStageParams)
             & TryParseParameters(data.ScriptParams["ClearQuest"], out var parsedClearQuestParams)
             & TryParseParameters(data.ScriptParams["GiveQuest"], out var parsedGiveQuestParams))
             {
                 if (parsedCompleteQuestParams != null && parsedCompleteQuestParams.Values.Any(arr => arr.Length == 0))
                 {
                     _log.Error("\'CompleteQuest\' action must take at least one stage ID as parameter.");
+                    validParams = false;
+                }
+
+                if(parsedCompleteStageParams != null && parsedCompleteStageParams.Values.Any(arr => arr.Length == 0))
+                {
+                    _log.Error("\'CompleteQuestStage\' action must take at least one stage ID as parameter");
                     validParams = false;
                 }
 
@@ -169,7 +176,6 @@ namespace QuestSystem
                     _log.Error("\'GiveQuest\' action must take exactly one stage ID as parameter.");
                     validParams = false;
                 }
-
             }
 
             if (!validParams)
@@ -207,6 +213,27 @@ namespace QuestSystem
             {
                 foreach (var kvp in parsedGiveQuestParams)
                     _ = SetQuestStage(player, kvp.Key, kvp.Value[0]);
+            }
+
+            if(parsedCompleteStageParams != null)
+            {
+                foreach(var kvp in parsedCompleteStageParams)
+                {
+                    var quest = _questMan.GetCachedQuest(kvp.Key);
+                    if(quest == null) continue;
+
+                    foreach(var id in kvp.Value)
+                    {
+                        var stage = quest.GetStage(id);
+                        if(stage != null && stage.IsTracking(player))
+                        {
+                            if(!stage.Complete(player))
+                                return ScriptHandleResult.NotHandled;
+
+                            else break;
+                        }
+                    }
+                }
             }
 
             return ScriptHandleResult.Handled;
