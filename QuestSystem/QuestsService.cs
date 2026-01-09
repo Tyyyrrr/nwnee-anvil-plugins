@@ -326,64 +326,81 @@ namespace QuestSystem
 
             return ScriptHandleResult.True;
         }
-
         private static bool TryParseParameters(string? parameters, out Dictionary<string, int[]>? parsedParameters)
         {
             parsedParameters = null;
 
-            if (string.IsNullOrEmpty(parameters)) return true;
-
+            if (string.IsNullOrEmpty(parameters))
+                return true;
 
             var dict = new Dictionary<string, int[]>();
-
             bool failed = false;
 
             var args = parameters.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var arg in args)
             {
+                if (failed) break;
+
                 var split = arg.Split(':', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
                 if (split.Length == 0 || split.Length > 2)
                 {
                     _log.Warn($"Invalid format: \"{arg}\"");
                     failed = true;
-                    continue;
+                    break;
                 }
 
                 string questTag = split[0];
 
-                if (!string.IsNullOrWhiteSpace(questTag))
+                if (string.IsNullOrWhiteSpace(questTag))
                 {
-                    _log.Warn($"Invalid quest tag \'{split[0]}\'");
+                    _log.Warn($"Invalid quest tag '{split[0]}'");
+                    failed = true;
+                    break;
                 }
-                else if (split.Length == 1 && !failed)
+
+                if (split.Length == 1)
                 {
-                    dict.Add(questTag, Array.Empty<int>());
-                }
-                else if (split.Length == 2)
-                {
-                    var ids = split[1].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                    var arr = new int[ids.Length];
-                    for (int i = 0; i < arr.Length; i++)
+                    if (!dict.TryAdd(questTag, Array.Empty<int>()))
                     {
-                        if (!int.TryParse(ids[i], out arr[i]))
-                        {
-                            _log.Warn($"Invalid stage ID: \'{ids[i]}\'");
-                            failed = true;
-                            break;
-                        }
+                        _log.Warn($"Duplicate quest tag '{questTag}'");
+                        failed = true;
+                        break;
                     }
 
-                    if (!failed) dict.Add(questTag, arr);
+                    continue;
+                }
+
+                // split.Length == 2
+                var ids = split[1].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                var arr = new int[ids.Length];
+
+                for (int i = 0; i < arr.Length; i++)
+                {
+                    if (!int.TryParse(ids[i], out arr[i]))
+                    {
+                        _log.Warn($"Invalid stage ID: '{ids[i]}'");
+                        failed = true;
+                        break;
+                    }
+                }
+
+                if(failed) break;
+
+                if (!dict.TryAdd(questTag, arr))
+                {
+                    _log.Warn($"Duplicate quest tag '{questTag}'");
+                    failed = true;
+                    break;
                 }
             }
 
-            failed = !(dict.Count > 0 && !failed);
+            if (failed || dict.Count == 0)
+                return false;
 
-            if (!failed) parsedParameters = dict;
-
-            return !failed;
+            parsedParameters = dict;
+            return true;
         }
 
         private void OnPlayerAdvanceInQuest(NwPlayer player, string questTag, int nextStageId)
