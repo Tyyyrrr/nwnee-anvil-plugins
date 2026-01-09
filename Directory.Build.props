@@ -1,5 +1,5 @@
 <Project>
-  <PropertyGroup Condition="'$(IsTool)' != 'true'">
+  <PropertyGroup Condition="'$(NotAPlugin)' != 'true'">
     <!-- Change this to your desired output directory -->
     <SharedOutputDirectory>/path-to-anvil/Plugins</SharedOutputDirectory>
 
