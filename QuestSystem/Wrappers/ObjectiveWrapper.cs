@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Anvil.API;
+using Anvil.Services;
 using NLog;
 
 using QuestSystem.Objectives;
@@ -10,6 +11,17 @@ namespace QuestSystem.Wrappers
 {
     internal abstract partial class ObjectiveWrapper
     {
+        private static EventService? _eventService = null;
+        public static EventService EventService
+        {
+            protected get => _eventService ?? throw new InvalidOperationException("Event service instance not provided yet.");
+            set
+            {
+                if(_eventService != null) throw new InvalidProgramException("Event service instance already provided.");
+                _eventService = value;
+            }
+        }
+
         protected static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         protected readonly Objective _baseObjective;
@@ -47,40 +59,40 @@ namespace QuestSystem.Wrappers
                 return;
             }
 
-            _log.Warn($"Track progress for player {player.PlayerName}");
+            _log.Warn($" < {GetType().Name} >  Track progress for player {player.PlayerName}");
 
             if (IsTracking(player))
             {
-                _log.Error("Player is already tracked!");
+                _log.Error($" < {GetType().Name} >  Player is already tracked!");
                 return;
             }
 
             if (shouldSubscribe)
             {
-                _log.Warn("Subscribing...");
+                _log.Warn($" < {GetType().Name} >  Subscribing...");
                 Subscribe();
             }
 
             var progress = Objective.CreateProgressTrack();
-            progress.OnUpdate += OnProgressUpdate;
             _trackedProgress.Add(player, progress);
+            progress.OnUpdate += OnProgressUpdate;
         }
 
         public void StopTrackingProgress()
         {
-            _log.Warn("Stop tracking progress for all players");
+            _log.Warn($" < {GetType().Name} > Stop tracking progress for all players");
             foreach (var kvp in _trackedProgress)
             {
                 kvp.Value.OnUpdate -= OnProgressUpdate;
             }
             _trackedProgress.Clear();
 
-            _log.Warn("Unsubscribing...");
+            _log.Warn($" < {GetType().Name} >  Unsubscribing...");
             Unsubscribe();
         }
         public void StopTrackingProgress(NwPlayer player)
         {
-            _log.Warn($"Stop tracking progress for player {(player.IsValid ? player.PlayerName : "INVALID PLAYER")}");
+            _log.Warn($" < {GetType().Name} > Stop tracking progress for player {(player.IsValid ? player.PlayerName : "<INVALID>")}");
             if (_trackedProgress.TryGetValue(player, out var progress))
             {
                 progress.OnUpdate -= OnProgressUpdate;
@@ -89,7 +101,7 @@ namespace QuestSystem.Wrappers
 
             if (!IsActive)
             {
-                _log.Warn("Unsubscribing...");
+                _log.Warn($" < {GetType().Name} > Unsubscribing...");
                 Unsubscribe();
             }
         }
@@ -106,7 +118,7 @@ namespace QuestSystem.Wrappers
 
         private void OnProgressUpdate(IObjectiveProgress progress)
         {
-            _log.Info(" - - on progress update --");
+            _log.Info($" < {GetType().Name} >   - - on progress update --");
 
             var player = GetTrackedPlayer(progress) ?? throw new InvalidOperationException("Progress object is not owned by this objective.");
 

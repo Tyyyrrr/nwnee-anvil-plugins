@@ -1,6 +1,9 @@
+using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Anvil.API;
 using Anvil.API.Events;
+using Anvil.Services;
 using QuestSystem.Objectives;
 
 namespace QuestSystem.Wrappers.Objectives
@@ -14,8 +17,6 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Subscribe()
         {
-            NLog.LogManager.GetCurrentClassLogger().Info("Fake subscribe...");
-            return;
             switch (Objective.Interaction)
             {
                 case ObjectiveInteract.InteractionType.PlaceableUse:
@@ -35,8 +36,6 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Unsubscribe()
         {
-            NLog.LogManager.GetCurrentClassLogger().Info("Fake unsubscribe...");
-            return;
             switch (Objective.Interaction)
             {
                 case ObjectiveInteract.InteractionType.PlaceableUse:
@@ -192,22 +191,50 @@ namespace QuestSystem.Wrappers.Objectives
 
         void OnItemActivated(ModuleEvents.OnActivateItem data)
         {
-
+            
         }
 
-        private void SubscribeObjectExamine() => NwModule.Instance.OnExamineObject += OnObjectExamined;
-        private void UnsubscribeObjectExamine() => NwModule.Instance.OnExamineObject -= OnObjectExamined;
+        private void SubscribeObjectExamine()
+        {
+            EventService.SubscribeAll<OnExamineObject,OnExamineObject.Factory>(OnObjectExamined, EventCallbackType.After);
+        }
+        private void UnsubscribeObjectExamine()
+        {
+            EventService.UnsubscribeAll<OnExamineObject,OnExamineObject.Factory>(OnObjectExamined, EventCallbackType.After);
+        }
+     
 
         void OnObjectExamined(OnExamineObject data)
         {
+            _log.Info(" > OnObjectExamined...");
+
+            var player = data.ExaminedBy;
+
+            if(player == null || !player.IsValid)
+            {
+                _log.Error("invalid player");
+                return;
+            }
+
             var obj = data.ExaminedObject;
 
+            if(!obj.IsValid){
+                _log.Error("examined invalid object");
+                return;
+            }
+
             var area = obj.Area;
+
+            if(area != null && !area.IsValid){
+                _log.Error("examined object not in area");
+                return;
+            }
 
             if (Objective.AreaTags.Length > 0 && (area == null || !Objective.AreaTags.Contains(area.Tag)))
                 return;
 
-            var player = data.ExaminedBy;
+                
+            _log.Info(" > Area valid...");
 
             if ((Objective.Tag == string.Empty && Objective.ResRef != string.Empty && Objective.ResRef == obj.ResRef)
                 || (Objective.ResRef == string.Empty && Objective.Tag != string.Empty && Objective.Tag == obj.Tag)
@@ -218,7 +245,13 @@ namespace QuestSystem.Wrappers.Objectives
                     foreach (var member in player.PartyMembers)
                     {
                         var controlledCreature = player.ControlledCreature;
-                        if (controlledCreature == null || controlledCreature.Area != area) continue;
+
+                        if (controlledCreature == null 
+                            || !controlledCreature.IsValid 
+                            || controlledCreature.Area == null
+                            || controlledCreature.Area != area) 
+                            continue;
+
                         GetTrackedProgress(member)?.Proceed();
                     }
                 }

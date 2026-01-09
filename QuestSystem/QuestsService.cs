@@ -26,8 +26,10 @@ namespace QuestSystem
         private readonly QuestPackManager _questPackMan;
         private readonly QuestManager _questMan;
 
-        public QuestsService(MySQLService mySQL, CharactersRegistryService charactersRegistry, PluginStorageService pluginStorage)
+        public QuestsService(MySQLService mySQL, CharactersRegistryService charactersRegistry, PluginStorageService pluginStorage, EventService events)
         {
+            ObjectiveWrapper.EventService = events;
+
             _questPackMan = new(pluginStorage.GetPluginStoragePath(typeof(QuestsService).Assembly));
 
             _mySQL = mySQL;
@@ -119,7 +121,7 @@ namespace QuestSystem
             }
 
             stage.TrackProgress(player);
-            _ = stage.ScheduleJournalUpdate(player);
+            stage.ScheduleJournalUpdate(player);
 
             return true;
         }
@@ -196,7 +198,6 @@ namespace QuestSystem
                         if (stage != null && stage.IsTracking(player))
                         {
                             _ = CompleteQuestOnStage(player, kvp.Key, id);
-                            _log.Warn($"Completed quest {quest.Tag} on stage {stage.ID}");
                             break;
                         }
                     }
@@ -430,21 +431,27 @@ namespace QuestSystem
 
         private void OnPlayerAdvanceInQuest(NwPlayer player, string questTag, int nextStageId)
         {
-            if (!player.IsValid)
-            {
-                _log.Error("Player invalidated");
-            }
-
+            _log.Info($"Advancing player to stage {nextStageId} of quest {questTag}");
             if(!SetQuestStage(player, questTag, nextStageId))
                 _log.Error($"Failed to advance player to stage {nextStageId} of quest {questTag}");
         }
+
         private bool SetQuestStage(NwPlayer player, string questTag, int stageId)
         {
+            if (!player.IsValid)
+            {
+                _log.Error("Player is not valid");
+                return false;
+            }
+
+            _log.Info($"Setting player {player.PlayerName} on stage {stageId} of quest {questTag}");
+
             QuestWrapper? quest = _questMan.GetCachedQuest(questTag);
 
             bool shouldRegisterQuest = quest == null;
             if (quest == null)
             {
+                _log.Info("Quest is not cached. Caching...");
                 if (!_questPackMan.TryGetQuestImmediate(questTag, out var q))
                     return false;
 
@@ -455,6 +462,7 @@ namespace QuestSystem
             bool shouldRegisterStage = stage == null;
             if (stage == null)
             {
+                _log.Info("Stage is not cached. Caching...");
                 if (!_questPackMan.TryGetQuestStageImmediate(quest.Tag, stageId, out var s))
                     return false;
 
@@ -468,8 +476,9 @@ namespace QuestSystem
             if (shouldRegisterStage && !quest.RegisterStage(stage))
                 return false;
 
+
             stage.TrackProgress(player);
-            _ = stage.ScheduleJournalUpdate(player);
+            stage.ScheduleJournalUpdate(player);
             // todo: schedule lazy database update
 
             return true;
@@ -511,6 +520,7 @@ namespace QuestSystem
                 || !player.ControlledCreature.IsValid
                 )
                 return false;
+            
 
 
             //stage.Reward.GrantReward(player.ControlledCreature!);
@@ -518,32 +528,9 @@ namespace QuestSystem
             // grant reward
 
             // save to database
-
+            _questMan.MarkQuestAsCompleted(player,questTag,stageId);
             return true;
         }
-
-
-        // public async ValueTask GrantReward(NwCreature creature)
-        // {
-        //     creature.Xp += Math.Max(0, Xp);
-
-        //     creature.GiveGold(Math.Max(0, Gold));
-
-        //     creature.GoodEvilValue = Math.Clamp(creature.GoodEvilValue + GoodEvilChange, 0, 100);
-        //     creature.LawChaosValue = Math.Clamp(creature.LawChaosValue + LawChaosChange, 0, 100);
-
-        //     if (Items.Count == 0) return;
-
-        //     foreach (var kvp in Items)
-        //     {
-        //         _ = await NwItem.Create(kvp.Key, creature);
-        //     }
-        // }
-
-
-
-
-
 
 
         /// <summary>
@@ -587,9 +574,7 @@ namespace QuestSystem
             return stage != null && stage.IsTracking(player);
         }
 
-        /// <summary>Check if the player has completed a quest with specified tag, and output the stage ID if so.</summary>
         /// <param name="stageId">Stage on which the quest was completed, or -1 if quest was not completed by the player</param>
-        /// <returns>True if the player has completed the quest</returns>
         public bool HasCompletedQuest(NwPlayer player, string questTag, out int stageId) => _questMan.HasCompletedQuest(player, questTag, out stageId);
 
         public void Dispose()

@@ -39,10 +39,12 @@ namespace QuestSystem.Wrappers
 
         public bool Complete(NwPlayer player)
         {
+            _log.Info("Manually completing the stage");
+
             if(!IsTracking(player)) 
                 return false;
 
-            if(_objectives.Any(o=>o.Objective.NextStageID >= 0 && o.Objective.NextStageID != _questStage.NextStageID))
+            if(_objectives.Any(o=>o.Objective.NextStageID >= 0))
             {
                 _log.Error("Stage with objectives can not be manually completed.");
                 return false;
@@ -68,8 +70,8 @@ namespace QuestSystem.Wrappers
             }
             else if (_objectives.Any(o => !o.IsCompleted(player)))
             {
+                ScheduleJournalUpdate(player);
                 wrapper.StopTrackingProgress(player);
-                _ = ScheduleJournalUpdate(player);
                 return;
             }
             else
@@ -78,6 +80,7 @@ namespace QuestSystem.Wrappers
                 nextStageId = this._questStage.NextStageID;
             }
 
+            _log.Info("Automatically completing the stage");
             StopTracking(player);
             reward.GrantReward(player);
             Completed?.Invoke(this, player, nextStageId);
@@ -89,14 +92,11 @@ namespace QuestSystem.Wrappers
 
             if (!player.IsValid)
             {
-                _log.Error("Player invalidated");
-                if(_trackedPlayers.Remove(player))
-                    foreach(var obj in _objectives)
-                        obj.StopTrackingProgress(player);
+                StopTracking(player);
                 return;
             }
 
-            _log.Warn($"Tracking progress for player {player.PlayerName} on {Quest?.Tag ?? " -- NO QUEST -- "}/{ID}");
+            _log.Warn($"Tracking stage progress for player {player.PlayerName} on {Quest?.Tag ?? " -- NO QUEST -- "}/{ID}");
 
             if(_trackedPlayers.Add(player))
                 foreach (var objective in _objectives)
@@ -112,23 +112,48 @@ namespace QuestSystem.Wrappers
                 {
                     objective.StopTrackingProgress(player);
                 }
+            
+            _log.Warn($"Stopped tracking stage progress for player {player.PlayerName} on {Quest?.Tag ?? " -- NO QUEST -- "}/{ID}");
         }
 
         internal bool IsTracking(NwPlayer player) => _trackedPlayers.Contains(player);
         internal bool IsActive => _trackedPlayers.Count > 0;
 
         private readonly HashSet<NwPlayer> _scheduledJournalUpdates = new();
-        internal async Task ScheduleJournalUpdate(NwPlayer player)
+
+        internal void ScheduleJournalUpdate(NwPlayer player)
         {
-            if (!_scheduledJournalUpdates.Add(player)) return;
+            if(!_scheduledJournalUpdates.Add(player)) return;
 
-            _log.Warn("Journal update scheduled!");
+            _log.Info("Journal update scheduled.");
 
+            _ = NwTask.Run(async ()=>
+            {
+                try
+                {
+                    if(!await UpdateJournalAsync(player))
+                    {
+                        _log.Warn("Failed to update journal");
+                    }
+                }catch(Exception ex)
+                {
+                    _log.Error("Exception: "+ex.Message+"\n"+ex.StackTrace);
+                }
+            });
+        }
+
+        private async Task<bool> UpdateJournalAsync(NwPlayer player)
+        {
+            _log.Info("Updating journal async...");
             await NwTask.Delay(TimeSpan.FromSeconds(0.6));
-            await NwTask.SwitchToMainThread();
+            _log.Info("... delay passed...");
 
-            if (!_scheduledJournalUpdates.Remove(player)) return;
-            else if (player.IsValid && IsTracking(player)) UpdateJournal(player);
+            if(_scheduledJournalUpdates.Remove(player) && player.IsValid && IsTracking(player)){
+                UpdateJournal(player);
+                return true;
+            }
+
+            return false;
         }
 
         private void UpdateJournal(NwPlayer player)
@@ -136,6 +161,12 @@ namespace QuestSystem.Wrappers
             ThrowIfQuestIsNull();
 
             _log.Warn("Updating journal...");
+            
+            if (!player.IsValid)
+            {
+                _log.Error("Invalid player!");
+                return;
+            }
 
             string[] parts = new string[1 + _objectives.Length];
             parts[0] = _questStage.JournalEntry;
@@ -149,6 +180,8 @@ namespace QuestSystem.Wrappers
             string str = string.Join("\n", parts);
 
             var entry = player.GetJournalEntry(Quest!.Tag);
+
+
             if (entry == null)
             {
                 entry = new();
@@ -159,14 +192,14 @@ namespace QuestSystem.Wrappers
                 entry.Text = str;
                 entry.Updated = true;
 
-                player.AddJournalQuestEntry(Quest!.Tag, 0, false, true); // test
+                player.AddCustomJournalEntry(entry);
             }
             else
             {
                 entry.Text = str;
                 entry.QuestCompleted = allCompleted;
                 entry.Updated = true;
-                player.AddJournalQuestEntry(entry.QuestTag, 0, false, true); // test
+                player.AddCustomJournalEntry(entry);
             }
         }
     }
