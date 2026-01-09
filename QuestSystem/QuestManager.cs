@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Anvil.API;
+using NLog;
 using QuestSystem.Wrappers;
 
 namespace QuestSystem
 {
     internal sealed class QuestManager
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
         private readonly Dictionary<string, QuestWrapper> _loadedQuests = new();
         private readonly Dictionary<NwPlayer, Dictionary<string, int>> _completedQuests = new();
 
@@ -19,8 +22,10 @@ namespace QuestSystem
         /// <returns>False if the object was already cached</returns>
         public bool RegisterQuest(QuestWrapper quest)
         {
+            _log.Info($"Registering quest \'{quest.Name}\' ({quest.Tag})");
             var res = _loadedQuests.TryAdd(quest.Tag, quest);
             if (res) quest.MovingToTheNextStage += OnQuestMovingToTheNextStage;
+            else _log.Error("Failed to register quest.");
             return res;
         }
 
@@ -30,8 +35,10 @@ namespace QuestSystem
         /// <returns>False if the object was not in the cache</returns>
         public bool UnregisterQuest(QuestWrapper quest)
         {
+            _log.Info($"Unregistering quest \'{quest.Name}\' ({quest.Tag})");
             var res = _loadedQuests.Remove(quest.Tag);
             if(res) quest.MovingToTheNextStage -= OnQuestMovingToTheNextStage;
+            else _log.Error("Failed to unregister quest.");
             return res;
         }
 
@@ -44,6 +51,7 @@ namespace QuestSystem
 
             if(nextStageId < 0) return;
 
+            _log.Info($"Quest {tag} moving to the next stage {nextStageId}");
             QuestMovingToTheNextStage?.Invoke(player, tag, nextStageId);
         }
 
@@ -57,6 +65,8 @@ namespace QuestSystem
         /// </summary>
         public void ClearPlayer(NwPlayer player)
         {
+            _log.Warn($"Clearing player {(player.IsValid ? player.PlayerName : "<INVALID>")}");
+
             List<QuestWrapper> questsToRemove = new();
 
             foreach (var quest in _loadedQuests.Values)
@@ -87,6 +97,8 @@ namespace QuestSystem
 
         public void MarkQuestAsCompleted(NwPlayer player, string questTag, int stageId)
         {
+            _log.Info($"Marking quest {questTag} as completed on stage {stageId} by player {(player.IsValid ? player.PlayerName : "<INVALID>")}");
+
             if (!player.IsValid)
             {
                 ClearPlayer(player);
@@ -103,9 +115,8 @@ namespace QuestSystem
             {
                 if (stageId != id)
                 {
-                    NLog.LogManager.GetCurrentClassLogger()
-                        .Warn($@"Marking quest \'{questTag}\' as completed on stage {stageId},
-                        but player {player.PlayerName} has already completed this quest on stage {id}. Overriding!");
+                    _log.Warn($@"Marking quest \'{questTag}\' as completed on stage {stageId},
+                    but player {player.PlayerName} has already completed this quest on stage {id}. Overriding!");
 
                     quests[questTag] = stageId;
                 }
