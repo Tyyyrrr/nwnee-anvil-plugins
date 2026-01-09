@@ -276,6 +276,12 @@ namespace QuestSystem
 
                 foreach (var kvp in parsedIsOnQuestParams)
                 {
+                    string str = kvp.Value.Length == 0 ?
+                        $"Checking if player is on quest {kvp.Key}" :
+                        $"Checking if player is on any stage from {string.Join(',',kvp.Value)} of quest {kvp.Key}";
+
+                    _log.Info(str);
+
                     if (IsOnQuest(player, kvp.Key, out var stageId)
                         && (kvp.Value.Length == 0 || kvp.Value.Contains(stageId)))
                     {
@@ -289,8 +295,15 @@ namespace QuestSystem
 
             if (parsedIsNotOnQuestParams != null)
             {
+                
                 foreach (var kvp in parsedIsNotOnQuestParams)
-                {
+                {                    
+                    string str = kvp.Value.Length == 0 ?
+                        $"Checking if player is NOT on quest {kvp.Key}" :
+                        $"Checking if player is NOT on any stage from {string.Join(',',kvp.Value)} of quest {kvp.Key}";
+
+                    _log.Info(str);
+
                     if (IsOnQuest(player, kvp.Key, out var stageId)
                         && (kvp.Value.Length == 0 || kvp.Value.Contains(stageId)))
                         return ScriptHandleResult.False;
@@ -302,7 +315,13 @@ namespace QuestSystem
                 bool completed = false;
 
                 foreach (var kvp in parsedCompletedQuestParams)
-                {
+                {                    
+                    string str = kvp.Value.Length == 0 ?
+                        $"Checking if player has completed quest {kvp.Key}" :
+                        $"Checking if player has completed quest {kvp.Key} on any stage from {string.Join(',',kvp.Value)}";
+
+                    _log.Info(str);
+
                     if (HasCompletedQuest(player, kvp.Key, out var stageId)
                         && (kvp.Value.Length == 0 || kvp.Value.Contains(stageId)))
                     {
@@ -318,6 +337,12 @@ namespace QuestSystem
             {
                 foreach (var kvp in parsedNotCompletedQuestParams)
                 {
+                    string str = kvp.Value.Length == 0 ?
+                        $"Checking if player has NOT completed quest {kvp.Key}" :
+                        $"Checking if player has NOT completed quest {kvp.Key} on any stage from {string.Join(',',kvp.Value)}";
+
+                    _log.Info(str);
+
                     if (HasCompletedQuest(player, kvp.Key, out var stageId)
                         && (kvp.Value.Length == 0 || kvp.Value.Contains(stageId)))
                         return ScriptHandleResult.False;
@@ -527,16 +552,28 @@ namespace QuestSystem
         /// <param name="stageId">Stage of the quest the player is currently on, -1 if not on the quest.</param>
         public bool IsOnQuest(NwPlayer player, string questTag, out int stageId)
         {
+            string str = "Checking IsOnQuest " + questTag;
             stageId = -1;
             var quest = _questMan.GetCachedQuest(questTag);
-            if (quest == null) return false;
+            if (quest == null){
+                str += "\n... quest is not cached. Player is not on quest!";
+                _log.Info(str);
+                return false;
+            }
+            str += "\n...quest is cached";
             var qs = quest.Stages.FirstOrDefault(s => s.IsTracking(player));
             if (qs != null)
             {
+                str += "\n...stage is cached. Player is on quest!";
+                _log.Info(str);
                 stageId = qs.ID;
                 return true;
             }
-            return false;
+            else{
+                str += "\n...stage is not cached. Player is not on quest!";
+                _log.Info(str);
+                return false;
+            }
         }
 
         /// <summary>
