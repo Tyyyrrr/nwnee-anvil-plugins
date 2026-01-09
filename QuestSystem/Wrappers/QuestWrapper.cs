@@ -1,7 +1,9 @@
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Anvil.API;
 
 namespace QuestSystem.Wrappers
 {
@@ -18,7 +20,9 @@ namespace QuestSystem.Wrappers
         }
 
         private readonly List<QuestStageWrapper> _stages = new();
-        internal IReadOnlyList<QuestStageWrapper> Stages => _stages;
+        public IReadOnlyList<QuestStageWrapper> Stages => _stages;
+
+        public event Action<QuestWrapper, NwPlayer, int>? MovingToTheNextStage;
 
         /// <summary>
         /// Store the stage in RAM memory
@@ -46,7 +50,16 @@ namespace QuestSystem.Wrappers
 
             _stages.Insert(index, stage);
 
+            stage.Completed += OnStageCompleted;
+
             return true;
+        }
+
+        private void OnStageCompleted(QuestStageWrapper wrapper, NwPlayer player, int nextStageId)
+        {
+            if (!wrapper.IsActive && !UnregisterStage(wrapper)) throw new InvalidOperationException("Completed stage is not registered");
+
+            MovingToTheNextStage?.Invoke(this, player, nextStageId);
         }
 
         /// <summary>
@@ -56,6 +69,9 @@ namespace QuestSystem.Wrappers
         internal bool UnregisterStage(QuestStageWrapper stage)
         {
             stage.Quest = null;
+
+            stage.Completed -= OnStageCompleted;
+
             return _stages.Remove(stage);
         }
 

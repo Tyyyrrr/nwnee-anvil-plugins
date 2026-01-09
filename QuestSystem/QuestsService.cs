@@ -28,8 +28,6 @@ namespace QuestSystem
 
         public QuestsService(MySQLService mySQL, CharactersRegistryService charactersRegistry, PluginStorageService pluginStorage)
         {
-            string questPacksPath = pluginStorage.GetPluginStoragePath(typeof(QuestsService).Assembly);
-
             _questPackMan = new(pluginStorage.GetPluginStoragePath(typeof(QuestsService).Assembly));
 
             _mySQL = mySQL;
@@ -39,11 +37,12 @@ namespace QuestSystem
             NwModule.Instance.OnClientLeave += OnClientLeave;
 
             _questMan = new();
+            _questMan.QuestMovingToTheNextStage += OnPlayerAdvanceInQuest;
         }
 
         void OnClientEnter(ModuleEvents.OnClientEnter data)
         {
-            _ = LoadQuestsAsync(data.Player);
+            //_ = LoadQuestsAsync(data.Player);
         }
 
         async Task LoadQuestsAsync(NwPlayer player)
@@ -52,23 +51,12 @@ namespace QuestSystem
 
             if (!_charactersRegistry.KickPlayerIfCharacterNotRegistered(player, out var pc))
                 return;
-                
-            if(IsOnQuest(player,"test_quest_1", out var stageId))
-            {
-                await ResumeNotCompletedQuestTask(player,"test_quest_1",stageId);
-            }
-            else if(HasCompletedQuest(player,"test_quest_1",out stageId))
-            {
-                _questMan.MarkQuestAsCompleted(player, "test_quest_1", stageId);
-            }
 
-            return;
-
-            _mySQL.QueryBuilder.Select("", ",,,")
-                .Where(ServerData.DataProviders.PlayerSQLMap.UUID, pc.UUID.ToUUIDString());
+            throw new NotImplementedException();
+            // _mySQL.QueryBuilder.Select("", ",,,")
+            //     .Where(ServerData.DataProviders.PlayerSQLMap.UUID, pc.UUID.ToUUIDString());
 
             List<Task<bool>> resumeNotCompletedQuestsTasks = new();
-            List<Task<bool>> writeCompletedQuestsTasks = new();
 
             using (var result = _mySQL.ExecuteQuery())
             {
@@ -87,7 +75,6 @@ namespace QuestSystem
             }
 
             await NwTask.WhenAll(resumeNotCompletedQuestsTasks);
-            await NwTask.WhenAll(writeCompletedQuestsTasks);
         }
 
         async Task<bool> ResumeNotCompletedQuestTask(NwPlayer player, string questTag, int stageId)
@@ -96,8 +83,8 @@ namespace QuestSystem
             bool shouldRegisterQuest = quest == null;
             if (quest == null)
             {
-                if (!_questPackMan.TryGetQuestImmediate(questTag, out var q))
-                    return false;
+                var q = await _questPackMan.TryGetQuestAsync(questTag);
+                if(q == null) return false;
                 quest = new(q);
             }
 
@@ -105,13 +92,22 @@ namespace QuestSystem
             bool shouldRegisterStage = stage == null;
             if (stage == null)
             {
-                if (!_questPackMan.TryGetQuestStageImmediate(quest.Tag, stageId, out var s))
-                    return false;
+                var s = await _questPackMan.TryGetQuestStageAsync(questTag, stageId);
+                if(s == null) return false;
                 stage = new(s);
             }
 
             if (shouldRegisterQuest && !_questMan.RegisterQuest(quest)) return false;
-            if (shouldRegisterStage && !quest.RegisterStage(stage)) return false;
+            if (shouldRegisterStage && !quest.RegisterStage(stage)){
+                if(shouldRegisterQuest) 
+                    _ = _questMan.UnregisterQuest(quest);
+                return false;
+            }
+
+
+            // todo: load progress from db
+
+
 
             await NwTask.SwitchToMainThread();
 
@@ -123,6 +119,7 @@ namespace QuestSystem
             }
 
             stage.TrackProgress(player);
+            _ = stage.ScheduleJournalUpdate(player);
 
             return true;
         }
@@ -193,6 +190,7 @@ namespace QuestSystem
                         if (stage != null && stage.IsTracking(player))
                         {
                             _ = CompleteQuestOnStage(player, kvp.Key, id);
+                            _log.Warn($"Completed quest {quest.Tag} on stage {stage.ID}");
                             break;
                         }
                     }
@@ -361,7 +359,16 @@ namespace QuestSystem
             return !failed;
         }
 
+        private void OnPlayerAdvanceInQuest(NwPlayer player, string questTag, int nextStageId)
+        {
+            if (!player.IsValid)
+            {
+                _log.Error("Player invalidated");
+            }
 
+            if(!SetQuestStage(player, questTag, nextStageId))
+                _log.Error($"Failed to advance player to stage {nextStageId} of quest {questTag}");
+        }
         private bool SetQuestStage(NwPlayer player, string questTag, int stageId)
         {
             QuestWrapper? quest = _questMan.GetCachedQuest(questTag);
@@ -393,7 +400,7 @@ namespace QuestSystem
                 return false;
 
             stage.TrackProgress(player);
-            stage.ScheduleJournalUpdate(player);
+            _ = stage.ScheduleJournalUpdate(player);
             // todo: schedule lazy database update
 
             return true;
@@ -506,6 +513,7 @@ namespace QuestSystem
 
         public void Dispose()
         {
+            _questMan.QuestMovingToTheNextStage -= OnPlayerAdvanceInQuest;
             _questPackMan.Dispose();
         }
     }

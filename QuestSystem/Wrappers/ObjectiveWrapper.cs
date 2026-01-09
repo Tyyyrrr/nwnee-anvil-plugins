@@ -20,7 +20,7 @@ namespace QuestSystem.Wrappers
             Reward = new(objective.Reward);
         }
 
-        public QuestStageWrapper? QuestStage { get; set; } = null;
+        public event Action<ObjectiveWrapper, NwPlayer>? Completed;
 
         public readonly QuestStageRewardWrapper Reward;
 
@@ -107,11 +107,11 @@ namespace QuestSystem.Wrappers
         private void OnProgressUpdate(IObjectiveProgress progress)
         {
             _log.Info(" - - on progress update --");
+
             var player = GetTrackedPlayer(progress) ?? throw new InvalidOperationException("Progress object is not owned by this objective.");
 
-            var stage = QuestStage ?? throw new InvalidOperationException("No parent QuestStage");
-
-            stage.ScheduleJournalUpdate(player);
+            if(IsCompleted(player)) Completed?.Invoke(this, player);
+            
         }
     }
 

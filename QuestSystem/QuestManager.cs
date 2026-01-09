@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Anvil.API;
 using QuestSystem.Wrappers;
 
@@ -9,17 +11,41 @@ namespace QuestSystem
         private readonly Dictionary<string, QuestWrapper> _loadedQuests = new();
         private readonly Dictionary<NwPlayer, Dictionary<string, int>> _completedQuests = new();
 
+        public event Action<NwPlayer, string, int>? QuestMovingToTheNextStage;
+
         /// <summary>
         /// Cache the quest in RAM
         /// </summary>
         /// <returns>False if the object was already cached</returns>
-        public bool RegisterQuest(QuestWrapper quest) => _loadedQuests.TryAdd(quest.Tag, quest);
+        public bool RegisterQuest(QuestWrapper quest)
+        {
+            var res = _loadedQuests.TryAdd(quest.Tag, quest);
+            if (res) quest.MovingToTheNextStage += OnQuestMovingToTheNextStage;
+            return res;
+        }
 
         /// <summary>
         /// Clear the quest from RAM
         /// </summary>
         /// <returns>False if the object was not in the cache</returns>
-        public bool UnregisterQuest(QuestWrapper quest) => _loadedQuests.Remove(quest.Tag);
+        public bool UnregisterQuest(QuestWrapper quest)
+        {
+            var res = _loadedQuests.Remove(quest.Tag);
+            if(res) quest.MovingToTheNextStage -= OnQuestMovingToTheNextStage;
+            return res;
+        }
+
+        private void OnQuestMovingToTheNextStage(QuestWrapper wrapper, NwPlayer player, int nextStageId)
+        {
+            string tag = wrapper.Tag;
+
+            if(wrapper.Stages.Count == 0)
+                UnregisterQuest(wrapper);
+
+            if(nextStageId < 0) return;
+
+            QuestMovingToTheNextStage?.Invoke(player, tag, nextStageId);
+        }
 
         /// <returns>Quest object with specified tag if it is already loaded into memory, null otherwise</returns>
         public QuestWrapper? GetCachedQuest(string tag) => _loadedQuests.TryGetValue(tag, out var quest) ? quest : null;
@@ -79,7 +105,7 @@ namespace QuestSystem
                 {
                     NLog.LogManager.GetCurrentClassLogger()
                         .Warn($@"Marking quest \'{questTag}\' as completed on stage {stageId},
-                        but player {player.PlayerName} already completed this quest on stage {id}. Overriding!");
+                        but player {player.PlayerName} has already completed this quest on stage {id}. Overriding!");
 
                     quests[questTag] = stageId;
                 }
