@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Text.Json.Serialization;
 using QuestSystem.Wrappers;
 
@@ -17,10 +16,6 @@ namespace QuestSystem.Objectives
     [JsonDerivedType(typeof(ObjectiveSpellcast), "$spellcast")]
     public abstract class Objective
     {
-        public static string? Serialize(Objective questStageReward) => QuestSerializer.Serialize(questStageReward);
-        public static Objective? Deserialize(string json) => QuestSerializer.Deserialize<Objective>(json);
-        public static Objective? Deserialize(Stream stream) => QuestSerializer.Deserialize<Objective>(stream);
-
         public string JournalEntry { get; set; } = string.Empty;
         public int NextStageID { get; set; } = -1;
         public bool PartyMembersAllowed { get; set; } = false;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Anvil.API;
 using NLog;
 
@@ -11,12 +12,15 @@ namespace QuestSystem.Wrappers
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private readonly QuestStage _questStage;
 
-        private readonly ObjectiveWrapper[] _objectives;
-
         public QuestWrapper? Quest { get; set; } = null;
+        private readonly ObjectiveWrapper[] _objectives;
         public readonly QuestStageRewardWrapper Reward;
 
+        private readonly HashSet<NwPlayer> _trackedPlayers = new();
+
         public int ID => _questStage.ID;
+
+        public event Action<QuestStageWrapper, NwPlayer, int>? Completed;
 
         public QuestStageWrapper(QuestStage questStage)
         {
@@ -26,69 +30,110 @@ namespace QuestSystem.Wrappers
             for (int i = 0; i < _objectives.Length; i++)
             {
                 _objectives[i] = questStage.Objectives[i].Wrap();
-                _objectives[i].QuestStage = this;
+                _objectives[i].Completed += OnObjectiveCompleted;
             }
         }
 
-        private bool AssertQuestValid()
+
+        private void ThrowIfQuestIsNull() {if(Quest==null) throw new InvalidOperationException("Quest is null.");}
+
+        public bool Complete(NwPlayer player)
         {
-            if (Quest == null)
+            if(!IsTracking(player)) 
+                return false;
+
+            if(_objectives.Any(o=>o.Objective.NextStageID >= 0 && o.Objective.NextStageID != _questStage.NextStageID))
             {
-                _log.Error("No parent Quest");
-                foreach (var objective in _objectives)
-                    objective.StopTrackingProgress();
+                _log.Error("Stage with objectives can not be manually completed.");
                 return false;
             }
+
+            StopTracking(player);
+            Reward.GrantReward(player);
+            Completed?.Invoke(this, player, _questStage.NextStageID);
             return true;
         }
+        
+        void OnObjectiveCompleted(ObjectiveWrapper wrapper, NwPlayer player)
+        {
+            ThrowIfQuestIsNull();
+
+            int nextStageId = wrapper.Objective.NextStageID;
+
+            QuestStageRewardWrapper reward;
+
+            if(nextStageId >= 0 && nextStageId != ID)
+            {
+                reward = wrapper.Reward;
+            }
+            else if (_objectives.Any(o => !o.IsCompleted(player)))
+            {
+                wrapper.StopTrackingProgress(player);
+                _ = ScheduleJournalUpdate(player);
+                return;
+            }
+            else
+            {
+                reward = this.Reward;
+                nextStageId = this._questStage.NextStageID;
+            }
+
+            StopTracking(player);
+            reward.GrantReward(player);
+            Completed?.Invoke(this, player, nextStageId);
+        }
+
         internal void TrackProgress(NwPlayer player)
         {
-            if (!AssertQuestValid()) return;
+            ThrowIfQuestIsNull();
 
             if (!player.IsValid)
             {
                 _log.Error("Player invalidated");
+                if(_trackedPlayers.Remove(player))
+                    foreach(var obj in _objectives)
+                        obj.StopTrackingProgress(player);
                 return;
             }
 
             _log.Warn($"Tracking progress for player {player.PlayerName} on {Quest?.Tag ?? " -- NO QUEST -- "}/{ID}");
 
-            foreach (var objective in _objectives)
-            {
-                objective.StartTrackingProgress(player);
-            }
-
+            if(_trackedPlayers.Add(player))
+                foreach (var objective in _objectives)
+                {
+                    objective.StartTrackingProgress(player);
+                }
         }
 
         internal void StopTracking(NwPlayer player)
         {
-            foreach (var objective in _objectives)
-            {
-                objective.StopTrackingProgress(player);
-            }
+            if(_trackedPlayers.Remove(player))
+                foreach (var objective in _objectives)
+                {
+                    objective.StopTrackingProgress(player);
+                }
         }
 
-        internal bool IsTracking(NwPlayer player) => _objectives.Any(o => o.IsTracking(player));
-        internal bool IsActive => _objectives.Any(o => o.IsActive);
-
+        internal bool IsTracking(NwPlayer player) => _trackedPlayers.Contains(player);
+        internal bool IsActive => _trackedPlayers.Count > 0;
 
         private readonly HashSet<NwPlayer> _scheduledJournalUpdates = new();
-        internal async void ScheduleJournalUpdate(NwPlayer player)
+        internal async Task ScheduleJournalUpdate(NwPlayer player)
         {
             if (!_scheduledJournalUpdates.Add(player)) return;
 
             _log.Warn("Journal update scheduled!");
 
             await NwTask.Delay(TimeSpan.FromSeconds(0.6));
+            await NwTask.SwitchToMainThread();
 
             if (!_scheduledJournalUpdates.Remove(player)) return;
-
             else if (player.IsValid && IsTracking(player)) UpdateJournal(player);
         }
 
         private void UpdateJournal(NwPlayer player)
         {
-            if (!AssertQuestValid()) return;
+            ThrowIfQuestIsNull();
 
             _log.Warn("Updating journal...");
 
