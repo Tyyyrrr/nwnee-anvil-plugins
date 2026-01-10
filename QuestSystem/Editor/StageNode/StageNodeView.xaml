@@ -53,7 +53,7 @@
 
         <reward:RewardBoxView DataContext="{Binding Reward}"/>
 
-        <StackPanel Orientation="Horizontal" ToolTip="Jump to given stage after completing all non-optional objectives (Optional objectives can have their own NextStageID set to 0 or greater. Those have higher priority!)">
+        <StackPanel Orientation="Horizontal" ToolTip="{Binding NextStageIDToolTip, Mode=OneWay}">
             <Label Content="{Binding NextStageIDLabelDisplay}" />
             <TextBox Text="{Binding NextStageID, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
                 Foreground="{Binding NextStageIDColor}"/>

@@ -278,5 +278,16 @@ namespace QuestEditor.StageNode
         }
         public string StageIDLabelDisplay => $"Stage ID: {StageID}";
         public string NextStageIDLabelDisplay => $"Next Stage ID: {_model.NextStageID}";
+        public string NextStageIDToolTip => 
+        @"Correct Values
+
+        0 or greater:
+            Complete the stage, grant reward and automatically continue to the next stage. (or loop if NextID == ID)
+        -1:
+            Complete the stage, grant reward, but do NOT continue.
+        -2:
+            Complete the quest on this stage.
+
+        The same rule apply to objectives.";
     }
 }

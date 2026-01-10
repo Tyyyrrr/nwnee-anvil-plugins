@@ -32,7 +32,7 @@ namespace QuestEditor.QuestPackExplorer
         
         public ObservableCollection<string> QuestTags { get; }
 
-        public string SelectedPackDisplayName => _explorerService.PackName+QuestPack.FileExtension ?? "(No QuestPack Selected)";
+        public string SelectedPackDisplayName => string.IsNullOrEmpty(_explorerService.PackName) ? "(No QuestPack Selected)" : _explorerService.PackName+QuestPack.FileExtension;
         public Brush QuestPackNameColor => IsPackFileSelected ? Brushes.Black : Brushes.Gray;
 
         public string? SelectedQuestTag 
