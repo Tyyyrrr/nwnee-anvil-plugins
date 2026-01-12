@@ -7,20 +7,23 @@ using NLog;
 
 namespace QuestSystem.Wrappers
 {
-    internal sealed class QuestStageRewardWrapper
+    internal sealed class QuestStageRewardWrapper : BaseWrapper
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         public readonly QuestStageReward Reward;
         public QuestStageRewardWrapper(QuestStageReward reward) { Reward = reward; }
 
-        public void GrantReward(NwPlayer player)
+        public void GiveReward(NwPlayer player)
         {
-            _log.Info("Granting reward...");
+            if(Reward.IsEmpty) return;
+
+            _log.Info($"Giving quest stage reward");
+
             _ = NwTask.Run(async () =>
             {
                 try
                 {
-                    if (!await GrantRewardAsync(player))
+                    if (!await GiveRewardAsync(player))
                     {
                         _log.Warn("Failed to grant reward");
                     }
@@ -31,14 +34,14 @@ namespace QuestSystem.Wrappers
                 }
             });
         }
-
-        private async Task<bool> GrantRewardAsync(NwPlayer player)
+        
+        private async Task<bool> GiveRewardAsync(NwPlayer player)
         {
             await NwTask.Delay(TimeSpan.FromSeconds(0.7f));
 
             await NwTask.SwitchToMainThread();
 
-            if(!player.IsValid || player.ControlledCreature is not NwCreature pc || !pc.IsValid) 
+            if(!player.IsValid || player.ControlledCreature is not NwCreature pc || !pc.IsValid)
                 return false;
 
             await pc.WaitForObjectContext();
@@ -52,11 +55,13 @@ namespace QuestSystem.Wrappers
                     var item = await NwItem.Create(kvp.Key, pc);
 
                     if(item == null) break;
-                    
+
                     createdItems[count] = item;
 
                     count++;
                 }
+
+                await pc.WaitForObjectContext();
 
                 if(count != Reward.Items.Count) // if failed to create ANY item, destroy all items granted, and skip the reward
                 {
@@ -71,29 +76,12 @@ namespace QuestSystem.Wrappers
                 }
             }
 
+            await pc.WaitForObjectContext();
+
             pc.Xp += Math.Max(0,Reward.Xp);
-
             pc.GiveGold(Reward.Gold, Reward.NotifyPlayer);
-
-            var alginmentChange = ClampAlignmentChange(pc.GoodEvilValue, Reward.GoodEvilChange);
-
-            if(alginmentChange != 0)
-            {
-                pc.GoodEvilValue += alginmentChange;
-
-                if(Reward.NotifyPlayer) 
-                    player.SendServerMessage($"Twój charakter zbliża się o {Math.Abs(alginmentChange)} w stronę {(alginmentChange < 0 ? "złego" : "dobrego")}");
-            }
-
-            alginmentChange = ClampAlignmentChange(pc.LawChaosValue, Reward.LawChaosChange);
-
-            if(alginmentChange != 0)
-            {
-                pc.GoodEvilValue += alginmentChange;
-
-                if(Reward.NotifyPlayer) 
-                    player.SendServerMessage($"Twój charakter zbliża się o {Math.Abs(alginmentChange)} w stronę {(alginmentChange < 0 ? "chaotycznego":"praworządnego")}");
-            }
+            pc.GoodEvilValue += ClampAlignmentChange(pc.GoodEvilValue, Reward.GoodEvilChange);
+            pc.LawChaosValue += ClampAlignmentChange(pc.LawChaosValue, Reward.LawChaosChange);
 
             return true;
         }
@@ -103,6 +91,12 @@ namespace QuestSystem.Wrappers
             if(change == 0) return 0;
             else if(change < 0) return currentValue < -change ? -currentValue : change;
             else return currentValue + change > 100 ? 100 - currentValue : change;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            //todo: cancel async task, or make it safe if not canceled
         }
     }
 }

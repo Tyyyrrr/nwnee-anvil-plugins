@@ -1,98 +1,98 @@
-
-
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Anvil.API;
-using NLog;
 
 namespace QuestSystem.Wrappers
 {
-    internal sealed class QuestWrapper
+    internal sealed class QuestWrapper : BaseWrapper
     {
-        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private readonly Quest _quest;
 
         public string Tag => _quest.Tag;
         public string Name => _quest.Name;
+        public int RegisteredStages {get;set;} = 0;
 
         public QuestWrapper(Quest quest)
         {
             _quest = quest;
         }
 
-        private readonly List<QuestStageWrapper> _stages = new();
-        public IReadOnlyList<QuestStageWrapper> Stages => _stages;
+        private readonly Dictionary<int, QuestStageWrapper> _stages = new();
 
-        public event Action<QuestWrapper, NwPlayer, int>? MovingToTheNextStage;
-
-        /// <summary>
-        /// Store the stage in RAM memory
-        /// </summary>
-        /// <param name="stage"></param>
-        /// <returns>True if successfully added. False if stage index is less than 0, or quest already has any stage with the same ID registered.</returns>
-        internal bool RegisterStage(QuestStageWrapper stage)
+        /// <returns>False, if stage with the same ID is already registered</returns>
+        public bool RegisterStage(QuestStageWrapper stage)
         {
-            if (stage.ID < 0)
+            if(_stages.TryAdd(stage.ID, stage))
             {
-                _log.Error("Can't register stage with ID " + stage.ID.ToString());
+                stage.AutoCompleted += OnStageAutoCompleted;
+                stage.QuestAutoCompleted += OnQuestAutoCompleted;
+                stage.Updated += OnStageUpdated;
+                RegisteredStages++;
+                return true;
+            }
+            return false;
+        }
+
+        /// <returns>False, if the stage with this ID was not registered by the quest, or is a different object</returns>
+        public bool UnregisterStage(QuestStageWrapper stage)
+        {
+            if(_stages.TryGetValue(stage.ID, out var existing) && existing != stage) 
                 return false;
-            }
 
-            int index = 0;
-            for (int i = 0; i < _stages.Count; i++)
+            if (_stages.Remove(stage.ID))
             {
-                if (_stages[i].ID == stage.ID)
-                    return false;
-
-                if (_stages[i].ID > stage.ID)
-                {
-                    index = i;
-                    break;
-                }
+                RegisteredStages--;
+                stage.AutoCompleted -= OnStageAutoCompleted;
+                stage.QuestAutoCompleted -= OnQuestAutoCompleted;
+                stage.Updated -= OnStageUpdated;
+                stage.Dispose();
+                return true;
             }
-
-            stage.Quest = this;
-
-            _stages.Insert(index, stage);
-
-            stage.Completed += OnStageCompleted;
-
-            _log.Info($"Stage {stage.ID} of quest \'{Tag}\' registered successfully.");
-
-            return true;
+            return false;
         }
 
-        private void OnStageCompleted(QuestStageWrapper wrapper, NwPlayer player, int nextStageId)
+        public event Action<QuestWrapper, NwPlayer, int>? Advanced;
+        public event Action<QuestWrapper, NwPlayer>? Completed;
+        public event Action<QuestWrapper, NwPlayer>? Updated;
+
+
+        private void ThrowIfNotOwning(QuestStageWrapper stage)
         {
-            // move to the next stage before unregistering the previous, to avoid re-caching entire quest
-            MovingToTheNextStage?.Invoke(this, player, nextStageId);
-
-            if (!wrapper.IsActive && !UnregisterStage(wrapper))
-            {
-                _log.Error("Completed stage was not registered.");
-            }
+            if(this[stage.ID] != stage) 
+                throw new InvalidOperationException("QuestWrapper subscribed to stage which it does not own.");
         }
 
-        /// <summary>
-        /// Clear the stage from RAM memory
-        /// </summary>
-        /// <returns>True if the stage was stored in RAM, false otherwise</returns>
-        internal bool UnregisterStage(QuestStageWrapper stage)
+        void OnStageAutoCompleted(QuestStageWrapper stage, NwPlayer player, int nextId)
         {
-            var q = stage.Quest;
-
-            stage.Quest = null;
-
-            stage.Completed -= OnStageCompleted;
-
-            var res = _stages.Remove(stage) && q != null;
-
-            if(!res) _log.Error($"Failed to unregister stage.");
-            else _log.Info($"Stage {stage.ID} of quest \'{q!.Name}\' ({q.Tag}) unregistered successfully.");
-            return res;
+            NLog.LogManager.GetCurrentClassLogger().Info(" - - OnStageAutoCompleted Handler");
+            ThrowIfNotOwning(stage);
+            Advanced?.Invoke(this, player, nextId);
         }
 
-        public QuestStageWrapper? GetStage(int stageID) => _stages.FirstOrDefault(s => s.ID == stageID);
+        void OnQuestAutoCompleted(QuestStageWrapper stage, NwPlayer player)
+        {
+            NLog.LogManager.GetCurrentClassLogger().Info(" - - OnQuestAutoCompleted Handler");
+            ThrowIfNotOwning(stage);
+            Completed?.Invoke(this, player);
+        }
+
+        void OnStageUpdated(QuestStageWrapper stage, NwPlayer player)
+        {
+            NLog.LogManager.GetCurrentClassLogger().Info(" - - OnStageUpdated Handler");
+            ThrowIfNotOwning(stage);
+            Updated?.Invoke(this, player);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            foreach(var stage in _stages.Values)
+                stage.Dispose();
+
+            _stages.Clear();
+        }
+
+        public QuestStageWrapper? this[int stageId] => _stages.TryGetValue(stageId, out var qw) ? qw : null;
     }
 }
