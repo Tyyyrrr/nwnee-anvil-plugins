@@ -18,7 +18,7 @@
             <propList:PropertyListView DataContext="{Binding Reward}"/>
 
             <Expander Header="Items" IsExpanded="false"
-                ToolTip="List of items from the pallette to be given to the player as a reward">
+                ToolTip="List of items from the pallette to be given to the player as a reward. To tag an item, write the tag after dot, for example:  myresref.my_custom_tag">
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <TextBox x:Name="AddItemTextBox" MinWidth = "70" Text="{Binding ItemResRefToAdd, Mode=TwoWay}"/>
