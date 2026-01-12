@@ -9,7 +9,7 @@ using QuestSystem.Objectives;
 
 namespace QuestSystem.Wrappers
 {
-    internal abstract partial class ObjectiveWrapper
+    internal abstract partial class ObjectiveWrapper : BaseWrapper
     {
         private static EventService? _eventService = null;
         public static EventService EventService
@@ -30,12 +30,15 @@ namespace QuestSystem.Wrappers
         {
             _baseObjective = objective;
             Reward = new(objective.Reward);
+            _log.Warn($"<{GetType().Name}> Subscribing");
+            Subscribe();
         }
 
-        public event Action<ObjectiveWrapper, NwPlayer>? Completed;
+        public event Action<ObjectiveWrapper, NwPlayer>? Updated;
 
         public readonly QuestStageRewardWrapper Reward;
 
+        public bool ShowInJournal => _baseObjective.ShowInJournal;
 
         protected internal NwPlayer? GetTrackedPlayer(IObjectiveProgress progress) => _trackedProgress.FirstOrDefault(kvp => kvp.Value == progress).Key;
         protected internal IObjectiveProgress? GetTrackedProgress(NwPlayer player) => _trackedProgress.TryGetValue(player, out var progress) ? progress : null;
@@ -67,12 +70,6 @@ namespace QuestSystem.Wrappers
                 return;
             }
 
-            if (shouldSubscribe)
-            {
-                _log.Warn($" < {GetType().Name} >  Subscribing...");
-                Subscribe();
-            }
-
             var progress = Objective.CreateProgressTrack();
             _trackedProgress.Add(player, progress);
             progress.OnUpdate += OnProgressUpdate;
@@ -86,9 +83,6 @@ namespace QuestSystem.Wrappers
                 kvp.Value.OnUpdate -= OnProgressUpdate;
             }
             _trackedProgress.Clear();
-
-            _log.Warn($" < {GetType().Name} >  Unsubscribing...");
-            Unsubscribe();
         }
         public void StopTrackingProgress(NwPlayer player)
         {
@@ -98,22 +92,17 @@ namespace QuestSystem.Wrappers
                 progress.OnUpdate -= OnProgressUpdate;
                 _ = _trackedProgress.Remove(player);
             }
-
-            if (!IsActive)
-            {
-                _log.Warn($" < {GetType().Name} > Unsubscribing...");
-                Unsubscribe();
-            }
         }
 
 
+        protected static readonly string ObjectiveJournalPrefix = "   - ";
         public virtual string GetJournalText(NwPlayer player)
         {
             if (!Objective.ShowInJournal) return string.Empty;
 
-            if (IsCompleted(player)) return $"{Objective.JournalEntry} (Ukończono)";
+            if (IsCompleted(player)) return $"{ObjectiveJournalPrefix}{Objective.JournalEntry} (Ukończono)";
 
-            else return Objective.JournalEntry;
+            else return ObjectiveJournalPrefix + Objective.JournalEntry;
         }
 
         private void OnProgressUpdate(IObjectiveProgress progress)
@@ -122,8 +111,17 @@ namespace QuestSystem.Wrappers
 
             var player = GetTrackedPlayer(progress) ?? throw new InvalidOperationException("Progress object is not owned by this objective.");
 
-            if(IsCompleted(player)) Completed?.Invoke(this, player);
-            
+            Updated?.Invoke(this, player);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            StopTrackingProgress();
+
+            _log.Warn($"<{GetType().Name}> Unsubscribing");
+            Unsubscribe();
         }
     }
 
