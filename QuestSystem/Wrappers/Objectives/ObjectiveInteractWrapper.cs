@@ -206,8 +206,6 @@ namespace QuestSystem.Wrappers.Objectives
 
         void OnObjectExamined(OnExamineObject data)
         {
-            _log.Info(" > OnObjectExamined...");
-
             var player = data.ExaminedBy;
 
             if(player == null || !player.IsValid)
@@ -234,7 +232,6 @@ namespace QuestSystem.Wrappers.Objectives
                 return;
 
                 
-            _log.Info(" > Area valid...");
 
             if ((Objective.Tag == string.Empty && Objective.ResRef != string.Empty && Objective.ResRef == obj.ResRef)
                 || (Objective.ResRef == string.Empty && Objective.Tag != string.Empty && Objective.Tag == obj.Tag)
