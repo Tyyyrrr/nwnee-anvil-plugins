@@ -5,35 +5,47 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using QuestSystem.Nodes;
 using QuestSystem.Objectives;
 
 namespace QuestSystem
 {
     public static class QuestSerializer
     {
-        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions()
+        static QuestSerializer()
         {
-            PreferredObjectCreationHandling = System.Text.Json.Serialization.JsonObjectCreationHandling.Replace,
-            WriteIndented = false,
-            AllowTrailingCommas = false,
-            MaxDepth = 6,
-            IncludeFields = false,
-        };
+            _validTypes = new HashSet<Type>()
+            {
+                typeof(Quest),
+                typeof(NodeBase),
+                typeof(Objective),
+                typeof(QuestStageReward)
+            }.ToFrozenSet();
 
-        private static FrozenSet<Type> _validTypes = new HashSet<Type>()
-        {
-            typeof(Quest),
-            typeof(QuestStage),
-            typeof(Objective),
-            typeof(QuestStageReward)
-        }.ToFrozenSet();
+            _emptyJsonValues = new HashSet<string>()
+            {
+                "{}",
+                "[]",
+                "null"
+            }.ToFrozenSet();
 
-        private static readonly FrozenSet<string> _emptyJsonValues = new HashSet<string>()
-        {
-            "{}",
-            "[]",
-            "null"
-        }.ToFrozenSet();
+            _jsonOptions = new JsonSerializerOptions()
+            {
+                PreferredObjectCreationHandling = System.Text.Json.Serialization.JsonObjectCreationHandling.Replace,
+                WriteIndented = false,
+                AllowTrailingCommas = false,
+                MaxDepth = 6,
+                IncludeFields = false,
+            };
+
+            _jsonOptions.Converters.Add(new NodeConverter());
+
+        }
+        private static readonly JsonSerializerOptions _jsonOptions;
+
+        private static FrozenSet<Type> _validTypes;
+
+        private static readonly FrozenSet<string> _emptyJsonValues;
 
         public static bool IsValidType(Type type) => _validTypes.Any(t => t.IsAssignableFrom(type));
         public static string? Serialize<T>(T obj) where T : class
