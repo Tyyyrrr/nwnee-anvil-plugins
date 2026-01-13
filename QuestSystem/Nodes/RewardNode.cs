@@ -1,0 +1,22 @@
+using System.Collections.Generic;
+
+namespace QuestSystem.Nodes
+{
+    public sealed class RewardNode : NodeBase
+    {
+        public bool NotifyPlayer { get; set; } = true;
+        public int Xp { get; set; }
+        public int Gold { get; set; }
+        public int GoodEvilChange { get; set; }
+        public int LawChaosChange { get; set; }
+        public Dictionary<string, int> Items { get; set; } = new();
+        // public Dictionary<string, bool> ObjectVisibility { get; set; } = new();
+        public bool IsEmpty => 
+            Xp == 0 && 
+            Gold == 0 && 
+            GoodEvilChange == 0 && 
+            LawChaosChange == 0 && 
+            Items.Count == 0 && 
+            // ObjectVisibility.Count == 0;
+    }
+}
