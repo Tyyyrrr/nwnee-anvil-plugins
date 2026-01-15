@@ -43,7 +43,7 @@ namespace QuestSystem
         }
         private static readonly JsonSerializerOptions _jsonOptions;
 
-        private static FrozenSet<Type> _validTypes;
+        private static readonly FrozenSet<Type> _validTypes;
 
         private static readonly FrozenSet<string> _emptyJsonValues;
 
@@ -60,17 +60,39 @@ namespace QuestSystem
             return IsValidType(typeof(T)) ? JsonSerializer.Deserialize<T>(json, _jsonOptions) : null;
         }
 
-        public static T? Deserialize<T>(Stream stream) where T : class
+        /// <summary>
+        /// Deserializes an object from the provided stream.
+        /// This method takes ownership of <paramref name="stream"/> and will close it.
+        /// Callers should not dispose the stream.
+        /// </summary>
+        public static T? Deserialize<T>(Stream ownedStream) where T : class
         {
-            var t = IsValidType(typeof(T)) ? JsonSerializer.Deserialize<T>(stream, _jsonOptions) : null;
-            stream.Close();
-            return t;
+            try
+            {
+                return IsValidType(typeof(T))
+                    ? JsonSerializer.Deserialize<T>(ownedStream, _jsonOptions)
+                    : null;
+            }
+            finally
+            {
+                ownedStream.Dispose();
+            }
         }
-        public static async Task<T?> DeserializeAsync<T>(Stream stream) where T : class
+
+        /// <inheritdoc cref="Deserialize{T}(Stream)"/>
+        public static async Task<T?> DeserializeAsync<T>(Stream ownedStream) where T : class
         {
-            var t = IsValidType(typeof(T)) ? await JsonSerializer.DeserializeAsync<T>(stream,_jsonOptions) : null;
-            stream.Close();
-            return t;
+            try
+            {
+                return IsValidType(typeof(T))
+                    ? await JsonSerializer.DeserializeAsync<T>(ownedStream, _jsonOptions)
+                    : null;
+            }
+            finally
+            {
+                ownedStream.Dispose();
+            }
         }
+
     }
 }
