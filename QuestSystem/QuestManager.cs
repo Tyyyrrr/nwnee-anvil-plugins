@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+
 using Anvil.API;
-using MySQLClient;
 using NLog;
-using QuestSystem.Wrappers;
+
+using MySQLClient;
+
+using QuestSystem.Graph;
+using QuestSystem.Wrappers.Nodes;
+using QuestSystem.Wrappers.Objectives;
 
 namespace QuestSystem
 {
@@ -12,334 +16,160 @@ namespace QuestSystem
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
-        private readonly QuestPackManager _questPackMan;
         private readonly MySQLService _mySQL;
+
+        private readonly QuestPackManager _questPackMan;
         
-        private readonly Dictionary<string, QuestWrapper> _loadedQuests = new();
+        private readonly INodeLoader _nodeLoader;
+
+        private readonly Dictionary<string, Quest> _loadedQuests = new();
+        private readonly Dictionary<string, QuestGraph> _loadedQuestsGraphs = new();
+
         private readonly Dictionary<NwPlayer, Dictionary<string, int>> _completedQuests = new();
-        private readonly Dictionary<QuestWrapper, Dictionary<NwPlayer, PlayerQuestData>> _playerData = new();
-
-        
-        private PlayerQuestData? this[string questTag, NwPlayer player] =>
-            _loadedQuests.TryGetValue(questTag, out var wrapper) ?
-            this[wrapper,player] : null;
-
-        private PlayerQuestData? this[QuestWrapper wrapper, NwPlayer player] =>
-            _playerData.TryGetValue(wrapper, out var playersData) &&
-            playersData.TryGetValue(player, out var playerData) ?
-            playerData : null;
-
 
         public QuestManager(string questPackDirectory, MySQLService mySQL)
         {
+            QuestGraph.QuestCompleted += OnQuestCompleted;
             _questPackMan = new(questPackDirectory);
+            _nodeLoader = new NodeLoader(_loadedQuests);
             _mySQL = mySQL;
         }
 
-        private void RegisterQuest(QuestWrapper wrapper)
+        private void RegisterQuest(Quest quest)
         {
-            _loadedQuests.Add(wrapper.Tag, wrapper);
-            _playerData.Add(wrapper, new()); // make new container for playerdata
-            wrapper.Completed += OnQuestCompleted;
-            wrapper.Updated += OnQuestUpdated;
-            wrapper.Advanced += OnQuestAdvanced;
+            var graph = new QuestGraph(quest.Tag, _nodeLoader);
+            _loadedQuests.Add(quest.Tag, quest);
+            _loadedQuestsGraphs.Add(quest.Tag, graph);
         }
 
-        private void UnregisterQuest(QuestWrapper wrapper)
-        {                   
-            wrapper.Completed -= OnQuestCompleted;
-            wrapper.Updated -= OnQuestUpdated;
-
-            wrapper.Dispose();
-
-            _playerData.Remove(wrapper); // destroy created container for playerdata
-            _loadedQuests.Remove(wrapper.Tag);
-        }
-
-        private void OnQuestCompleted(QuestWrapper quest, NwPlayer player)
+        private void UnregisterQuest(string tag)
         {
-            _log.Warn(" - Quest Completed Handler");
-            CompleteQuest(player, quest.Tag);
-        }
-
-        private void OnQuestUpdated(QuestWrapper quest, NwPlayer player)
-        {
-            _log.Warn(" - Quest Updated Handler");
-            var pd = this[quest,player];
-            if(pd == null) return;
-            pd.Update();
-        }
-
-        private void OnQuestAdvanced(QuestWrapper quest, NwPlayer player, int nextStageID)
-        {
-            _log.Warn(" - Quest Advanced Handler");
-            GiveQuest(player, quest.Tag, nextStageID);
-        }
-
-        /// <remarks>This method will try to read the quest and/or stage from a file, and cache missing resources if they're not present in the dictionary</remarks>
-        private bool TryGetOrLoadQuestStage(string questTag, int stageId, [NotNullWhen(true)] out QuestWrapper? questWrapper, [NotNullWhen(true)] out QuestStageWrapper? stageWrapper)
-        {
-            bool questLoaded = false;
-            
-            // load and store the quest in RAM, if not cached already
-            if (!_loadedQuests.TryGetValue(questTag, out questWrapper))
+            if (_loadedQuests.Remove(tag))
             {
-                if (!_questPackMan.TryGetQuestImmediate(questTag, out var quest))
-                {
-                    _log.Error($"Failed to load quest \'{questTag}\' from the pack");
-                    stageWrapper = null;
-                    return false;
-                }
-                questWrapper = new(quest);
-
-                RegisterQuest(questWrapper);
-
-                questLoaded = true;
+                var graph = _loadedQuestsGraphs[tag];
+                graph.Dispose();
             }
-
-            stageWrapper = questWrapper[stageId]; // will return null, if the quest was loaded from file in this operation, or stage is not cached
-
-            if(stageWrapper != null) return true; // early return if both quest and stage were already in the cache
-
-            // load the stage from file, if its not present in the cache
-            if(!_questPackMan.TryGetQuestStageImmediate(questTag, stageId, out var stage))
-            {
-                _log.Error($"Failed to load stage {stageId} of quest \'{questTag}\' from the pack");
-
-                if(questLoaded) // unload the quest on failure, if it was cached by this operation
-                {
-                    UnregisterQuest(questWrapper);
-                }
-                return false;
-            }
-
-            // store the stage in RAM
-            stageWrapper = new(stage);
-
-            if (!questWrapper.RegisterStage(stageWrapper))
-            {
-                if(questLoaded)
-                {
-                    _playerData.Remove(questWrapper);
-                    _loadedQuests.Remove(questTag);
-                }
-
-                _log.Error($"Stage {stageId} is already registered under quest \'{questTag}\'");
-
-                questWrapper = null;
-                stageWrapper = null;
-                return false;
-            }
-
-            return true;
         }
 
         /// <summary>
         /// Removes any quest-related data for this player from memory
         /// </summary>
-        /// <param name="player"></param>
         public void ClearPlayer(NwPlayer player)
         {
-            _ = _completedQuests.Remove(player);
-
-            List<QuestWrapper> touchedQuests = new();
-
-            foreach(var kvp in _playerData)
-            {   
-                if(!kvp.Value.TryGetValue(player, out var pd))
-                    continue;
-
-                var currentStage = pd.CurrentStage;
-                if(currentStage != null)
-                {
-                    currentStage.StopTracking(player);
-                    CleanupStageIfNotTrackingPlayers(kvp.Key,currentStage);
-                }
-                touchedQuests.Add(kvp.Key);
+            List<string> emptyGraphs = new();
+            foreach(var graph in _loadedQuestsGraphs.Values)
+            {
+                graph.RemovePlayer(player);
+                if(graph.IsEmpty)
+                    emptyGraphs.Add(graph.Tag);
             }
-
-            foreach(var quest in touchedQuests)
-                CleanupQuestIfNoStages(quest);
-            
+            foreach(var tag in emptyGraphs)
+                UnregisterQuest(tag);
         }
+
+        void OnQuestCompleted(string tag, NwPlayer player)
+        {
+            ((IQuestDatabase)this).UpdateQuest(player, tag);
+
+            var graph = _loadedQuestsGraphs[tag];
+
+            graph.RemovePlayer(player);
+
+            if(graph.IsEmpty)
+                UnregisterQuest(tag);
+        }
+
 
         /// <inheritdoc cref="IQuestInterface.GiveQuest"/>
-        /// <inheritdoc cref="TryGetOrLoadQuestStage"/>
         public bool GiveQuest(NwPlayer player, string questTag, int stageId)
         {
-            _log.Info(" - - - Giving quest");
-            if(!player.IsValid) return false;
-
-            if(!TryGetOrLoadQuestStage(questTag, stageId, out var quest, out var stage))
-                return false;
-
-            var existingData = this[quest,player];
-
-            if(existingData == null) // cache player's data and start to track the progress
+            if(!_loadedQuests.TryGetValue(questTag, out var quest))
             {
-                _log.Info("> Creating new playerdata <");
-                var newData = new PlayerQuestData(player, quest);
+                if(!_questPackMan.TryGetQuestImmediate(questTag, out quest))
+                {
+                    _log.Error("Failed to set player on quest. The quest was not found in any packs");
+                    return false;
+                }
 
-                _playerData[quest].Add(player, newData);
-
-                newData.PushStage(stage);
-                newData.CurrentStage?.TrackProgress(player);
-            }
-            else if(existingData.CurrentStage == stage){
-                _log.Info("> Resetting progress <");
-                existingData.ResetCurrentStageProgress();
-            }
-            else
-            {
-                _log.Info("> Stage transition <");
-
-                var oldStage = existingData.CurrentStage;
-                oldStage?.StopTracking(player);
-                existingData.PushStage(stage);
-                existingData.CurrentStage?.TrackProgress(player);
-
-                CleanupStageIfNotTrackingPlayers(quest,oldStage);
-                CleanupQuestIfNoStages(quest);
+                RegisterQuest(quest);
             }
 
-            return true;
+            var graph = _loadedQuestsGraphs[questTag];
+
+            return graph.AddPlayer(player, stageId);
         }
 
-        private static void CleanupStageIfNotTrackingPlayers(QuestWrapper quest, QuestStageWrapper? stage)
-        {
-            if(stage == null || stage.TrackedPlayersCount > 0) return;
-
-            quest.UnregisterStage(stage);
-        }
-
-        private void CleanupQuestIfNoStages(QuestWrapper quest)
-        {
-            if(quest.RegisteredStages <= 0)
-                UnregisterQuest(quest);
-        }
-
+        /// <inheritdoc cref="IQuestInterface.ClearQuest(NwPlayer, string)"/>
         public bool ClearQuest(NwPlayer player, string questTag)
         {
             _log.Info(" - - - Clearing quest");
-
-            ((IQuestDatabase)this).ClearQuest(player, questTag);
-
-            if(_completedQuests.TryGetValue(player, out var dict)) 
-                dict.Remove(questTag);
-            
-            else if(_loadedQuests.TryGetValue(questTag, out var quest))
-            {
-                var pd = this[quest, player];
-
-                if(pd == null) return false;
-
-                var stage = pd.CurrentStage;
-
-                pd.Dispose();
-
-                // wipe journal
-                if (player.IsValid)
-                {
-                    var pc = player.ControlledCreature;
-                    if(pc != null && pc.IsValid)
-                        NWN.Core.NWScript.RemoveJournalQuestEntry(questTag, pc.ObjectId, 0, 0);
-                }
-
-                _playerData[quest].Remove(player);
-
-                stage?.StopTracking(player);
-
-                CleanupStageIfNotTrackingPlayers(quest, stage);
-                CleanupQuestIfNoStages(quest);
-            }
-            else return false;
-            
-            return true;
+            throw new NotImplementedException();
         }
 
+        /// <inheritdoc cref="IQuestInterface.CompleteQuest(NwPlayer, string, int)"/>
         public bool CompleteQuest(NwPlayer player, string questTag, int stageId = -1)
         {
-            _log.Info(" - - - Completing quest");
-            if(HasCompletedQuest(player, questTag, out var completedStageId))
+            if(_loadedQuestsGraphs.TryGetValue(questTag, out var graph))
             {
-                if(stageId == completedStageId)
-                    return true; // early return if nothing to change
-
-                else if(stageId < 0)
-                    return false; // meet interface requirements
-
-                else
-                {
-                    _log.Warn($"Overriding completed quest \'{questTag}\' stage {completedStageId} -> {stageId}");
-                }
+                stageId = stageId == -1 ? graph.GetRoot(player) : stageId;
+                if(stageId < 0) return false;
             }
 
             if(!_completedQuests.TryGetValue(player, out var dict))
             {
-                dict = new()
-                {
-                    { questTag, stageId }
-                };
+                dict = new();
                 _completedQuests.Add(player, dict);
+            }
+
+            if(dict.TryGetValue(questTag, out var oldId))
+            {
+                if(oldId != stageId)
+                    _log.Warn($"Overriding final stage of completed quest \'{questTag}\' from {oldId} to {stageId}");
+
+                dict[questTag] = stageId;
             }
             else dict.Add(questTag,stageId);
 
+            if(graph != null && graph.RemovePlayer(player) && graph.IsEmpty)
+                UnregisterQuest(questTag);
 
             ((IQuestDatabase)this).UpdateQuest(player, questTag);
-
-
-            if(!IsOnQuest(player, questTag, out var _))
-                return true;
-
-
-            var quest = _loadedQuests[questTag];
-            var pd = this[quest,player]!;
-            var stage = pd.CurrentStage;
-
-            pd.IsStageCompleted = true;
-            pd.IsQuestCompleted = true;
-
-            pd.Dispose();
-            _playerData[quest].Remove(player);
-            
-            stage?.StopTracking(player);
-
-            CleanupStageIfNotTrackingPlayers(quest, stage);
-            CleanupQuestIfNoStages(quest);
 
             return true;
         }
 
 
 
-        /// <inheritdoc cref="IQuestInterface.GiveQuest"/>
-        /// <inheritdoc cref="TryGetOrLoadQuestStage"/>
+
+        /// <inheritdoc cref="IQuestInterface.CompleteStage(NwPlayer, string, int)"/>
         public bool CompleteStage(NwPlayer player, string questTag, int stageId = -1)
         {
-            _log.Info(" - - - Completing quest stage");
-            if(!IsOnQuest(player, questTag, out var currentStageId))
-            {
-                if(stageId < 0 || !GiveQuest(player, questTag, stageId))
-                    return false;
+            if(!_loadedQuestsGraphs.TryGetValue(questTag, out var graph))
+                return false;
 
-                return CompleteStage(player, questTag, stageId);
-            }
+            var root = graph.GetRoot(player);
 
-            var stage = _loadedQuests[questTag][stageId < 0 ? currentStageId : stageId];
+            if(graph.GetRoot(player) < 0) // not on the quest
+                return GiveQuest(player,questTag,stageId) && CompleteStage(player,questTag,-1);
+            
+            if(stageId >= 0 && stageId != root)
+                graph.Evaluate(stageId,player,QuestGraph.EvaluationPolicy.SkipToNextRoot);
 
-            if(stage == null) return false;
+            graph.Evaluate(stageId,player,QuestGraph.EvaluationPolicy.SuspendOnLeaf);
 
-            if(!stage.ManualComplete(player)) return false;
-
-            this[questTag,player]!.IsStageCompleted = true;
             return true;
         }
 
         /// <inheritdoc cref="IQuestInterface.IsOnQuest(NwPlayer, string, out int)"/>
         public bool IsOnQuest(NwPlayer player, string questTag, out int stageId)
         {
-            stageId = this[questTag, player]?.CurrentStage?.ID ?? -1;
-            return stageId >= 0;
+            if(_loadedQuestsGraphs.TryGetValue(questTag, out var graph))
+            {
+                stageId = graph.GetRoot(player);
+                return stageId >= 0;
+            }
+            stageId = -1;
+            return false;
         }
     
         /// <inheritdoc cref="IQuestInterface.HasCompletedQuest(NwPlayer, string, out int)"/>
@@ -361,16 +191,12 @@ namespace QuestSystem
             ObjectDisposedException.ThrowIf(isDisposed, this);
             isDisposed = true;
 
-            foreach(var kvp in _playerData)
-            {
-                foreach(var data in kvp.Value)
-                {
-                    data.Value.Dispose();
-                }
-            }
+            foreach(var graph in _loadedQuestsGraphs.Values)
+                graph.Dispose();
 
-            foreach(var quest in _loadedQuests.Values)
-                quest.Dispose();
+            _loadedQuestsGraphs.Clear();
+            _loadedQuests.Clear();
+            _completedQuests.Clear();
 
             _questPackMan.Dispose();
         }
@@ -383,6 +209,24 @@ namespace QuestSystem
         void IQuestDatabase.UpdateQuest(NwPlayer player, string questTag)
         {
             _log.Info(" -- Updating player quest in database (fake)");
+            //save completed quest
+            if(_completedQuests.TryGetValue(player, out var dict) && dict.TryGetValue(questTag, out var value))
+            {
+                // todo: 
+                // - write completed quest to db
+                // - cleanup 'active' quest state from db if any
+                //...
+                return;
+            }
+
+            if(!_loadedQuestsGraphs.TryGetValue(questTag, out var graph))
+                throw new InvalidOperationException("Can't save quest state, while it is not loaded into memory");
+
+            //save active quest
+            var ss = graph.CaptureSnapshot(player);
+            if(ss == null) return;
+            // todo: write array to db
+            // ...
         }
 
         void IQuestDatabase.ClearQuest(NwPlayer player, string questTag)
@@ -400,12 +244,12 @@ namespace QuestSystem
             _log.Info(" -- Clearing player quest objective progress from database (fake)");
         }
 
-        void IQuestDatabase.UpdateStageProgress(NwPlayer player, QuestStageWrapper stage)
+        void IQuestDatabase.UpdateStageProgress(NwPlayer player, StageNodeWrapper stage)
         {
             _log.Info(" -- Updating player quest stage progress in database (fake)");
         }
 
-        void IQuestDatabase.ClearStageProgress(NwPlayer player, QuestStageWrapper stage)
+        void IQuestDatabase.ClearStageProgress(NwPlayer player, StageNodeWrapper stage)
         {
             _log.Info(" -- Clearing player quest stage progress from database (fake)");
         }

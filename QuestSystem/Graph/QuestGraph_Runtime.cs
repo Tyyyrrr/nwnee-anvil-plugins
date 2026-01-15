@@ -21,7 +21,7 @@ namespace QuestSystem.Graph
                 public PlayerCursor NewPosition {get;set;}
                 public EvaluationResult Result {get;set;}
             }
-            
+
             public enum EvaluationResult
             {
                 Error,
@@ -55,7 +55,7 @@ namespace QuestSystem.Graph
                     int rollback = initPos.Node;
                     bool started = false;
 
-                    for(int i = 0; i < QuestGraph.MaxChainLength; i++)
+                    for(int i = 0; i < MaxChainLength; i++)
                     {
                         if(!Cursor.IsOnGraph) 
                             break;
@@ -70,13 +70,18 @@ namespace QuestSystem.Graph
                             if (started)
                             {
                                 Cursor = node.ID;
+                                NodeVisited?.Invoke(node.ID);
                                 return EvaluationResult.Success;
                             }
 
                             started = true;
                         }
                         
-                        if(i > 0) NodeVisited?.Invoke(node.ID); // don't "touch" initial node. It is already counted.
+                        if(i > 0) // don't "touch" initial node; It is already counted.
+                        {
+                            NodeVisited?.Invoke(node.ID);
+                            node.Enter(player);
+                        }
 
                         if (!node.Evaluate(player))
                         {
@@ -125,6 +130,9 @@ namespace QuestSystem.Graph
                 }
                 finally
                 {
+                    foreach(var node in outcome.VisitedNodes)
+                        _storage[node]?.Reset(player);
+
                     _evaluator.NodeVisited -= outcome.VisitedNodes.Add;
                 }
             }

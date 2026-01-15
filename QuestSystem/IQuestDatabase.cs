@@ -1,5 +1,7 @@
 using Anvil.API;
-using QuestSystem.Wrappers;
+
+using QuestSystem.Wrappers.Nodes;
+using QuestSystem.Wrappers.Objectives;
 
 namespace QuestSystem
 {
@@ -13,7 +15,7 @@ namespace QuestSystem
         void UpdateProgress(NwPlayer player, ObjectiveWrapper objective);
         void ClearProgress(NwPlayer player, ObjectiveWrapper objective);
 
-        void UpdateStageProgress(NwPlayer player, QuestStageWrapper stage);
-        void ClearStageProgress(NwPlayer player, QuestStageWrapper stage);
+        void UpdateStageProgress(NwPlayer player, StageNodeWrapper stage);
+        void ClearStageProgress(NwPlayer player, StageNodeWrapper stage);
     }
 }

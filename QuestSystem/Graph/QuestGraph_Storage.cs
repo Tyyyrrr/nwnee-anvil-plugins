@@ -18,7 +18,9 @@ namespace QuestSystem.Graph
             }
 
             private readonly Dictionary<int, NodeEntry> _nodes = new();
+            public int Count => _nodes.Count;
             private readonly INodeLoader _nodeLoader;
+
 
             public Storage(string tag, INodeLoader nodeLoader) : base(tag)
             {

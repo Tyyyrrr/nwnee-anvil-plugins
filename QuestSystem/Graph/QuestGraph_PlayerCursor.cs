@@ -26,6 +26,7 @@ namespace QuestSystem.Graph
 
             public override bool Equals(object? obj) => obj is PlayerCursor cursor && cursor == this;
             public override int GetHashCode() => HashCode.Combine(Root,Node);
+            public override string ToString() => $"[{Root}:{Node}]";
         }
     }
 }

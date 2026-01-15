@@ -5,6 +5,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using QuestSystem.Graph;
+using QuestSystem.Nodes;
+using QuestSystem.Wrappers;
 
 namespace QuestSystem
 {
@@ -76,7 +79,7 @@ namespace QuestSystem
             return null;
         }
 
-        public bool TryGetQuestImmediate(string questTag, [NotNullWhen(true)] out Quest? quest)
+        internal bool TryGetQuestImmediate(string questTag, [NotNullWhen(true)] out Quest? quest)
         {
             quest = null;
          
@@ -86,7 +89,13 @@ namespace QuestSystem
 
             quest = QuestSerializer.Deserialize<Quest>(entry.Open());
 
-            return quest != null;
+            if(quest != null)
+            {
+                quest.Pack = entry.Archive as QuestPack;
+                return true;
+            }
+
+            return false;
         }
 
         public async Task<Quest?> TryGetQuestAsync(string questTag)
@@ -98,26 +107,28 @@ namespace QuestSystem
             return await QuestSerializer.DeserializeAsync<Quest>(entry.Open());
         }
 
-        public bool TryGetQuestStageImmediate(string questTag, int stageId, [NotNullWhen(true)] out QuestStage? stage)
+        internal bool TryGetNodeImmediate<T>(Quest quest, int nodeId, [NotNullWhen(true)] out T? node) where T : class, INode
         {
-            stage = null;
-         
-            ZipArchiveEntry? entry = FindEntryInPacks($"{questTag}/{stageId}");
+            node = null;
 
-            if (entry == null) return false;
+            var pack = quest.Pack;
+            if(pack == null) return false;
 
-            stage = QuestSerializer.Deserialize<QuestStage>(entry.Open());
-
-            return stage != null;
+            var entry = pack.GetEntry($"{quest.Tag}/{nodeId}");
+            if(entry == null) return false;
+            
+            node = QuestSerializer.Deserialize<T>(entry.Open());
+            return node != null;
         }
 
-        public async Task<QuestStage?> TryGetQuestStageAsync(string questTag, int stageId)
+
+        public async Task<StageNode?> TryGetQuestStageAsync(string questTag, int stageId)
         {
             ZipArchiveEntry? entry = FindEntryInPacks($"{questTag}/{stageId}");
 
             if (entry == null) return null;
 
-            return await QuestSerializer.DeserializeAsync<QuestStage>(entry.Open());
+            return await QuestSerializer.DeserializeAsync<StageNode>(entry.Open());
         }
     }
 }

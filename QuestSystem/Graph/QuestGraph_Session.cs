@@ -29,8 +29,8 @@ namespace QuestSystem.Graph
             {
                 public PlayerCursor Cursor {get;set;}
 
-                private readonly Stack<PlayerCursor> chainsCompleted = new();
-                private readonly Stack<int> currentChainFootprints = new();
+                private readonly Stack<PlayerCursor> chainsCompleted = new(10);
+                private readonly Stack<int> currentChainFootprints = new(10);
 
                 public IEnumerable<int> Footprints => currentChainFootprints;
                 public int FootprintsCount => currentChainFootprints.Count;
@@ -97,10 +97,61 @@ namespace QuestSystem.Graph
                 public void SetResult(Runtime.EvaluationResult result) => lastEvaluationResult = result;
             }
 
+            private void ResetChain(NwPlayer player, PlayerState state)
+            {
+                if(state.FootprintsCount == 0) throw new InvalidOperationException("State needs at least a single footprint on the root node");
+
+                while (state.FootprintsCount > 1)
+                {
+                    var fp = state.PopNode();
+                    _storage[fp]?.Reset(player);
+                    _storage.NodeDecrement(fp);
+                }
+                _storage[state.Cursor.Root]?.Reset(player);
+                state.Cursor = state.Cursor.Root;
+            }
+
+            /// <summary>
+            /// Move player to the root of another chain. (reset chain if its current root)
+            /// </summary>
+            public bool MovePlayer(NwPlayer player, int newRoot)
+            {
+                if(!_playerStates.TryGetValue(player, out var state))
+                    return false;
+
+                var oldPos = state.Cursor;
+
+                if(newRoot == oldPos.Root)
+                {
+                    ResetChain(player, state);
+                    return true;
+                }
+                
+                var node = _storage.GetOrCreateNode(newRoot);
+                if(node == null)
+                {
+                    _log.Error("Attempt to move player to non-existing (or non-root) node.");
+                    return false;
+                }
+
+                _log.Info($"Player cursor moving on quest graph \'{Tag}\' from node {state.Cursor} to {new PlayerCursor(newRoot)}");
+                
+                _storage.NodeIncrement(newRoot);
+
+                ResetChain(player, state);
+                var oldRoot = state.PopNode();
+                state.PushNode(newRoot);
+                state.Cursor = newRoot;
+                _storage[oldRoot]?.Reset(player);
+                _storage.NodeDecrement(oldRoot);
+                _storage[newRoot]?.Enter(player);
+                return true;
+                
+            }
             /// <summary>
             /// Essentially "set" the player on this quest.
             /// </summary>
-            /// <param name="player">Entering player</param>
+            /// <param name="player">Entering player</param> 
             /// <param name="rootNode">Initial root node to set the player on.</param>
             public bool EnterGraph(NwPlayer player, int rootNode)
             {
@@ -123,12 +174,19 @@ namespace QuestSystem.Graph
 
                 _playerStates.Add(player, PlayerState.CreateNew(rootNode));
 
+                node.Enter(player);
+
                 return true;
             }
 
             /// <inheritdoc cref="EnterGraph(NwPlayer, int)"/>
-            /// <param name="snapshot">Track of the player progress on this quest. Use <see cref="CaptureSnapshot(NwPlayer)"/> to get a strongly typed serializable instance.</param>
-            /// <returns></returns>
+            /// <param name="snapshot">
+            /// Track of the player progress on this quest.<br/>
+            /// It contains a list of completed chains, and footprints for the most recent chain.<br/>
+            /// It does not contain any node-specific player data. Nodes should come with their own persistence mechanism on this layer.<br/>
+            /// <br/>
+            /// Use <see cref="PlayerState.CaptureSnapshot"/> to get one.
+            /// </param>
             public bool EnterGraph(NwPlayer player, IReadOnlyList<int> snapshot)
             {
                 if(!player.IsValid || _playerStates.ContainsKey(player))
@@ -144,12 +202,14 @@ namespace QuestSystem.Graph
                     {
                         foreach(var tn in touchedNodes)
                         {
+                            tn.Reset(player);
                             _storage.NodeDecrement(tn.ID);
                         }
                         return false; 
                     }
                     touchedNodes.Add(node);
                     _storage.NodeIncrement(node.ID);
+                    node.Enter(player);
                 }
 
                 _playerStates.Add(player, state);
@@ -165,8 +225,10 @@ namespace QuestSystem.Graph
                     return false;
 
                 foreach(var footprint in state.Footprints)
+                {
+                    _storage[footprint]?.Reset(player);
                     _storage.NodeDecrement(footprint);
-                
+                }
                 _playerStates.Remove(player);
                 
                 return true;
@@ -180,6 +242,9 @@ namespace QuestSystem.Graph
                     _ = ExitGraph(player);
             }
 
+            /// <summary>
+            /// Structural changes end here
+            /// </summary>
             public void ApplyOutcome(Runtime.EvaluationOutcome outcome, NwPlayer player)
             {
                 var state = _playerStates[player];
@@ -193,26 +258,34 @@ namespace QuestSystem.Graph
 
                 state.Cursor = newPos;
 
+                foreach(var visitedNode in outcome.VisitedNodes)
+                    state.PushNode(visitedNode);
+
                 switch(result)
                 {
                     // reached a root node
                     case Runtime.EvaluationResult.Success:
 
-                        if(oldPos.Root == newPos.Root)
+                        if(oldPos.Root == newPos.Root) // if root evaluated to itself - reset the chain
                         {
                             while (state.FootprintsCount > 1)
                             {
                                 var fp = state.PopNode();
+                                _storage[fp]?.Reset(player);
                                 _storage.NodeDecrement(fp);
                             }
+                            _storage[state.Footprints.First()]?.Reset(player);
                         }
-                        else
+                        else // otherwise enter the next chain and discard the previous
                         {
+                            _storage[newPos.Root]?.Enter(player);
                             _storage.NodeIncrement(newPos.Root);
+
                             state.PushChain(oldPos);
                             while(state.FootprintsCount > 0)
                             {
                                 var fp = state.PopNode();
+                                _storage[fp]?.Reset(player);
                                 _storage.NodeDecrement(fp);
                             }
                             state.PushNode(newPos.Root);
@@ -221,7 +294,7 @@ namespace QuestSystem.Graph
 
                     // root node failed to evaluate
                     case Runtime.EvaluationResult.Failure:
-                        while(state.FootprintsCount > 1) // rollback to old cursor position, or root node
+                        while(state.FootprintsCount > 1) // rewind to the root node or the last rollback 'checkpoint'
                         {
                             var fp = state.PopNode();
                             if(fp == oldPos.Node)
@@ -229,13 +302,14 @@ namespace QuestSystem.Graph
                                 state.PushNode(fp);
                                 break;
                             }
+                            _storage[fp]?.Reset(player);
                             _storage.NodeDecrement(fp);
                         }
                     break;
 
                     // some child node in the chain failed to evaluate
                     case Runtime.EvaluationResult.Rollback:                    
-                        while(state.FootprintsCount > 1) // rollback to the new cursor position, or root node
+                        while(state.FootprintsCount > 1) // rollback to the latest checkpoint, or root node
                         {
                             var fp = state.PopNode();
                             if(fp == newPos.Node)
@@ -243,6 +317,7 @@ namespace QuestSystem.Graph
                                 state.PushNode(fp);
                                 break;
                             }
+                            // no reset here - rollback preserves every node's storage
                             _storage.NodeDecrement(fp);
                         }
                     break;
@@ -254,13 +329,17 @@ namespace QuestSystem.Graph
 
                     // reached a terminal node
                     case Runtime.EvaluationResult.Complete:
-                        state.PushChain(newPos);
+                        _completeQuestCallback(player); // notify about completion before any potential disposal
+                        // if PlayerState snapshot is captured now, it should contain footprints of the last evaluation
+
+                        // (no need to push chain)
+
                         while (state.FootprintsCount > 0)
                         {
                             var fp = state.PopNode();
+                            _storage[fp]?.Reset(player);
                             _storage.NodeDecrement(fp);
                         }
-                        _completeQuestCallback(player); // notify about completion
                         break;
 
                     // some error occurred (Cursor and result are already set)

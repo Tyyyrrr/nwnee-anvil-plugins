@@ -30,7 +30,7 @@ namespace QuestSystem.Graph
         public event Action<INode, NwPlayer>? ShouldEvaluate;
         
         /// <summary>
-        /// The "root" node can't have parent nodes. Evaluation leading to such node shall be terminated and return success result.<br/>
+        /// The "root" node can't have parent. Evaluation leading to such node shall be terminated and return success result.<br/>
         /// Root nodes are the only valid entry points to manually run the sequence (for example from a DM command).
         /// <br/><br/>This is the only structural metadata exposed by nodes. All other structural relationships are managed by the graph.
         /// </summary>
@@ -47,8 +47,16 @@ namespace QuestSystem.Graph
         /// <br/><br/>This is the only behavior a node performs. 
         /// All state transitions, refcounting, and graph navigation are handled externally by the graph.
         /// </summary>
-        /// <param name="player">The context</param>
-        /// <returns></returns>
         public bool Evaluate(NwPlayer player);
+
+        /// <summary>
+        /// Release all data cached for this player.
+        /// </summary>
+        public void Reset(NwPlayer player);
+
+        /// <summary>
+        /// Initialize node storage for this player (optional)
+        /// </summary>
+        public void Enter(NwPlayer player);
     }
 }
