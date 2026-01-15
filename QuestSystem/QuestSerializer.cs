@@ -18,8 +18,7 @@ namespace QuestSystem
             {
                 typeof(Quest),
                 typeof(NodeBase),
-                typeof(Objective),
-                typeof(QuestStageReward)
+                typeof(Objective)
             }.ToFrozenSet();
 
             _emptyJsonValues = new HashSet<string>()

@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using QuestSystem.Nodes;
 
 namespace QuestSystem
 {
@@ -78,18 +79,18 @@ namespace QuestSystem
             return true;
         }
 
-        public bool TryGetStageImmediate(string questTag, int stageID, [NotNullWhen(true)] out QuestStage? stage)
+        public bool TryGetStageImmediate(string questTag, int stageID, [NotNullWhen(true)] out StageNode? stage)
         {
             var stagePath = $"{questTag}/{stageID}";
 
             var entry = GetEntry(stagePath);
 
-            stage = entry == null ? null : QuestSerializer.Deserialize<QuestStage>(entry.Open());
+            stage = entry == null ? null : QuestSerializer.Deserialize<StageNode>(entry.Open());
 
             return stage != null;
         }
 
-        public async Task<QuestStage?> GetStageAsync(string questTag, int stageID)
+        public async Task<StageNode?> GetStageAsync(string questTag, int stageID)
         {
             var stagePath = $"{questTag}/{stageID}";
 
@@ -106,7 +107,7 @@ namespace QuestSystem
             using var sr = new StreamReader(entry.Open());
             var json = await sr.ReadToEndAsync();
 
-            var stage = QuestSerializer.Deserialize<QuestStage>(json);
+            var stage = QuestSerializer.Deserialize<StageNode>(json);
             if (stage == null)
             {
                 NLog.LogManager.GetCurrentClassLogger().Error("DESERIALIZATION FAILED");
@@ -114,7 +115,7 @@ namespace QuestSystem
 
             return stage;
         }
-        public async Task<bool> SetStageAsync(string questTag, QuestStage stage)
+        public async Task<bool> SetStageAsync(string questTag, StageNode stage)
         {
             ThrowIfReadOnly();
 
