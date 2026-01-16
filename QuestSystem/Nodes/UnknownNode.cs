@@ -12,6 +12,15 @@ namespace QuestSystem.Nodes
         public UnknownNode(string raw){ RawData = raw; }
         public UnknownNode() : this(string.Empty) {}
 
-        internal override WrapperBase Wrap() => throw new NotSupportedException("Unknown nodes can not be wrapped.");
+        internal override WrapperBase Wrap() => throw new UnknownNodeWrapException(this);
+    }
+    internal sealed class UnknownNodeWrapException : Exception
+    {
+        public override string Message => "Unknown nodes can not be wrapped.";
+        public string RawNodeData {get;}
+        public UnknownNodeWrapException(UnknownNode node)
+        {
+            RawNodeData = node.RawData;
+        }
     }
 }

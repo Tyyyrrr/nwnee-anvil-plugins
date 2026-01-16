@@ -50,6 +50,7 @@ namespace QuestSystem
 
         private void RegisterQuest(Quest quest)
         {
+            _log.Info($"Registering quest {quest}");
             var graph = new QuestGraph(quest, _nodeLoader);
             _loadedQuests.Add(quest.Tag, graph);
             _questData.Add(quest.Tag, new());
@@ -57,11 +58,14 @@ namespace QuestSystem
 
         private void UnregisterQuest(string tag)
         {
+            var graph = _loadedQuests[tag];
+
+            _log.Info($"Unregistering quest {graph.Quest}");
             var data = _questData[tag];
+
             _questData.Remove(tag);
             data.Values.DisposeAll();
 
-            var graph = _loadedQuests[tag];
             _loadedQuests.Remove(tag);
             graph.Dispose();
 
@@ -110,6 +114,7 @@ namespace QuestSystem
         /// <inheritdoc cref="IQuestInterface.GiveQuest"/>
         public bool GiveQuest(NwPlayer player, string questTag, int stageId)
         {
+            _log.Info("Setting player on quest " + questTag +":"+stageId);
             if(!_loadedQuests.TryGetValue(questTag, out var graph))
             {
                 if(!_questPackMan.TryGetQuestImmediate(questTag, out var quest))
@@ -119,11 +124,18 @@ namespace QuestSystem
                 }
 
                 RegisterQuest(quest);
+
+                graph = _loadedQuests[questTag];
             }
 
-            graph = _loadedQuests[questTag];
-
-            return graph.AddPlayer(player, stageId);
+            if(graph?.AddPlayer(player, stageId) ?? false)
+                _log.Info("Player set on quest!");
+            else
+            {
+                _log.Info("Failed to set player on quest");
+                return false;
+            }
+            return true;
         }
 
         /// <inheritdoc cref="IQuestInterface.ClearQuest(NwPlayer, string)"/>
@@ -136,6 +148,7 @@ namespace QuestSystem
         /// <inheritdoc cref="IQuestInterface.CompleteQuest(NwPlayer, string, int)"/>
         public bool CompleteQuest(NwPlayer player, string questTag, int stageId = -1)
         {
+            _log.Info("Completing player quest " + questTag +" on stage "+stageId);
             if(_loadedQuests.TryGetValue(questTag, out var graph))
             {
                 stageId = stageId == -1 ? graph.GetRoot(player) : stageId;
@@ -171,6 +184,8 @@ namespace QuestSystem
         /// <inheritdoc cref="IQuestInterface.CompleteStage(NwPlayer, string, int)"/>
         public bool CompleteStage(NwPlayer player, string questTag, int stageId = -1)
         {
+            _log.Info("Completing quest " + questTag +" stage "+stageId);
+
             if(!_loadedQuests.TryGetValue(questTag, out var graph))
                 return false;
 

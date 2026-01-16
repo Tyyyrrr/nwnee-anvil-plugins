@@ -17,5 +17,7 @@ namespace QuestSystem
                 _pack = value;
             }
         }
+
+        public override string ToString() => $"{Tag}: {Name}";
     }
 }

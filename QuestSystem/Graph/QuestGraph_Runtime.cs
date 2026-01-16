@@ -21,6 +21,15 @@ namespace QuestSystem.Graph
                 public PlayerCursor OldPosition {get;set;}
                 public PlayerCursor NewPosition {get;set;}
                 public EvaluationResult Result {get;set;}
+
+                public override string ToString()
+                {
+                    return @$"
+                    - Result: {Result}
+                    - OldPosition: {OldPosition}
+                    - NewPosition: {NewPosition}
+                    Visited nodes: {string.Join(", ",VisitedNodes)}";
+                }
             }
 
             public enum EvaluationResult
@@ -52,6 +61,7 @@ namespace QuestSystem.Graph
                 /// </summary>
                 public EvaluationResult Evaluate(NwPlayer player, PlayerCursor initPos)
                 {
+                    _log.Info("Chain evaluator run...");
                     Cursor = initPos;
                     int rollback = initPos.Node;
                     bool started = false;
@@ -120,6 +130,7 @@ namespace QuestSystem.Graph
 
             public EvaluationOutcome EvaluateChain(PlayerCursor initialPosition, NwPlayer player)
             {
+                _log.Info("Evaluating the chain...");
                 var outcome = new EvaluationOutcome(){OldPosition = initialPosition};
                 _evaluator.NodeVisited += outcome.VisitedNodes.Add;
                 try
@@ -128,6 +139,8 @@ namespace QuestSystem.Graph
                     outcome.NewPosition = _evaluator.Cursor;
                     if(outcome.Result == EvaluationResult.Error)
                         _log.Error($"Failed to evaluate chain for the player starting from node {initialPosition} of quest \'{_tag}\'. Error occurred at node {_evaluator.Cursor.Node}");
+                    _log.Info($"Evaluation outcome: {outcome}");
+
                     return outcome;
                 }
                 finally
