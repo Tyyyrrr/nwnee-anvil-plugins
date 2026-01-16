@@ -2,6 +2,6 @@ namespace QuestSystem.Graph
 {
     internal interface INodeLoader
     {
-        internal INode? LoadNode(string questTag, int nodeId);
+        internal INode? LoadNode(Quest quest, int nodeId);
     }
 }

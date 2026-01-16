@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 using Anvil.API;
-using QuestSystem.Wrappers;
+using QuestSystem.Graph;
+using QuestSystem.Wrappers.Nodes;
 
 namespace QuestSystem
 {
     internal sealed class PlayerQuestData : IDisposable
     {
-        private readonly QuestWrapper _wrapper;
-        public QuestStageWrapper? CurrentStage => _chain.TryPeek(out var lastStageId) ? _wrapper[lastStageId] : null;
-
         private readonly NwPlayer _player;
         private readonly PlayerJournalState _journalState;
 
         private readonly Stack<int> _chain = new();
+
+        private readonly QuestGraph _graph;
 
         private bool _isQuestCompleted = false;
         public bool IsQuestCompleted 
@@ -23,7 +23,7 @@ namespace QuestSystem
             {
                 if(_isQuestCompleted || !value) return;
                 _isQuestCompleted = true;
-                _journalState.MarkCompleted(_player, _wrapper);
+                _journalState.MarkCompleted(_player, _graph.Quest.Tag);
             }
         }
 
@@ -38,10 +38,10 @@ namespace QuestSystem
             }
         }
 
-        public PlayerQuestData(NwPlayer player, QuestWrapper wrapper) 
+        public PlayerQuestData(NwPlayer player, QuestGraph graph) 
         {
+            _graph = graph;
             _player = player;
-            _wrapper = wrapper;
             _journalState = new();
             _journalState.JournalReady += OnJournalReadyForUpdate;
         }
@@ -51,25 +51,17 @@ namespace QuestSystem
             _journalState.ScheduleUpdate();
         }
 
-        public void ResetCurrentStageProgress()
-        {
-            NLog.LogManager.GetCurrentClassLogger().Info(" - - - - Resetting current stage progress");
-            if(CurrentStage == null) return;
-            CurrentStage.StopTracking(_player);
-            CurrentStage.TrackProgress(_player);
-            _journalState.ScheduleUpdate();
-        }
 
-
-        public void PushStage(QuestStageWrapper stage)
+        public void PushStage(StageNodeWrapper stage)
         {
             NLog.LogManager.GetCurrentClassLogger().Info(" - - - - Pushin' stage");
-            if(stage == null) 
-                return;
 
-            if(stage == CurrentStage)
+            var current = _graph.GetRootNode(_player) as StageNodeWrapper;
+
+            if(stage == current)
             {
-                ResetCurrentStageProgress();
+                current.Reset(_player);
+                _journalState.ScheduleUpdate();
                 return;
             }
 
@@ -80,7 +72,8 @@ namespace QuestSystem
         void OnJournalReadyForUpdate()
         {
             NLog.LogManager.GetCurrentClassLogger().Info(" - - - - Journal ready for update");
-            _journalState.Update(_player,_wrapper);
+            if (_graph.GetRootNode(_player) is StageNodeWrapper currentStage)
+                _journalState.Update(_player, _graph.Quest, currentStage);
         }
 
         public void Dispose()

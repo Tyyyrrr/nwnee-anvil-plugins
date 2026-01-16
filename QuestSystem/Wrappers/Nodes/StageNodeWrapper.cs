@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 
 using Anvil.API;
@@ -51,12 +53,17 @@ namespace QuestSystem.Wrappers.Nodes
         {
             foreach(var objective in _objectives)
                 objective.StartTrackingProgress(player);
+            var data = QuestManager.GetPlayerQuestData(player,Quest);
+            data?.PushStage(this);
         }
 
         public override void Reset(NwPlayer player)
         {
             foreach(var objective in _objectives)
                 objective.StopTrackingProgress(player);
+
+            var data = QuestManager.GetPlayerQuestData(player,Quest);
+            data?.Update();
         }
 
         protected override bool ProtectedEvaluate(NwPlayer player, out int nextId)
