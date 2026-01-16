@@ -16,6 +16,6 @@ namespace QuestSystem.Wrappers
             ProtectedDispose();
         }
         protected void ThrowIfDisposed()=>ObjectDisposedException.ThrowIf(disposed, this);
-        protected virtual void ProtectedDispose(){}
+        protected abstract void ProtectedDispose();
     }
 }

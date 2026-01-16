@@ -47,7 +47,9 @@ namespace QuestSystem.Graph
         /// <br/><br/>This is the only behavior a node performs. 
         /// All state transitions, refcounting, and graph navigation are handled externally by the graph.
         /// </summary>
-        public bool Evaluate(NwPlayer player);
+        /// <param name="nextId">Next node in the chain if evaluation was successfull</param>
+        /// <returns></returns>
+        public bool Evaluate(NwPlayer player, out int nextId);
 
         /// <summary>
         /// Release all data cached for this player.
