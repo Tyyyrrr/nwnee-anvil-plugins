@@ -83,13 +83,13 @@ namespace QuestSystem.Graph
                             node.Enter(player);
                         }
 
-                        if (!node.Evaluate(player))
+                        if (!node.Evaluate(player, out var nextId))
                         {
                             Cursor = (initPos.Root, rollback);
                             return node.IsRoot ? EvaluationResult.Failure : EvaluationResult.Rollback;
                         }
 
-                        switch (node.NextID)
+                        switch (nextId)
                         {
                             case -1:
                                 Cursor = (initPos.Root, node.ID);
@@ -100,7 +100,7 @@ namespace QuestSystem.Graph
                                 return EvaluationResult.Complete;
 
                             default:
-                                Cursor = (initPos.Root, node.NextID);
+                                Cursor = (initPos.Root, nextId);
                                 rollback = node.Rollback ? node.ID : rollback;
                                 break;
                         }
