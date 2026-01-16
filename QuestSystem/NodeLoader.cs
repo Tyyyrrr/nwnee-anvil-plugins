@@ -12,13 +12,31 @@ namespace QuestSystem
     {
         INode? INodeLoader.LoadNode(Quest quest, int nodeId) 
         {
-            var node = GetNodeImmediate(quest,nodeId) as NodeWrapper;
+            
+            NLog.LogManager.GetCurrentClassLogger().Info("Loading node!");
+
+            NodeWrapper? node = null;
+            try
+            {
+                node = GetNodeImmediate(quest,nodeId) as NodeWrapper;
+            }
+            catch(UnknownNodeWrapException ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Error(ex.Message + "\nRawData:\n" + ex.RawNodeData);
+                node?.Dispose();
+                return null;
+            }
+            
             if(node != null)
                 node.Quest = quest;
 
             return node;
         }
 
+
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="InvalidDataException"></exception>
+        /// <exception cref="UnknownNodeWrapException"></exception>
         private static INode? GetNodeImmediate(Quest quest, int id)
         {
             var pack = quest.Pack ?? throw new InvalidOperationException("QuestPack does not exist");

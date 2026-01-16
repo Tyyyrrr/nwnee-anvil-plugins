@@ -98,6 +98,8 @@ namespace QuestSystem.Graph
         /// <exception cref="InvalidOperationException"></exception>
         public void Evaluate(int id, NwPlayer player, EvaluationPolicy policy = EvaluationPolicy.Default)
         {
+            _log.Info($"QuestGraph Evaluate\nPlayer: {(player.IsValid ? player.PlayerName : "INVALID PLAYER")}\nID: {id}\nPolicy: {policy}");
+
             if(_storage[id] == null)
                 throw new InvalidOperationException("First node of the chain must exist on the graph to start evaluation");
 
@@ -171,6 +173,7 @@ namespace QuestSystem.Graph
 
         public void Dispose()
         {
+            _log.Info("Disposing quest graph " + Quest.ToString());
             _session.Dispose();
             _storage.Dispose();
         }
@@ -191,12 +194,14 @@ namespace QuestSystem.Graph
 
         public bool AddPlayer(NwPlayer player, int rootStage)
         {
+            _log.Info("Adding player to graph session");
             if(!_session.MovePlayer(player, rootStage))
                 return _session.EnterGraph(player, rootStage);
             return true;
         }
         public bool AddPlayer(NwPlayer player, int[] snapshot)
         {
+            _log.Info("Adding player to graph session with snapshot");
             if(!_session.EnterGraph(player, snapshot))
             {
                 return _session.ExitGraph(player)
@@ -204,6 +209,9 @@ namespace QuestSystem.Graph
             }
             return true;
         }
-        public bool RemovePlayer(NwPlayer player) => _session.ExitGraph(player);
+        public bool RemovePlayer(NwPlayer player){
+            _log.Info("Removing player from graph");
+            return _session.ExitGraph(player);
+        }
     }
 }

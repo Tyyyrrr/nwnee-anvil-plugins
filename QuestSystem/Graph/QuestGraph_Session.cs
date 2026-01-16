@@ -99,6 +99,7 @@ namespace QuestSystem.Graph
 
             private void ResetChain(NwPlayer player, PlayerState state)
             {
+                _log.Info("Resetting chain...");
                 if(state.FootprintsCount == 0) throw new InvalidOperationException("State needs at least a single footprint on the root node");
 
                 while (state.FootprintsCount > 1)
@@ -116,6 +117,7 @@ namespace QuestSystem.Graph
             /// </summary>
             public bool MovePlayer(NwPlayer player, int newRoot)
             {
+                _log.Info("Player moving on graph...");
                 if(!_playerStates.TryGetValue(player, out var state))
                     return false;
 
@@ -153,18 +155,27 @@ namespace QuestSystem.Graph
             /// <param name="rootNode">Initial root node to set the player on.</param>
             public bool EnterGraph(NwPlayer player, int rootNode)
             {
-                if(!_playerStates.ContainsKey(player))
+                _log.Info("Player entering graph...");
+                if (_playerStates.ContainsKey(player))
+                {
+                    _log.Error("Can't enter, player is already on the graph.");
                     return false;
+                }
 
                 var node = _storage.GetOrCreateNode(rootNode);
 
-                if(node == null) return false;
+                if(node == null)
+                {
+                    _log.Error($"Node is missing. ({rootNode})");
+                    return false;
+                }
 
                 _storage.NodeIncrement(rootNode);
 
                 if(!node.IsRoot)
                 {
                     _storage.NodeDecrement(rootNode);
+                    _log.Error("Graph can be entered only on the root nodes");
                     return false;
                 }
 
@@ -172,6 +183,7 @@ namespace QuestSystem.Graph
 
                 node.Enter(player);
 
+                _log.Info("...success!");
                 return true;
             }
 
@@ -185,8 +197,12 @@ namespace QuestSystem.Graph
             /// </param>
             public bool EnterGraph(NwPlayer player, IReadOnlyList<int> snapshot)
             {
-                if(!player.IsValid || _playerStates.ContainsKey(player))
+                _log.Info("Player entering graph...");
+                if(_playerStates.ContainsKey(player))
+                {
+                    _log.Error("Can't enter, player is already on the graph.");
                     return false;
+                }
 
                 var state = PlayerState.RestoreSnapshot(snapshot);
 
@@ -201,6 +217,8 @@ namespace QuestSystem.Graph
                             tn.Reset(player);
                             _storage.NodeDecrement(tn.ID);
                         }
+                        
+                        _log.Error($"Node is missing ({footprint})");
                         return false; 
                     }
                     touchedNodes.Add(node);
@@ -217,6 +235,7 @@ namespace QuestSystem.Graph
             /// </summary>
             public bool ExitGraph(NwPlayer player)
             {
+                _log.Info("Player exiting graph...");
                 if(!_playerStates.TryGetValue(player, out var state))
                     return false;
 
@@ -232,6 +251,8 @@ namespace QuestSystem.Graph
 
             public void Dispose()
             {
+                _log.Info("Disposing graph session...");
+
                 var players = _playerStates.Keys.ToArray();
 
                 foreach(var player in players)
@@ -243,6 +264,7 @@ namespace QuestSystem.Graph
             /// </summary>
             public void ApplyOutcome(Runtime.EvaluationOutcome outcome, NwPlayer player)
             {
+                _log.Info("Applying outcome...");
                 var state = _playerStates[player];
 
                 var result = outcome.Result;
