@@ -4,9 +4,9 @@ namespace QuestSystem.Wrappers.Objectives
 {
     internal sealed class ObjectiveSpellcastWrapper : ObjectiveWrapper<ObjectiveSpellcast>
     {
-        public ObjectiveSpellcastWrapper(Objective objective) : base(objective) { }
+        public ObjectiveSpellcastWrapper(ObjectiveSpellcast objective) : base(objective) { }
 
-        public override ObjectiveSpellcast Objective => base.Objective;
+        protected override ObjectiveSpellcast Objective => base.Objective;
 
         protected override void Subscribe()
         {

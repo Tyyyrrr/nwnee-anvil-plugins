@@ -2,14 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using QuestSystem.Wrappers.Nodes;
+
 namespace QuestSystem.Nodes
 {
     public sealed class RandomizerNode : NodeBase
     {
         public static readonly Random _prng = Random.Shared;
-        public override int NextID => WeightedRandom(); // todo: explicitly call function in NodeWrapper's Evaluate()
+        
         public Dictionary<int,float> Branches {get;set;} = new();
-        private int WeightedRandom()
+
+        internal override RandomizerNodeWrapper Wrap() => new(this);
+
+        internal int WeightedRandom()
         {
             var total = Branches.Values.Sum();
 

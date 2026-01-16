@@ -7,9 +7,9 @@ namespace QuestSystem.Wrappers.Objectives
 {
     internal sealed class ObjectiveKillWrapper : ObjectiveWrapper<ObjectiveKill>
     {
-        public ObjectiveKillWrapper(Objective objective) : base(objective) { }
+        public ObjectiveKillWrapper(ObjectiveKill objective) : base(objective) { }
 
-        public override ObjectiveKill Objective => base.Objective;
+        protected override ObjectiveKill Objective => base.Objective;
 
         protected override void Subscribe()
         {

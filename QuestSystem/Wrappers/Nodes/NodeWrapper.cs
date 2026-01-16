@@ -15,7 +15,7 @@ namespace QuestSystem.Wrappers.Nodes
         public virtual int NextID => _node.NextID;
         public bool Rollback => _node.Rollback;
 
-        public abstract bool IsRoot { get; }
+        public virtual bool IsRoot {get;} = false;
 
         public event Action<INode, NwPlayer>? ShouldEvaluate;
         protected void RaiseShouldEvaluate(NwPlayer player) => ShouldEvaluate?.Invoke(this,player);

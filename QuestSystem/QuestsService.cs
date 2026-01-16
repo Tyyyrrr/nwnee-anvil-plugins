@@ -10,7 +10,7 @@ using NLog;
 using MySQLClient;
 using CharactersRegistry;
 
-using QuestSystem.Wrappers;
+using QuestSystem.Wrappers.Objectives;
 
 namespace QuestSystem
 {
@@ -18,9 +18,12 @@ namespace QuestSystem
     public sealed class QuestsService : IDisposable
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
         private readonly MySQLService _mySQL;
         private readonly CharactersRegistryService _charactersRegistry;
+
         private readonly QuestManager _questMan;
+        public IQuestInterface Interface => _questMan;
 
         public QuestsService(MySQLService mySQL, CharactersRegistryService charactersRegistry, PluginStorageService pluginStorage, EventService events)
         {
@@ -32,12 +35,12 @@ namespace QuestSystem
             NwModule.Instance.OnClientEnter += OnClientEnter;
             NwModule.Instance.OnClientLeave += OnClientLeave;
 
-            _questMan = new(pluginStorage.GetPluginStoragePath(typeof(QuestsService).Assembly), _mySQL);
+            _questMan = new QuestManager(pluginStorage.GetPluginStoragePath(typeof(QuestsService).Assembly), _mySQL);
         }
 
         public void Dispose()
         {
-            _questMan.Dispose();
+            ((IDisposable)Interface).Dispose();
         }
 
         void OnClientEnter(ModuleEvents.OnClientEnter data)

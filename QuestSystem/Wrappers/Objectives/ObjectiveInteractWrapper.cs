@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Anvil.API;
 using Anvil.API.Events;
 using Anvil.Services;
@@ -10,9 +9,9 @@ namespace QuestSystem.Wrappers.Objectives
 {
     internal sealed class ObjectiveInteractWrapper : ObjectiveWrapper<ObjectiveInteract>
     {
-        public ObjectiveInteractWrapper(Objective objective) : base(objective) { }
+        public ObjectiveInteractWrapper(ObjectiveInteract objective) : base(objective) { }
 
-        public override ObjectiveInteract Objective => base.Objective;
+        protected override ObjectiveInteract Objective => base.Objective;
 
 
         protected override void Subscribe()
