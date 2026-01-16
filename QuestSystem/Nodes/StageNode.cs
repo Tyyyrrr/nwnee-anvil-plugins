@@ -9,7 +9,6 @@ namespace QuestSystem.Nodes
         public override bool Rollback { get => true; }
         public string JournalEntry { get; set; } = string.Empty;
         public bool ShowInJournal { get; set; } = true;
-        public RewardNode Reward { get; set; } = new();
         public Objective[] Objectives { get; set; } = Array.Empty<Objective>();
 
         internal override StageNodeWrapper Wrap() => new(this);
