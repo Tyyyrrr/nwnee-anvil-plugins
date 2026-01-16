@@ -74,24 +74,18 @@ namespace QuestSystem.Graph
 
         public const int MaxChainLength = 100;
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
-        public readonly string Tag;
-        private abstract class GraphComponent : IDisposable
-        {
-            public GraphComponent(string tag){Tag = tag;}
-            public string Tag {get;}
-            public abstract void Dispose();
-        }
+        public readonly Quest Quest;
 
         private readonly Storage _storage;
         private readonly Runtime _runtime;
         private readonly Session _session;
 
-        public QuestGraph(string tag, INodeLoader nodeLoader)
+        public QuestGraph(Quest quest, INodeLoader nodeLoader)
         {
-            Tag = tag;
-            _storage = new Storage(tag, nodeLoader);
-            _runtime = new Runtime(tag, _storage);
-            _session = new Session(tag, _storage, OnQuestCompleted);
+            Quest = quest;
+            _storage = new Storage(quest, nodeLoader);
+            _runtime = new Runtime(quest.Tag, _storage);
+            _session = new Session(_storage, OnQuestCompleted);
         }
 
         /// <summary>
@@ -173,12 +167,11 @@ namespace QuestSystem.Graph
         }
 
         public static event Action<string, NwPlayer>? QuestCompleted;
-        private void OnQuestCompleted(NwPlayer player) => QuestCompleted?.Invoke(Tag, player);
+        private void OnQuestCompleted(NwPlayer player) => QuestCompleted?.Invoke(Quest.Tag, player);
 
         public void Dispose()
         {
             _session.Dispose();
-            _runtime.Dispose();
             _storage.Dispose();
         }
 
@@ -187,6 +180,13 @@ namespace QuestSystem.Graph
 
         public bool IsEmpty => _storage.Count == 0;
         public int GetRoot(NwPlayer player) => _session[player]?.Cursor.Root ?? -1;
+        public INode? GetRootNode(NwPlayer player)
+        {
+            int id = GetRoot(player);
+            if(id < 0) return null;
+            return _storage[id];
+        }
+
         public int[]? CaptureSnapshot(NwPlayer player) => _session[player]?.CaptureSnapshot() ?? null;
 
         public bool AddPlayer(NwPlayer player, int rootStage)

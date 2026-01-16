@@ -10,14 +10,14 @@ namespace QuestSystem.Graph
         /// <summary>
         /// Responsible to tracking player states on the graph.
         /// </summary>
-        private sealed class Session : GraphComponent
+        private sealed class Session : IDisposable
         {
             private readonly Dictionary<NwPlayer, PlayerState> _playerStates = new();
 
             private readonly Storage _storage;
             
             private readonly Action<NwPlayer> _completeQuestCallback;
-            public Session(string tag, Storage storage, Action<NwPlayer> completeQuestCallback) : base(tag)
+            public Session(Storage storage, Action<NwPlayer> completeQuestCallback)
             {
                 _storage = storage;
                 _completeQuestCallback = completeQuestCallback;
@@ -134,8 +134,6 @@ namespace QuestSystem.Graph
                     return false;
                 }
 
-                _log.Info($"Player cursor moving on quest graph \'{Tag}\' from node {state.Cursor} to {new PlayerCursor(newRoot)}");
-                
                 _storage.NodeIncrement(newRoot);
 
                 ResetChain(player, state);
@@ -155,10 +153,8 @@ namespace QuestSystem.Graph
             /// <param name="rootNode">Initial root node to set the player on.</param>
             public bool EnterGraph(NwPlayer player, int rootNode)
             {
-                if(!player.IsValid || _playerStates.ContainsKey(player))
+                if(!_playerStates.ContainsKey(player))
                     return false;
-
-                _log.Info($"Player {player.PlayerName} entering quest \'{Tag}\' graph at root node {rootNode}");
 
                 var node = _storage.GetOrCreateNode(rootNode);
 
@@ -234,7 +230,7 @@ namespace QuestSystem.Graph
                 return true;
             }
 
-            public override void Dispose()
+            public void Dispose()
             {
                 var players = _playerStates.Keys.ToArray();
 

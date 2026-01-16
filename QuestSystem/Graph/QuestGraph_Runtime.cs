@@ -9,10 +9,11 @@ namespace QuestSystem.Graph
         /// <summary>
         /// Responsible for evaluating node chains.
         /// </summary>
-        private sealed partial class Runtime : GraphComponent
+        private sealed partial class Runtime
         {
             private readonly ChainEvaluator _evaluator;
             private readonly Storage _storage;
+            private readonly string _tag;
 
             public sealed class EvaluationOutcome
             {
@@ -110,8 +111,9 @@ namespace QuestSystem.Graph
                 }
             }
 
-            public Runtime(string tag, Storage storage) : base(tag)
+            public Runtime(string tag, Storage storage)
             {
+                _tag = tag;
                 _storage = storage;
                 _evaluator = new(_storage.GetOrCreateNode);
             }
@@ -125,7 +127,7 @@ namespace QuestSystem.Graph
                     outcome.Result = _evaluator.Evaluate(player, initialPosition);
                     outcome.NewPosition = _evaluator.Cursor;
                     if(outcome.Result == EvaluationResult.Error)
-                        _log.Error($"Failed to evaluate chain for the player starting from node {initialPosition} of quest \'{Tag}\'. Error occurred at node {_evaluator.Cursor.Node}");
+                        _log.Error($"Failed to evaluate chain for the player starting from node {initialPosition} of quest \'{_tag}\'. Error occurred at node {_evaluator.Cursor.Node}");
                     return outcome;
                 }
                 finally
@@ -135,11 +137,6 @@ namespace QuestSystem.Graph
 
                     _evaluator.NodeVisited -= outcome.VisitedNodes.Add;
                 }
-            }
-
-            public override void Dispose()
-            {
-                // nothing to dispose
             }
         }
     }

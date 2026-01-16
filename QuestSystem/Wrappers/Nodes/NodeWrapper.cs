@@ -11,6 +11,8 @@ namespace QuestSystem.Wrappers.Nodes
         public virtual NodeBase Node => _node;
         public NodeWrapper(NodeBase node) { _node = node; }
 
+        internal Quest? Quest {get;set;}
+
         public int ID => _node.ID;
         public virtual int NextID => _node.NextID;
         public bool Rollback => _node.Rollback;

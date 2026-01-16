@@ -22,33 +22,60 @@ namespace QuestSystem
         
         private readonly INodeLoader _nodeLoader;
 
-        private readonly Dictionary<string, Quest> _loadedQuests = new();
-        private readonly Dictionary<string, QuestGraph> _loadedQuestsGraphs = new();
-
+        private readonly Dictionary<string, QuestGraph>  _loadedQuests = new();
         private readonly Dictionary<NwPlayer, Dictionary<string, int>> _completedQuests = new();
+
+
+        private static readonly Dictionary<string, Dictionary<NwPlayer, PlayerQuestData>>  _questData = new();
+        public static PlayerQuestData? GetPlayerQuestData(NwPlayer player, Quest? quest)
+        {
+            if(quest == null) return null;
+            return _questData.TryGetValue(quest.Tag, out var dict) && dict.TryGetValue(player, out var data) ? data : null;
+        }
+
 
         public QuestManager(string questPackDirectory, MySQLService mySQL)
         {
             QuestGraph.QuestCompleted += OnQuestCompleted;
             _questPackMan = new(questPackDirectory);
-            _nodeLoader = new NodeLoader(_loadedQuests);
+            _nodeLoader = new NodeLoader();
             _mySQL = mySQL;
+
+            foreach(var dict in _questData.Values)
+                foreach(var p in dict.Values)
+                    p.Dispose();
+            
+            _questData.Clear();
         }
 
         private void RegisterQuest(Quest quest)
         {
-            var graph = new QuestGraph(quest.Tag, _nodeLoader);
-            _loadedQuests.Add(quest.Tag, quest);
-            _loadedQuestsGraphs.Add(quest.Tag, graph);
+            var graph = new QuestGraph(quest, _nodeLoader);
+            _loadedQuests.Add(quest.Tag, graph);
+            _questData.Add(quest.Tag, new());
         }
 
         private void UnregisterQuest(string tag)
         {
-            if (_loadedQuests.Remove(tag))
+            var data = _questData[tag];
+            _questData.Remove(tag);
+            data.Values.DisposeAll();
+
+            var graph = _loadedQuests[tag];
+            _loadedQuests.Remove(tag);
+            graph.Dispose();
+
+            List<NwPlayer> toRemove = new();
+            foreach(var kvp in _completedQuests)
             {
-                var graph = _loadedQuestsGraphs[tag];
-                graph.Dispose();
+                _ = kvp.Value.Remove(tag);
+                if(kvp.Value.Count == 0)
+                {
+                    toRemove.Add(kvp.Key);
+                }
             }
+
+            foreach(var p in toRemove) _completedQuests.Remove(p);
         }
 
         /// <summary>
@@ -56,22 +83,22 @@ namespace QuestSystem
         /// </summary>
         public void ClearPlayer(NwPlayer player)
         {
-            List<string> emptyGraphs = new();
-            foreach(var graph in _loadedQuestsGraphs.Values)
+            List<Quest> emptyGraphs = new();
+            foreach(var graph in _loadedQuests.Values)
             {
                 graph.RemovePlayer(player);
                 if(graph.IsEmpty)
-                    emptyGraphs.Add(graph.Tag);
+                    emptyGraphs.Add(graph.Quest);
             }
-            foreach(var tag in emptyGraphs)
-                UnregisterQuest(tag);
+            foreach(var q in emptyGraphs)
+                UnregisterQuest(q.Tag);
         }
 
         void OnQuestCompleted(string tag, NwPlayer player)
         {
             ((IQuestDatabase)this).UpdateQuest(player, tag);
 
-            var graph = _loadedQuestsGraphs[tag];
+            var graph = _loadedQuests[tag];
 
             graph.RemovePlayer(player);
 
@@ -83,9 +110,9 @@ namespace QuestSystem
         /// <inheritdoc cref="IQuestInterface.GiveQuest"/>
         public bool GiveQuest(NwPlayer player, string questTag, int stageId)
         {
-            if(!_loadedQuests.TryGetValue(questTag, out var quest))
+            if(!_loadedQuests.TryGetValue(questTag, out var graph))
             {
-                if(!_questPackMan.TryGetQuestImmediate(questTag, out quest))
+                if(!_questPackMan.TryGetQuestImmediate(questTag, out var quest))
                 {
                     _log.Error("Failed to set player on quest. The quest was not found in any packs");
                     return false;
@@ -94,7 +121,7 @@ namespace QuestSystem
                 RegisterQuest(quest);
             }
 
-            var graph = _loadedQuestsGraphs[questTag];
+            graph = _loadedQuests[questTag];
 
             return graph.AddPlayer(player, stageId);
         }
@@ -109,7 +136,7 @@ namespace QuestSystem
         /// <inheritdoc cref="IQuestInterface.CompleteQuest(NwPlayer, string, int)"/>
         public bool CompleteQuest(NwPlayer player, string questTag, int stageId = -1)
         {
-            if(_loadedQuestsGraphs.TryGetValue(questTag, out var graph))
+            if(_loadedQuests.TryGetValue(questTag, out var graph))
             {
                 stageId = stageId == -1 ? graph.GetRoot(player) : stageId;
                 if(stageId < 0) return false;
@@ -144,7 +171,7 @@ namespace QuestSystem
         /// <inheritdoc cref="IQuestInterface.CompleteStage(NwPlayer, string, int)"/>
         public bool CompleteStage(NwPlayer player, string questTag, int stageId = -1)
         {
-            if(!_loadedQuestsGraphs.TryGetValue(questTag, out var graph))
+            if(!_loadedQuests.TryGetValue(questTag, out var graph))
                 return false;
 
             var root = graph.GetRoot(player);
@@ -163,7 +190,7 @@ namespace QuestSystem
         /// <inheritdoc cref="IQuestInterface.IsOnQuest(NwPlayer, string, out int)"/>
         public bool IsOnQuest(NwPlayer player, string questTag, out int stageId)
         {
-            if(_loadedQuestsGraphs.TryGetValue(questTag, out var graph))
+            if(_loadedQuests.TryGetValue(questTag, out var graph))
             {
                 stageId = graph.GetRoot(player);
                 return stageId >= 0;
@@ -191,10 +218,15 @@ namespace QuestSystem
             ObjectDisposedException.ThrowIf(isDisposed, this);
             isDisposed = true;
 
-            foreach(var graph in _loadedQuestsGraphs.Values)
+            foreach(var dict in _questData.Values)
+                foreach(var p in dict.Values)
+                    p.Dispose();
+            
+            _questData.Clear();
+
+            foreach(var graph in _loadedQuests.Values)
                 graph.Dispose();
 
-            _loadedQuestsGraphs.Clear();
             _loadedQuests.Clear();
             _completedQuests.Clear();
 
@@ -219,7 +251,7 @@ namespace QuestSystem
                 return;
             }
 
-            if(!_loadedQuestsGraphs.TryGetValue(questTag, out var graph))
+            if(!_loadedQuests.TryGetValue(questTag, out var graph))
                 throw new InvalidOperationException("Can't save quest state, while it is not loaded into memory");
 
             //save active quest

@@ -8,7 +8,7 @@ namespace QuestSystem.Graph
         /// <summary>
         /// Responsible for managing node lifetimes.
         /// </summary>
-        private sealed class Storage : GraphComponent
+        private sealed class Storage : IDisposable
         {
             private sealed class NodeEntry
             {
@@ -21,9 +21,11 @@ namespace QuestSystem.Graph
             public int Count => _nodes.Count;
             private readonly INodeLoader _nodeLoader;
 
+            private readonly Quest _quest;
 
-            public Storage(string tag, INodeLoader nodeLoader) : base(tag)
+            public Storage(Quest quest, INodeLoader nodeLoader)
             {
+                _quest = quest;
                 _nodeLoader = nodeLoader;
             }
 
@@ -34,7 +36,7 @@ namespace QuestSystem.Graph
                 {
                     node.RefCount++;
                 }
-                else throw new InvalidOperationException($"Node is missing. QuestTag: {Tag}, Node: {id}");
+                else throw new InvalidOperationException($"Node is missing. QuestTag: {_quest.Tag}, Node: {id}");
             }
             public void NodeDecrement(int id)
             {
@@ -44,9 +46,9 @@ namespace QuestSystem.Graph
                     if(node.RefCount == 0)
                         RemoveNode(node.Node);
                     else if(node.RefCount<0)
-                        throw new InvalidOperationException($"RefCount underflow\nQuestTag: {Tag}, Node: {id}");
+                        throw new InvalidOperationException($"RefCount underflow\nQuestTag: {_quest.Tag}, Node: {id}");
                 }
-                else throw new InvalidOperationException($"Node is missing. QuestTag: {Tag}, Node: {id}");
+                else throw new InvalidOperationException($"Node is missing. QuestTag: {_quest.Tag}, Node: {id}");
             }
 
             public INode? GetOrCreateNode(PlayerCursor cursor)
@@ -57,12 +59,12 @@ namespace QuestSystem.Graph
                     return existing.Node;
 
                 if (!cursor.IsAtRoot && !_nodes.TryGetValue(cursor.Root, out _))
-                    throw new InvalidOperationException($"Parent node {cursor.Root} must be loaded before adding child {cursor.Node}. (Quest: {Tag})");
+                    throw new InvalidOperationException($"Parent node {cursor.Root} must be loaded before adding child {cursor.Node}. (Quest: {_quest.Tag})");
                 
-                var node = _nodeLoader.LoadNode(Tag, cursor.Node);
+                var node = _nodeLoader.LoadNode(_quest, cursor.Node);
                 if (node == null)
                 {
-                    _log.Error($"Node loader failed to load node {cursor.Node} of quest \'{Tag}\'");
+                    _log.Error($"Node loader failed to load node {cursor.Node} of quest \'{_quest.Tag}\'");
                     return null;
                 }
 
@@ -107,11 +109,11 @@ namespace QuestSystem.Graph
             /// Every memory leak will be printed as a warning.
             /// Every negative RefCount will be printed as an error.
             /// </summary>
-            public override void Dispose()
+            public void Dispose()
             {
                 foreach(var node in _nodes.Values)
                 {
-                    var str = $"Node {node.Node.ID} of quest \'{Tag}\' RefCount:{node.RefCount}{(node.RefCount == 0 ? " (leak)" : "")}";
+                    var str = $"Node {node.Node.ID} of quest \'{_quest.Tag}\' RefCount:{node.RefCount}{(node.RefCount == 0 ? " (leak)" : "")}";
                     if(node.RefCount>=0) 
                         _log.Warn(str);
                     else _log.Error(str);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Anvil.API;
+using QuestSystem.Wrappers.Nodes;
 
 namespace QuestSystem
 {
@@ -45,7 +46,7 @@ namespace QuestSystem
             {
                 try
                 {
-                    await NwTask.Delay(TimeSpan.FromSeconds(0.41291), _cts.Token);
+                    await NwTask.Delay(TimeSpan.FromSeconds(0.3291), _cts.Token);
                     if (!_cts.IsCancellationRequested)
                         JournalReady?.Invoke();
                 }
@@ -80,17 +81,15 @@ namespace QuestSystem
         }
 
 
-        public void Update(NwPlayer player, string tag)
+        public void Update(NwPlayer player, Quest quest, StageNodeWrapper stage)
         {
             NLog.LogManager.GetCurrentClassLogger().Info(" - - - - - Updating journal");
 
-            var entry = player.GetJournalEntry(tag);
+            var entry = player.GetJournalEntry(quest.Tag);
             var text = entry?.Text ?? string.Empty;
 
             text = text.Length > totalLength ? text[..totalLength] : text;
 
-
-            var stage = wrapper[LastStageID];
 
             var objStr = stage?.GetObjectivesJournalEntry(player);
             if(!string.IsNullOrEmpty(objStr))
@@ -99,13 +98,13 @@ namespace QuestSystem
             entry ??= new();
 
             entry.Text = string.Concat(text,string.Concat(_schedule),objStr);
-            entry.QuestTag = wrapper.Tag;
+            entry.QuestTag = quest.Tag;
             entry.QuestCompleted = false;
             entry.QuestDisplayed = entry.Text.Length > 0;
             entry.Updated = true;
-            entry.Name = wrapper.Name;
+            entry.Name = quest.Name;
             
-            totalLength = entry.Text - objStr.Length;
+            totalLength = entry.Text.Length - (objStr?.Length ?? 0);
 
             player.AddCustomJournalEntry(entry, entry.Text.Length == 0);
         }

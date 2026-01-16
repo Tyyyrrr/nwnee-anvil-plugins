@@ -1,30 +1,22 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using NLog;
+
 using QuestSystem.Graph;
 using QuestSystem.Nodes;
 using QuestSystem.Wrappers;
+using QuestSystem.Wrappers.Nodes;
 
 namespace QuestSystem
 {
     internal sealed class NodeLoader : INodeLoader
     {
-        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
-        
-        private readonly Dictionary<string, Quest> _quests;
-
-        public NodeLoader(Dictionary<string,Quest> quests)
+        INode? INodeLoader.LoadNode(Quest quest, int nodeId) 
         {
-            _quests = quests;
-        }
+            var node = GetNodeImmediate(quest,nodeId) as NodeWrapper;
+            if(node != null)
+                node.Quest = quest;
 
-        INode? INodeLoader.LoadNode(string questTag, int nodeId)
-        {
-            if(!_quests.TryGetValue(questTag, out var quest))
-                return null;
-            
-            return GetNodeImmediate(quest,nodeId);
+            return node;
         }
 
         private static INode? GetNodeImmediate(Quest quest, int id)
