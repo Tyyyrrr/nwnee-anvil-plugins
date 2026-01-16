@@ -4,9 +4,9 @@ namespace QuestSystem.Wrappers.Objectives
 {
     internal sealed class ObjectiveObtainWrapper : ObjectiveWrapper<ObjectiveObtain>
     {
-        public ObjectiveObtainWrapper(Objective objective) : base(objective) { }
+        public ObjectiveObtainWrapper(ObjectiveObtain objective) : base(objective) { }
 
-        public override ObjectiveObtain Objective => base.Objective;
+        protected override ObjectiveObtain Objective => base.Objective;
 
         protected override void Subscribe()
         {

@@ -1,6 +1,6 @@
 using System;
 
-namespace QuestSystem.Wrappers
+namespace QuestSystem.Wrappers.Objectives
 {
     internal interface IObjectiveProgress
     {

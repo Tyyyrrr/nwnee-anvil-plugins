@@ -4,8 +4,8 @@ namespace QuestSystem.Wrappers.Objectives
 {
     internal sealed class ObjectiveDeliverWrapper : ObjectiveWrapper<ObjectiveDeliver>
     {
-        public ObjectiveDeliverWrapper(Objective objective) : base(objective) { }
-        public override ObjectiveDeliver Objective => base.Objective;
+        public ObjectiveDeliverWrapper(ObjectiveDeliver objective) : base(objective) { }
+        protected override ObjectiveDeliver Objective => base.Objective;
 
         protected override void Subscribe()
         {

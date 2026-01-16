@@ -1,21 +1,27 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Anvil.API;
+
 using NLog;
 
+using QuestSystem.Nodes;
 
-namespace QuestSystem.Wrappers
+
+namespace QuestSystem.Wrappers.Nodes
 {
-    internal sealed class QuestStageRewardWrapper : BaseWrapper
+    internal sealed class RewardNodeWrapper : NodeWrapper<RewardNode>
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
-        public readonly QuestStageReward Reward;
-        public QuestStageRewardWrapper(QuestStageReward reward) { Reward = reward; }
+
+        public RewardNodeWrapper(RewardNode reward) : base(reward){}
+
+        public override bool IsRoot => false;
 
         public void GiveReward(NwPlayer player)
         {
-            if(Reward.IsEmpty) return;
+            if(Node.IsEmpty) return;
 
             _log.Info($"Giving quest stage reward");
 
@@ -46,11 +52,11 @@ namespace QuestSystem.Wrappers
 
             await pc.WaitForObjectContext();
 
-            if (Reward.Items.Count > 0)
+            if (Node.Items.Count > 0)
             {
                 int count = 0;
-                var createdItems = new NwItem[Reward.Items.Count];
-                foreach (var kvp in Reward.Items)
+                var createdItems = new NwItem[Node.Items.Count];
+                foreach (var kvp in Node.Items)
                 {
                     var item = await NwItem.Create(kvp.Key, pc);
 
@@ -63,7 +69,7 @@ namespace QuestSystem.Wrappers
 
                 await pc.WaitForObjectContext();
 
-                if(count != Reward.Items.Count) // if failed to create ANY item, destroy all items granted, and skip the reward
+                if(count != Node.Items.Count) // if failed to create ANY item, destroy all items granted, and skip the reward
                 {
                     foreach(var item in createdItems)
                     {
@@ -78,10 +84,10 @@ namespace QuestSystem.Wrappers
 
             await pc.WaitForObjectContext();
 
-            pc.Xp += Math.Max(0,Reward.Xp);
-            pc.GiveGold(Reward.Gold, Reward.NotifyPlayer);
-            pc.GoodEvilValue += ClampAlignmentChange(pc.GoodEvilValue, Reward.GoodEvilChange);
-            pc.LawChaosValue += ClampAlignmentChange(pc.LawChaosValue, Reward.LawChaosChange);
+            pc.Xp += Math.Max(0,Node.Xp);
+            pc.GiveGold(Node.Gold, Node.NotifyPlayer);
+            pc.GoodEvilValue += ClampAlignmentChange(pc.GoodEvilValue, Node.GoodEvilChange);
+            pc.LawChaosValue += ClampAlignmentChange(pc.LawChaosValue, Node.LawChaosChange);
 
             return true;
         }
@@ -93,10 +99,25 @@ namespace QuestSystem.Wrappers
             else return currentValue + change > 100 ? 100 - currentValue : change;
         }
 
-        public override void Dispose()
+
+
+        protected override bool ProtectedEvaluate(NwPlayer player, out int nextId)
         {
-            base.Dispose();
+            if(_rewarderPlayers.Add(player))
+                GiveReward(player);
+            nextId = NextID;
+            return true;
+        }
+
+
+
+        private readonly HashSet<NwPlayer> _rewarderPlayers = new();
+        public override void Reset(NwPlayer player) => _rewarderPlayers.Remove(player);
+
+        protected override void ProtectedDispose()
+        {
             //todo: cancel async task, or make it safe if not canceled
+            _rewarderPlayers.Clear();
         }
     }
 }

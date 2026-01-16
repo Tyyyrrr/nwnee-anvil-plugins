@@ -19,10 +19,11 @@ namespace QuestSystem.Nodes
                 var type = typeProp.GetString();
                 node = type switch
                 {
-                    "$stage" => JsonSerializer.Deserialize<QuestStageNode>(raw, options),
+                    "$stage" => JsonSerializer.Deserialize<StageNode>(raw, options),
+                    "$reward" => JsonSerializer.Deserialize<RewardNode>(raw, options),
+                    "$visibility" => JsonSerializer.Deserialize<VisibilityNode>(raw, options),
                     "$randomizer" => JsonSerializer.Deserialize<RandomizerNode>(raw, options),
                     "$cooldown" => JsonSerializer.Deserialize<CooldownNode>(raw, options),
-                    //...
                     //...
                     _ => new UnknownNode(raw)
                 };

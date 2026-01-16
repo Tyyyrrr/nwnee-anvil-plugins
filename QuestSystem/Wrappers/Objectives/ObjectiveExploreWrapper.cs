@@ -4,9 +4,9 @@ namespace QuestSystem.Wrappers.Objectives
 {
     internal sealed class ObjectiveExploreWrapper : ObjectiveWrapper<ObjectiveExplore>
     {
-        public ObjectiveExploreWrapper(Objective objective) : base(objective) { }
+        public ObjectiveExploreWrapper(ObjectiveExplore objective) : base(objective) { }
 
-        public override ObjectiveExplore Objective => base.Objective;
+        protected override ObjectiveExplore Objective => base.Objective;
 
         protected override void Subscribe()
         {

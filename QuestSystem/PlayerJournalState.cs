@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Anvil.API;
-using QuestSystem.Wrappers;
 
 namespace QuestSystem
 {
@@ -81,11 +80,11 @@ namespace QuestSystem
         }
 
 
-        public void Update(NwPlayer player, QuestWrapper wrapper)
+        public void Update(NwPlayer player, string tag)
         {
             NLog.LogManager.GetCurrentClassLogger().Info(" - - - - - Updating journal");
 
-            var entry = player.GetJournalEntry(wrapper.Tag);
+            var entry = player.GetJournalEntry(tag);
             var text = entry?.Text ?? string.Empty;
 
             text = text.Length > totalLength ? text[..totalLength] : text;
@@ -106,6 +105,8 @@ namespace QuestSystem
             entry.Updated = true;
             entry.Name = wrapper.Name;
             
+            totalLength = entry.Text - objStr.Length;
+
             player.AddCustomJournalEntry(entry, entry.Text.Length == 0);
         }
 
@@ -117,9 +118,9 @@ namespace QuestSystem
             _cts.Dispose();
         }
 
-        public void MarkCompleted(NwPlayer player, QuestWrapper wrapper)
+        public void MarkCompleted(NwPlayer player, string tag)
         {
-            var entry = player.GetJournalEntry(wrapper.Tag) 
+            var entry = player.GetJournalEntry(tag) 
                 ?? throw new InvalidOperationException("There is no Journal Quest Entry to complete");
             
             entry.QuestCompleted = true;

@@ -1,3 +1,5 @@
+using QuestSystem.Wrappers.Nodes;
+
 namespace QuestSystem.Nodes
 {
     public class CooldownNode : NodeBase
@@ -5,5 +7,7 @@ namespace QuestSystem.Nodes
         public string CooldownTag {get;set;} = string.Empty;
         public float DurationSeconds {get;set;}
         public bool RunOffline {get;set;}
+        
+        internal override CooldownNodeWrapper Wrap() => new(this);
     }
 }

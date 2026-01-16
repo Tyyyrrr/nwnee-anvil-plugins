@@ -7,9 +7,9 @@ using NLog;
 
 using QuestSystem.Objectives;
 
-namespace QuestSystem.Wrappers
+namespace QuestSystem.Wrappers.Objectives
 {
-    internal abstract partial class ObjectiveWrapper : BaseWrapper
+    internal abstract partial class ObjectiveWrapper : WrapperBase
     {
         private static EventService? _eventService = null;
         public static EventService EventService
@@ -25,18 +25,17 @@ namespace QuestSystem.Wrappers
         protected static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         protected readonly Objective _baseObjective;
-        public abstract Objective Objective { get; }
+        protected abstract Objective Objective { get; }
         public ObjectiveWrapper(Objective objective)
         {
             _baseObjective = objective;
-            Reward = new(objective.Reward);
             _log.Warn($"<{GetType().Name}> Subscribing");
             Subscribe();
         }
 
-        public event Action<ObjectiveWrapper, NwPlayer>? Updated;
+        public int NextID => Objective.NextStageID;
 
-        public readonly QuestStageRewardWrapper Reward;
+        public event Action<ObjectiveWrapper, NwPlayer>? Updated;
 
         public bool ShowInJournal => _baseObjective.ShowInJournal;
 
@@ -114,13 +113,12 @@ namespace QuestSystem.Wrappers
             Updated?.Invoke(this, player);
         }
 
-        public override void Dispose()
+        protected override void ProtectedDispose()
         {
-            base.Dispose();
-
             StopTrackingProgress();
 
             _log.Warn($"<{GetType().Name}> Unsubscribing");
+            
             Unsubscribe();
         }
     }
@@ -129,6 +127,6 @@ namespace QuestSystem.Wrappers
     {
         protected ObjectiveWrapper(Objective objective) : base(objective) { }
 
-        public override T Objective => (T)_baseObjective;
+        protected override T Objective => (T)_baseObjective;
     }
 }
