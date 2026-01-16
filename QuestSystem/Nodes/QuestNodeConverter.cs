@@ -24,7 +24,6 @@ namespace QuestSystem.Nodes
                     "$visibility" => JsonSerializer.Deserialize<VisibilityNode>(raw, options),
                     "$randomizer" => JsonSerializer.Deserialize<RandomizerNode>(raw, options),
                     "$cooldown" => JsonSerializer.Deserialize<CooldownNode>(raw, options),
-                    //...
                     _ => new UnknownNode(raw)
                 };
 
@@ -34,6 +33,28 @@ namespace QuestSystem.Nodes
         }
 
         public override void Write(Utf8JsonWriter writer, NodeBase value, JsonSerializerOptions options)
-            => JsonSerializer.Serialize(writer, (object)value, options);
+        {
+            writer.WriteStartObject();
+
+            // 1. Write discriminator
+            writer.WriteString("$nodeType", value switch
+            {
+                StageNode => "$stage",
+                RewardNode => "$reward",
+                VisibilityNode => "$visibility",
+                RandomizerNode => "$randomizer",
+                CooldownNode => "$cooldown",
+                _ => "$unknown"
+            });
+
+            var type = value.GetType();
+            var json = JsonSerializer.SerializeToElement(value, type, options);
+
+            foreach (var prop in json.EnumerateObject())
+                prop.WriteTo(writer);
+
+            writer.WriteEndObject();
+        }
+
     }
 }
