@@ -88,8 +88,20 @@ namespace CharactersRegistry
       var builder = _mySQL.QueryBuilder;
 
       builder.Select(sqlMap.TableName, sqlMap.Character).Where(sqlMap.UUID, uuidStr).Limit(2);
-      using var result = _mySQL.ExecuteQuery();
-      var count = result.Count();
+
+      var count = 0;
+
+      using (var result = _mySQL.ExecuteQuery())
+      {
+        if (!result.HasData)
+        {
+          _log.Error("Failed to execute query: " + builder.Build());
+            player.BootPlayer($"Serwer napotkał problem techniczny.");
+          return false;
+        }
+        else count = result.Count();
+      }
+
       switch (count)
       {
         case 0:
@@ -100,18 +112,11 @@ namespace CharactersRegistry
           playerCharacter.GetObjectVariable<LocalVariableBool>(CHARACTERS_REGISTRY_FLAG).Value = true;
           return true;
 
-        case -1:
-          _log.Error("Failed to execute query: " + builder.Build());
-            player.BootPlayer($"Serwer napotkał problem techniczny.");
-          return false;
-
         default:
           _log.Warn("Multiple database entries for the same character: " + playerCharacter.Name);
           player.BootPlayer("Błąd bazy danych. Skontaktuj się z administracją serwera.");
           return false;
       }
-
-
     }
 
 

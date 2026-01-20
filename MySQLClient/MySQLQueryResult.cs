@@ -15,7 +15,7 @@ namespace MySQLClient
         {
             public int Rows { get; init; }
             public readonly bool HasData => false;
-            public readonly IEnumerator<ISqlRowData> GetEnumerator() => throw new NotImplementedException();
+            public readonly IEnumerator<ISqlRowData> GetEnumerator() => throw new NotSupportedException("Non-query results can't be enumerated.");
             readonly IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             public readonly void Dispose() { }
         }
