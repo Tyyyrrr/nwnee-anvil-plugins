@@ -196,18 +196,18 @@ namespace MovementSystem
                         if(creature.IsVanir())
                             surfSpeedMod = 0f;
                         else if(creature.IsSvart())
-                            surfSpeedMod = 0.05f;
+                            surfSpeedMod = 0.1f;
                         else if(creature.IsDesertElf() || creature.IsArabian())
-                            surfSpeedMod -= 0.05f;
+                            surfSpeedMod -= 0.1f;
                     }
                     break;
 
                 case (int)SurfaceMaterial.Sand:
                     {
                         if(creature.IsDesertElf() || creature.IsArabian())
-                            surfSpeedMod = 0.05f;
+                            surfSpeedMod = 0.1f;
                         else if(creature.IsSvart())
-                            surfSpeedMod -= 0.05f;
+                            surfSpeedMod -= 0.1f;
                     }
                     break;
 

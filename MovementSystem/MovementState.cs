@@ -192,7 +192,12 @@ namespace MovementSystem
                 var flag = FlagFromFeatId(feat);
                 if(flag == FeatFlags.None) continue;
                 if(NWScript.GetHasFeat(feat, objId) > 0) 
+                {
                     featFlags |= flag;
+
+                    if(flag == FeatFlags.SuperiorInitiative)
+                        featFlags &= ~FeatFlags.ImprovedInitiative;
+                }
                 else featFlags &= ~flag;
             }
 
@@ -428,12 +433,12 @@ namespace MovementSystem
 
             if(!hasArmor && !hasShield)
             {
-                if(HasFeatFlag(FeatFlags.ImprovedInitiative)) speed += MovementService.GetFeatSpeedModifier(NWScript.FEAT_IMPROVED_INITIATIVE);
                 if(HasFeatFlag(FeatFlags.SuperiorInitiative)) speed += MovementService.GetFeatSpeedModifier(NWScript.FEAT_EPIC_SUPERIOR_INITIATIVE);
+                else if(HasFeatFlag(FeatFlags.ImprovedInitiative)) speed += MovementService.GetFeatSpeedModifier(NWScript.FEAT_IMPROVED_INITIATIVE);
 
                 if(HasFeatFlag(FeatFlags.LivelyStep))
                 {
-                    var monkClasses = NWScript.GetLevelByClass(NWScript.CLASS_TYPE_MONK, pcObj) + NWScript.GetLevelByClass(ServerData.DataProviders.CustomClassesMap.Sage);
+                    var monkClasses = NWScript.GetLevelByClass(NWScript.CLASS_TYPE_MONK, pcObj) + NWScript.GetLevelByClass(ServerData.DataProviders.CustomClassesMap.Sage, pcObj);
                     var wisMod = NWScript.GetAbilityModifier(NWScript.ABILITY_WISDOM);
                     speed += MovementService.GetFeatSpeedModifier(ServerData.DataProviders.CustomFeatsMap.Gadabout) * Math.Min(wisMod, monkClasses);
                 }
@@ -459,7 +464,7 @@ namespace MovementSystem
 
             if (HasFeatFlag(FeatFlags.Gadabout))
             {
-                var barbarianClassLevels = NWScript.GetLevelByClass(NWScript.CLASS_TYPE_BARBARIAN);
+                var barbarianClassLevels = NWScript.GetLevelByClass(NWScript.CLASS_TYPE_BARBARIAN, pcObj);
                 speed += MovementService.GetFeatSpeedModifier(ServerData.DataProviders.CustomFeatsMap.Gadabout) * Math.Min(10,barbarianClassLevels);
             }
             
