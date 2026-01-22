@@ -10,6 +10,7 @@ using MySQLClient;
 
 using NLog;
 using CharacterAppearance;
+using ExtensionsPlugin;
 
 
 namespace CharacterIdentity
@@ -51,7 +52,12 @@ namespace CharacterIdentity
         private static NwSkill? _senseMotiveSkill = null;
 
 
-        public static int GetMaxIdentities(NwCreature pc) => pc.GetSkillRank(_bluffSkill, true) / CharacterIdentityService.ServiceConfig.BluffRanksPerIdentity;
+        public static int GetMaxIdentities(NwCreature pc)
+        {
+            int maxIdentities = pc.GetSkillRank(_bluffSkill, true) / CharacterIdentityService.ServiceConfig.BluffRanksPerIdentity;
+            if(pc.IsGypsy()) maxIdentities += 1;
+            return Math.Min(maxIdentities, CharacterIdentityService.ServiceConfig.MaximumFalseIdentities);
+        }
         
         public static int GetIdentityRank(NwCreature pc)
         {

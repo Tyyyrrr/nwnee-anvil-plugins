@@ -5,6 +5,7 @@ using Anvil.API;
 using Anvil.API.Events;
 using Anvil.Services;
 using CharacterAppearance;
+using ExtensionsPlugin;
 using NLog;
 using NuiMVC;
 
@@ -75,12 +76,15 @@ namespace CharacterIdentity.UI
             if (pc == null || !pc.IsValid || pc != player.LoginCreature) return;
 
             var validClasses = CharacterIdentityService.ServiceConfig.RequiredClassLevels;
+
+            bool skipClassCheck = pc.IsGypsy();
             
             foreach (var c in pc.Classes)
             {
-                if (validClasses.TryGetValue(c.Class.Id.ToString(), out var req) || validClasses.TryGetValue(c.Class.ClassType.ToString(), out req))
+                int req = 0;
+                if (skipClassCheck || validClasses.TryGetValue(c.Class.Id.ToString(), out req) || validClasses.TryGetValue(c.Class.ClassType.ToString(), out req))
                 {
-                    if (c.Level >= req)
+                    if (skipClassCheck || c.Level >= req)
                     {
                         var idState = CharacterIdentityState.GetState(player)
                         ?? throw new InvalidOperationException($"Every player needs to have a {nameof(CharacterIdentityState)} object attached.");

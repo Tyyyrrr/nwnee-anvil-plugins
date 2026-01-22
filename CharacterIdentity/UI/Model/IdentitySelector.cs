@@ -1,5 +1,6 @@
 using System;
 using Anvil.API;
+using ExtensionsPlugin;
 
 namespace CharacterIdentity.UI.Model
 {
@@ -16,6 +17,7 @@ namespace CharacterIdentity.UI.Model
 
         public bool HasFalseIdentities => Identities.Length > 0;
         public readonly int HowManyIdentitiesCanBeCreated;
+        public readonly int BonusIdentitySlots = 0;
         public readonly string WhyCreationIsDisabled;
 
 
@@ -74,7 +76,6 @@ namespace CharacterIdentity.UI.Model
 
 
 
-
             var skillRanks = IdentityManager.GetIdentityRank(player.ControlledCreature!);
 
             var maxIdentities = CharacterIdentityService.ServiceConfig.MaximumFalseIdentities;
@@ -88,6 +89,9 @@ namespace CharacterIdentity.UI.Model
             else
             {
                 int allowed = Math.Min(maxIdentities, skillRanks / CharacterIdentityService.ServiceConfig.BluffRanksPerIdentity);
+                
+                if(player.ControlledCreature!.IsGypsy()) allowed += 1;
+
                 int available = allowed - Identities.Length;
 
 

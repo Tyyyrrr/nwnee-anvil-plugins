@@ -612,6 +612,8 @@ namespace CharacterIdentity
         {
             get
             {
+                if(IsValid && _loginCharacter.IsGypsy()) return true;
+                
                 if (!IsValid || _loginCharacter.GetSkillRank(NwSkill.FromSkillType(Skill.Bluff)!, true) < CharacterIdentityService.ServiceConfig.BluffRanksPerIdentity) 
                     return false;
 
