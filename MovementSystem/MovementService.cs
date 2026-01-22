@@ -170,26 +170,51 @@ namespace MovementSystem
         {
             if(NWScript.GetHasFeat(ServerData.DataProviders.CustomFeatsMap.WildAgility) > 0 || creature.IsFlying()/* || !creature.HasLegs()*/) return 0f;
 
-            return surface switch
+            float surfSpeedMod = _surfaceConfig.GetSpeedModifierForSurface(surface);
+
+            switch (surface)
             {
-                (int)SurfaceMaterial.Dirt or
-                (int)SurfaceMaterial.Grass or
-                (int)SurfaceMaterial.Leaves => creature.IsSatyr() ?
-                    AberrationMovementRateBonusForNaturalTerrain
-                    : _surfaceConfig.GetSpeedModifierForSurface(surface),
+                case (int)SurfaceMaterial.Dirt:
+                case (int)SurfaceMaterial.Grass:
+                case (int)SurfaceMaterial.Leaves:
+                    {
+                        if(creature.IsSatyr())
+                            surfSpeedMod = AberrationMovementRateBonusForNaturalTerrain;
+                    }
+                    break;
 
-                (int)SurfaceMaterial.Puddles or
-                (int)SurfaceMaterial.Water => creature.IsWaterNymph() ?
-                    0f : _surfaceConfig.GetSpeedModifierForSurface(surface),
+                case (int)SurfaceMaterial.Puddles:
+                case (int)SurfaceMaterial.Water:
+                    {
+                        if(creature.IsWaterNymph())
+                            surfSpeedMod = 0f;
+                    }
+                    break;
 
-                (int)SurfaceMaterial.Snow => creature.IsVanir() ?
-                    0f : _surfaceConfig.GetSpeedModifierForSurface(surface),
+                case (int)SurfaceMaterial.Snow:
+                    {
+                        if(creature.IsVanir())
+                            surfSpeedMod = 0f;
+                        else if(creature.IsSvart())
+                            surfSpeedMod = 0.05f;
+                        else if(creature.IsDesertElf() || creature.IsArabian())
+                            surfSpeedMod -= 0.05f;
+                    }
+                    break;
 
-                (int)SurfaceMaterial.Sand => creature.SubRace.Equals("tauden", StringComparison.OrdinalIgnoreCase) ?
-                    0f : _surfaceConfig.GetSpeedModifierForSurface(surface),
+                case (int)SurfaceMaterial.Sand:
+                    {
+                        if(creature.IsDesertElf() || creature.IsArabian())
+                            surfSpeedMod = 0.05f;
+                        else if(creature.IsSvart())
+                            surfSpeedMod -= 0.05f;
+                    }
+                    break;
 
-                _ => _surfaceConfig.GetSpeedModifierForSurface(surface)
-            };
+                default: break;
+            }
+
+            return surfSpeedMod;
         }
 
 
