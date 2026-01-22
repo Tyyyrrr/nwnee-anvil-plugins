@@ -76,5 +76,17 @@ namespace ExtensionsPlugin
         public static bool IsNeur(this NwCreature creature) => DataProviders.CreatureInspector.IsNeur(creature);
         public static bool IsVampire(this NwCreature creature) => DataProviders.CreatureInspector.IsVampire(creature);
         public static bool IsLycantrophe(this NwCreature creature) => DataProviders.CreatureInspector.IsLycantrophe(creature);
+
+        public static bool IsSkulldwarf(this NwCreature creature) => DataProviders.CreatureInspector.IsSkulldwarf(creature);
+        public static bool IsCitydwarf(this NwCreature creature) => DataProviders.CreatureInspector.IsCitydwarf(creature);
+        public static bool IsDesertElf(this NwCreature creature) => DataProviders.CreatureInspector.IsDesertElf(creature);
+        public static bool IsUnderdweller(this NwCreature creature) => DataProviders.CreatureInspector.IsUnderdweller(creature);
+        public static bool IsSvart(this NwCreature creature) => DataProviders.CreatureInspector.IsSvart(creature);
+        public static bool IsWolffolk(this NwCreature creature) => DataProviders.CreatureInspector.IsWolffolk(creature);
+        public static bool IsCossack(this NwCreature creature) => DataProviders.CreatureInspector.IsCossack(creature);
+        public static bool IsTatar(this NwCreature creature) => DataProviders.CreatureInspector.IsTatar(creature);
+        public static bool IsGypsy(this NwCreature creature) => DataProviders.CreatureInspector.IsGypsy(creature);
+        public static bool IsAsian(this NwCreature creature) => DataProviders.CreatureInspector.IsAsian(creature);
+        public static bool IsArabian(this NwCreature creature) => DataProviders.CreatureInspector.IsArabian(creature);
     }
 }
