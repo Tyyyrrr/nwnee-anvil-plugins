@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CharacterIdentity", "Charac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestSystem", "QuestSystem\QuestSystem.csproj", "{B109F4AC-3316-4035-9E24-7D240F9EFD3E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestSystem.Tests", "QuestSystem.Tests\QuestSystem.Tests.csproj", "{761D3459-D49B-420A-A235-98E14217A346}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,5 +53,7 @@ Global
 		{83E5C3B7-97CC-451A-BA47-FF9013D3DF0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B109F4AC-3316-4035-9E24-7D240F9EFD3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B109F4AC-3316-4035-9E24-7D240F9EFD3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{761D3459-D49B-420A-A235-98E14217A346}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{761D3459-D49B-420A-A235-98E14217A346}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal
