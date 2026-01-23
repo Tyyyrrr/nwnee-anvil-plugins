@@ -4,13 +4,18 @@ using System.Text.Json.Serialization;
 
 namespace QuestSystem.Nodes
 {
-    public class NodeConverter : JsonConverter<NodeBase>
+    internal class NodeConverter : JsonConverter<NodeBase>
     {
-        public override NodeBase Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        private readonly JsonSerializerOptions _options;
+        public NodeConverter(JsonSerializerOptions options)
+        {
+            _options = options;
+        }
+
+        public override NodeBase Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions _)
         {
             using var doc = JsonDocument.ParseValue(ref reader);
             var root = doc.RootElement;
-            var raw = root.GetRawText();
 
             NodeBase? node = null;
 
@@ -19,24 +24,22 @@ namespace QuestSystem.Nodes
                 var type = typeProp.GetString();
                 node = type switch
                 {
-                    "$stage" => JsonSerializer.Deserialize<StageNode>(raw, options),
-                    "$reward" => JsonSerializer.Deserialize<RewardNode>(raw, options),
-                    "$visibility" => JsonSerializer.Deserialize<VisibilityNode>(raw, options),
-                    "$randomizer" => JsonSerializer.Deserialize<RandomizerNode>(raw, options),
-                    "$cooldown" => JsonSerializer.Deserialize<CooldownNode>(raw, options),
-                    _ => new UnknownNode(raw)
+                    "$stage" => root.Deserialize<StageNode>(_options),
+                    "$reward" => root.Deserialize<RewardNode>(_options),
+                    "$visibility" => root.Deserialize<VisibilityNode>(_options),
+                    "$randomizer" => root.Deserialize<RandomizerNode>(_options),
+                    "$cooldown" => root.Deserialize<CooldownNode>(_options),
+                    _ => new UnknownNode(doc.RootElement.GetRawText())
                 };
-
             }
 
-            return node ?? new UnknownNode(raw);
+            return node ?? new UnknownNode(root.GetRawText());
         }
 
-        public override void Write(Utf8JsonWriter writer, NodeBase value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, NodeBase value, JsonSerializerOptions _)
         {
             writer.WriteStartObject();
 
-            // 1. Write discriminator
             writer.WriteString("$nodeType", value switch
             {
                 StageNode => "$stage",
@@ -48,7 +51,7 @@ namespace QuestSystem.Nodes
             });
 
             var type = value.GetType();
-            var json = JsonSerializer.SerializeToElement(value, type, options);
+            var json = JsonSerializer.SerializeToElement(value, type, _options);
 
             foreach (var prop in json.EnumerateObject())
                 prop.WriteTo(writer);

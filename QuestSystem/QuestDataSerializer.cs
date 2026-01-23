@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using QuestSystem.Nodes;
@@ -9,32 +11,71 @@ namespace QuestSystem
     {
         public Quest? DeserializeQuestFromStream(Stream stream)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                return JsonSerializer.Deserialize<Quest>(stream, IQuestDataSerializer.Options);
+            }
+            catch(Exception)
+            {
+                return null;
+            }
         }
 
         public NodeBase? DeserializeNodeFromStream(Stream stream)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                return JsonSerializer.Deserialize<NodeBase>(stream, IQuestDataSerializer.Options);
+            }
+            catch(Exception)
+            {
+                return null;
+            }
         }
 
-        public Task<NodeBase?> DeserializeNodeFromStreamAsync(Stream stream, CancellationToken cancellationToken = default)
+
+        public async Task SerializeToStreamAsync(Quest quest, Stream stream)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                await JsonSerializer.SerializeAsync(stream, quest, IQuestDataSerializer.Options);
+            }
+            catch(Exception){}
         }
 
-        public Task<Quest?> DeserializeQuestFromStreamAsync(Stream stream, CancellationToken cancellationToken = default)
-        {
-            throw new System.NotImplementedException();
+        public async Task SerializeToStreamAsync(NodeBase node, Stream stream)
+        {            
+            try
+            {
+                await JsonSerializer.SerializeAsync(stream, node, IQuestDataSerializer.Options);
+            }
+            catch(Exception){}
         }
 
-        public Task SerializeToStreamAsync(Quest quest, Stream stream)
-        {
-            throw new System.NotImplementedException();
+
+        public async Task<Quest?> DeserializeQuestFromStreamAsync(Stream stream, CancellationToken cancellationToken = default)
+        {            
+            try
+            {
+                return await JsonSerializer.DeserializeAsync<Quest>(stream, IQuestDataSerializer.Options, cancellationToken);
+            }
+            catch(Exception)
+            {
+                return null;
+            }
         }
 
-        public Task SerializeToStreamAsync(NodeBase node, Stream stream)
+        public async Task<NodeBase?> DeserializeNodeFromStreamAsync(Stream stream, CancellationToken cancellationToken = default)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                return await JsonSerializer.DeserializeAsync<NodeBase>(stream, IQuestDataSerializer.Options, cancellationToken);
+            }
+            catch(Exception)
+            {
+                return null;
+            }
         }
+
     }
 }

@@ -39,13 +39,9 @@ namespace QuestSystem
         /// <exception cref="UnknownNodeWrapException"></exception>
         private static INode? GetNodeImmediate(Quest quest, int id)
         {
-            var pack = quest.Pack ?? throw new InvalidOperationException("QuestPack does not exist");
+            var pack = (quest.Pack as RuntimeQuestPack) ?? throw new InvalidOperationException("RuntimeQuestPack does not exist");
 
-            var entry = pack.GetEntry($"{quest.Tag}/{id}");
-            if(entry == null) return null;
-
-            using var stream = entry.Open();
-            var nodeBase = QuestSerializer.Deserialize<NodeBase>(stream)
+            var nodeBase = pack.GetNode(quest.Tag, id)
                 ?? throw new InvalidDataException($"Node {id} is missing or invalid.");
 
             if (nodeBase is not IWrappable wrappable)

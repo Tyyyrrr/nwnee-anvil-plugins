@@ -21,7 +21,9 @@ namespace QuestSystem
                 IncludeFields = false,
             };
 
-            Options.Converters.Add(new NodeConverter());
+            var cleanOptions = new JsonSerializerOptions(Options);
+
+            Options.Converters.Add(new NodeConverter(cleanOptions));
         }
 
         public Task SerializeToStreamAsync(Quest quest, Stream stream);
