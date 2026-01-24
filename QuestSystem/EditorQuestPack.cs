@@ -85,7 +85,7 @@ namespace QuestSystem
 
                 _linkedCT.ThrowIfCancellationRequested();
 
-                var entry = _archive.CreateEntry(questPath);
+                var entry = _archive.CreateEntry(questPath, CompressionLevel.NoCompression);
 
                 using var stream = entry.Open();
 
@@ -123,7 +123,7 @@ namespace QuestSystem
                 }
                 if(noQuest) return false;
 
-                var entry = _archive.CreateEntry(nodePath);
+                var entry = _archive.CreateEntry(nodePath, CompressionLevel.NoCompression);
 
                 using var stream = entry.Open();
 
@@ -162,7 +162,7 @@ namespace QuestSystem
                 }
                 if(noQuest) return false;
 
-                var entry = _archive.CreateEntry(metadataPath);
+                var entry = _archive.CreateEntry(metadataPath,CompressionLevel.SmallestSize);
                 
                 using var sw = new StreamWriter(entry.Open(), leaveOpen: false);
 
