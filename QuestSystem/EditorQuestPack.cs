@@ -317,6 +317,40 @@ namespace QuestSystem
 
 
         /// <returns>Array of nodes deserialized from the file, or null if quest does not exist in the pack.</returns>
+        public async Task<Quest[]?> GetQuestsAsync()
+        {
+            await _zipLock.WaitAsync(_linkedCT);
+
+            try
+            {
+                _linkedCT.ThrowIfCancellationRequested();
+
+                var quests = new List<Quest>();
+
+
+                foreach (var entry in _archive.Entries.Where(e => e.FullName.EndsWith('/')))
+                {
+
+                    using var stream = entry.Open();
+
+                    var quest = await _serializer.DeserializeQuestFromStreamAsync(stream, _linkedCT);
+
+                    _linkedCT.ThrowIfCancellationRequested();
+
+                    if (quest == null) return null;
+
+                    quests.Add(quest);
+                }
+
+                return quests.ToArray();
+            }
+            finally
+            {
+                _zipLock.Release();
+            }
+        }
+
+        /// <returns>Array of nodes deserialized from the file, or null if quest does not exist in the pack.</returns>
         public async Task<NodeBase[]?> GetNodesAsync(string questTag)
         {
             await _zipLock.WaitAsync(_linkedCT);

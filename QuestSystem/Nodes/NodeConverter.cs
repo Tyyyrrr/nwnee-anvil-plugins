@@ -29,7 +29,7 @@ namespace QuestSystem.Nodes
                     "$visibility" => root.Deserialize<VisibilityNode>(_options),
                     "$randomizer" => root.Deserialize<RandomizerNode>(_options),
                     "$cooldown" => root.Deserialize<CooldownNode>(_options),
-                    _ => new UnknownNode(doc.RootElement.GetRawText())
+                    _ => new UnknownNode(root.GetRawText())
                 };
             }
 
