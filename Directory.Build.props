@@ -1,23 +1,30 @@
 <Project>
-  <PropertyGroup>
-    <!-- Change this to your desired output directory -->
-    <SharedOutputDirectory>/path-to-anvil/Plugins</SharedOutputDirectory>
+	<!-- These properties will be applied to every project in the solution -->
+	<PropertyGroup>
+		<Configurations>All;PluginsOnly</Configurations>
+		<Platforms>x64</Platforms>
+	</PropertyGroup>	
+	
+	<!-- These properties will be applied only to actual plugins -->
+    <PropertyGroup Condition="'$(NotAPlugin)' != 'true'">
 
-    <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>9.0</LangVersion>
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+		<SharedOutputDirectory>/path-to-anvil/Plugins</SharedOutputDirectory> <!-- Change this to your desired output directory -->
 
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>9.0</LangVersion>
+        <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
 
-    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <EnableDynamicLoading>true</EnableDynamicLoading>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 
-    <NoWarn>1591</NoWarn>
-    <Nullable>enable</Nullable>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
 
-    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
-    
-  </PropertyGroup>
+        <NoWarn>1591</NoWarn>
+        <Nullable>enable</Nullable>
+
+        <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
+    </PropertyGroup>
+		
 </Project>
