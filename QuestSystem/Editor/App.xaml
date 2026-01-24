@@ -4,6 +4,8 @@
              xmlns:local="clr-namespace:QuestEditor"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        
+        <CornerRadius x:Key="NodeCornerRadius">12</CornerRadius>
+        
     </Application.Resources>
 </Application>
