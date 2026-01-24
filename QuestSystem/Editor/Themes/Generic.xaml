@@ -1,0 +1,62 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:QuestEditor"
+    xmlns:nodes="clr-namespace:QuestEditor.Nodes">
+
+    <DataTemplate DataType="{x:Type nodes:StageNodeVM}">
+        <nodes:StageNodeControl />
+    </DataTemplate>
+    
+    <DataTemplate DataType="{x:Type nodes:RewardNodeVM}">
+        <nodes:RewardNodeControl />
+    </DataTemplate>
+
+    <Style x:Key="NodeControlBaseStyle" TargetType="nodes:NodeControl">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="nodes:NodeControl">
+                    <Border
+                            Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" 
+                            CornerRadius="{DynamicResource NodeCornerRadius}"
+                            Opacity="{TemplateBinding Opacity}">
+                        
+                        <ContentControl Content="{TemplateBinding Content}" Foreground="AliceBlue"/>
+
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="nodes:NodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="Opacity" Value="0.8"/>
+    </Style>
+    
+    
+    <Style TargetType="nodes:StageNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="Content">
+            <Setter.Value>
+                <StackPanel>
+                    <TextBlock Text="Stage Node"/>
+                    <TextBlock Text="{Binding StageName}"/>
+                </StackPanel>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="nodes:RewardNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="Content">
+            <Setter.Value>
+                <StackPanel>
+                    <TextBlock Text="Reward Node"/>
+                    <TextBlock Text="{Binding GoldAmount}"/>
+                </StackPanel>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+</ResourceDictionary>
