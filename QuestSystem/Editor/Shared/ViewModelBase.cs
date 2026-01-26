@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace QuestEditor
+namespace QuestEditor.Shared
 {
     public abstract class ViewModelBase : INotifyPropertyChanging, INotifyPropertyChanged
     {

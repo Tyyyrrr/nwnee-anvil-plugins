@@ -1,0 +1,27 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Color x:Key="PackNormalColor">#B13F2124</Color>
+    <Color x:Key="PackExpandedColor">#B26F2124</Color>
+    <Color x:Key="PackSelectedColor">#F123A124</Color>
+
+    <LinearGradientBrush x:Key="ExplorerBackground">
+        <GradientStopCollection>
+            <GradientStop Color="{x:Static Colors.AliceBlue}" Offset="-0.5"/>
+            <GradientStop Color="{x:Static Colors.DarkSlateBlue}" Offset="2"/>
+        </GradientStopCollection>
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="MenuBackgroundColorBrush"
+                 Color="{DynamicResource {x:Static SystemColors.MenuBarColorKey}}"/>
+
+    <SolidColorBrush x:Key="MenuForegroundColorBrush"
+                 Color="{DynamicResource {x:Static SystemColors.MenuTextColorKey}}"/>
+
+
+    <SolidColorBrush x:Key="TreeViewItemHoveredBrush">White</SolidColorBrush>
+    <SolidColorBrush x:Key="TreeViewItemSelectedBackgroundBrush" Color="LightBlue"/>
+    <SolidColorBrush x:Key="TreeViewItemBorderBrush" Color="DarkSlateBlue"/>
+    <SolidColorBrush x:Key="TreeViewItemForeground" Color="Black"/>
+
+</ResourceDictionary>
