@@ -5,11 +5,95 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QuestEditor"
         xmlns:nodes="clr-namespace:QuestEditor.Nodes"
+        xmlns:explorer="clr-namespace:QuestEditor.Explorer"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
+
+    <Window.DataContext>
+        <local:MainWindowVM/>
+    </Window.DataContext>
+
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.New" Executed="New_Executed" CanExecute="New_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Open" Executed="Open_Executed" CanExecute="Open_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Save" Executed="Save_Executed" CanExecute="Save_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.SaveAs" Executed="SaveAs_Executed" CanExecute="SaveAs_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Find" Executed="Find_Executed" CanExecute="Find_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Close" Executed="Close_Executed" CanExecute="Close_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.SelectAll" Executed="SelectAll_Executed" CanExecute="SelectAll_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Copy" Executed="Copy_Executed" CanExecute="Copy_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Cut" Executed="Cut_Executed" CanExecute="Cut_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Paste" Executed="Paste_Executed" CanExecute="Paste_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Delete" Executed="Delete_Executed" CanExecute="Delete_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Undo" Executed="Undo_Executed" CanExecute="Undo_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Redo" Executed="Redo_Executed" CanExecute="Redo_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Help" Executed="Help_Executed" CanExecute="Help_CanExecute"/>
+    </Window.CommandBindings>
+
+    <Window.Resources>
+        <Style TargetType="{x:Type local:MainWindow}">
+            <Setter Property="HelpCommand" Value="{Binding HelpCommand}" />
+            <Setter Property="CloseCommand" Value="{Binding CloseCommand}" />
+            <Setter Property="UndoCommand" Value="{Binding UndoCommand}" />
+            <Setter Property="RedoCommand" Value="{Binding RedoCommand}" />
+            <Setter Property="NewCommand" Value="{Binding Explorer.NewCommand}" />
+            <Setter Property="OpenCommand" Value="{Binding Explorer.OpenCommand}" />
+            <Setter Property="SaveCommand" Value="{Binding Explorer.SaveCommand}" />
+            <Setter Property="SaveAsCommand" Value="{Binding Explorer.SaveAsCommand}" />
+            <Setter Property="SelectAllCommand" Value="{Binding CurrentContext.SelectAllCommand}" />
+            <Setter Property="CopyCommand" Value="{Binding CurrentContext.CopyCommand}" />
+            <Setter Property="CutCommand" Value="{Binding CurrentContext.CutCommand}" />
+            <Setter Property="PasteCommand" Value="{Binding CurrentContext.PasteCommand}" />
+            <Setter Property="DeleteCommand" Value="{Binding CurrentContext.DeleteCommand}" />
+            <Setter Property="FindCommand" Value="{Binding CurrentContext.FindCommand}" />
+        </Style>
+
+    </Window.Resources>
+    
     <Grid>
-        <nodes:NodeControl BorderBrush="Red" BorderThickness="12" Background="Black" Width="350" Height="120"/>
-        <nodes:RewardNodeControl BorderBrush="Red" BorderThickness="12" Background="Black" Width="350" Height="120" Margin="426,282,24,32"/>
-        <nodes:StageNodeControl BorderBrush="Red" BorderThickness="12" Background="Black" Width="350" Height="120" Margin="50,277,400,37"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition MinWidth="120" MaxWidth="360" Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="5*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <explorer:ExplorerControl DataContext="{Binding Explorer}"
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            Background="{DynamicResource ExplorerBackground}"/>
+
+        <Menu Grid.ColumnSpan="2" Background="{DynamicResource MenuBackgroundColorBrush}" >
+            <MenuItem Header="File" Background="{DynamicResource MenuBackgroundColorBrush}" Foreground="{DynamicResource MenuForegroundColorBrush}">
+                <MenuItem Header ="New" Command="{x:Static ApplicationCommands.New}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <MenuItem Header ="Open" Command="{x:Static ApplicationCommands.Open}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <MenuItem Header ="Save" Command="{x:Static ApplicationCommands.Save}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <MenuItem Header ="Save As" Command="{x:Static ApplicationCommands.SaveAs}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <Separator/>
+                <MenuItem Header ="Find" Command="{x:Static ApplicationCommands.Find}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <Separator/>
+                <MenuItem Header ="Close" Command="{x:Static ApplicationCommands.Close}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+            </MenuItem>
+            <MenuItem Header="Edit" Background="{DynamicResource MenuBackgroundColorBrush}" Foreground="{DynamicResource MenuForegroundColorBrush}">
+                <MenuItem Header ="Select All" Command="{x:Static ApplicationCommands.SelectAll}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <Separator/>
+                <MenuItem Header ="Copy" Command="{x:Static ApplicationCommands.Copy}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <MenuItem Header ="Cut" Command="{x:Static ApplicationCommands.Cut}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <MenuItem Header ="Paste" Command="{x:Static ApplicationCommands.Paste}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <MenuItem Header ="Delete" Command="{x:Static ApplicationCommands.Delete}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <Separator/>
+                <MenuItem Header ="Undo" Command="{x:Static ApplicationCommands.Undo}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <MenuItem Header ="Redo" Command="{x:Static ApplicationCommands.Redo}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+            </MenuItem>
+            <MenuItem Header="Themes" Background="{DynamicResource MenuBackgroundColorBrush}" Foreground="{DynamicResource MenuForegroundColorBrush}">
+                <MenuItem Header="Light" Click="ToggleLightMode" x:Name="LightThemeMenuOption" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <MenuItem Header="Dark" Click="ToggleDarkMode" x:Name="DarkThemeMenuOption" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+            </MenuItem>
+            <MenuItem Header ="Help" Command="{x:Static ApplicationCommands.Help}" Background="{DynamicResource MenuBackgroundColorBrush}" Foreground="{DynamicResource MenuForegroundColorBrush}"/>
+        </Menu>
     </Grid>
 </Window>
