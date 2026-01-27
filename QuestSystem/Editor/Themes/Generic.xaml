@@ -6,6 +6,10 @@
     xmlns:explorer="clr-namespace:QuestEditor.Explorer"
     xmlns:nodes="clr-namespace:QuestEditor.Nodes">
     
+    
+    
+    <!-- NODES -->
+    
     <DataTemplate DataType="{x:Type nodes:StageNodeVM}">
         <nodes:StageNodeControl />
     </DataTemplate>
@@ -60,45 +64,48 @@
     </Style>
 
 
-    <Style x:Key="BaseSelectableItemStyle"  TargetType="explorer:SelectableTreeViewItem">
+
+    <!-- EXPLORER VIEW -->
+    <Style x:Key="BaseSelectableItemStyle" TargetType="explorer:SelectableTreeViewItem">
         <Setter Property="ItemSelected" Value="{Binding IsSelected}"/>
-        <Setter Property="ClickedCommand" Value="{Binding ClickedCommand}"/>
+        <Setter Property="ClickedCommand"
+                Value="{Binding DataContext.SelectableItemClickedCommand,
+                        RelativeSource={RelativeSource AncestorType=UserControl}}" />
         <Setter Property="Foreground" Value="{DynamicResource TreeViewItemForeground}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="explorer:SelectableTreeViewItem">
-                    
-                    <Grid x:Name="PART_Grid">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
 
-                        <ToggleButton x:Name="PART_Expander"
-                                 IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
-                                 ClickMode="Press"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                        <Border x:Name="PART_Border"
-                           Grid.Column="1"
-                           Background="Transparent"
-                           Padding="4">
-                            <ContentPresenter ContentSource="Header"
+                        <!-- HEADER ROW -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border x:Name="PART_Border"
+                                Grid.Column="1"
+                                Background="Transparent"
+                                Padding="4">
+                                <ContentPresenter ContentSource="Header"
                                               IsHitTestVisible="False"/>
-                        </Border>
+                            </Border>
+                        </Grid>
 
+                        <!-- CHILDREN ROW -->
                         <ItemsPresenter x:Name="PART_ItemsHost"
-                                   Grid.Column="1"
-                                   Margin="19,0,0,0"
-                                   Visibility="Collapsed"/>
+                                Grid.Row="1"
+                                Margin="19,0,0,0"/>
+
                     </Grid>
 
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsExpanded" Value="True">
-                            <Setter TargetName="PART_ItemsHost" Property="Visibility" Value="Visible"/>
-                        </Trigger>
-                        <Trigger Property="HasItems" Value="False">
-                            <Setter TargetName="PART_Expander" Property="Visibility" Value="Hidden"/>
-                        </Trigger>
                         <Trigger Property="ItemSelected" Value="True">
                             <Setter TargetName="PART_Border" Property="BorderThickness" Value="2,0,2,0"/>
                             <Setter TargetName="PART_Border" Property="BorderBrush" Value="{DynamicResource TreeViewItemBorderBrush}"/>
@@ -110,33 +117,47 @@
                             <Setter TargetName="PART_Border" Property="BorderBrush" Value="{DynamicResource TreeViewItemBorderBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
+
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-
+    <Style TargetType="explorer:SelectableTreeViewItem"
+       BasedOn="{StaticResource BaseSelectableItemStyle}" />
+    
     <Style x:Key="QuestPackItemStyle" TargetType="explorer:SelectableTreeViewItem" BasedOn="{StaticResource BaseSelectableItemStyle}">
         <Setter Property="ContextMenu">
             <Setter.Value>
                 <ContextMenu>
                     <MenuItem Header="Add Quest" Command="{Binding AddQuestCommand}" CommandParameter="{Binding}"/>
-                    <MenuItem Header="Rename Pack" Command="{Binding RenamePackCommand}" CommandParameter="{Binding}"/>
-                    <MenuItem Header="Delete Pack" Command="{Binding DeletePackCommand}" CommandParameter="{Binding}"/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>
+        <Setter Property="Foreground" Value="Red"/>
     </Style>
 
     <Style x:Key="QuestItemStyle" TargetType="explorer:SelectableTreeViewItem" BasedOn="{StaticResource BaseSelectableItemStyle}">
         <Setter Property="ContextMenu">
             <Setter.Value>
-                <ContextMenu>
+                <ContextMenu> <!-- TODO: move to shared resources and use it in Graph too -->
+                    <MenuItem Header="Add Node">
+                        <MenuItem Header="Stage" Command="{Binding AddStageNodeCommand}" CommandParameter="{Binding}"/>
+                        <MenuItem Header="Reward" Command="{Binding AddRewardNodeCommand}" CommandParameter="{Binding}"/>
+                        <MenuItem Header="Randomizer" Command="{Binding AddRandomizerNodeCommand}" CommandParameter="{Binding}"/>
+                        <MenuItem Header="Cooldown" Command="{Binding AddCooldownNodeCommand}" CommandParameter="{Binding}"/>
+                        <MenuItem Header="Condition">
+                            <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}" CommandParameter="{Binding}"/>
+                            <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}" CommandParameter="{Binding}"/>
+                            <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}" CommandParameter="{Binding}"/>
+                        </MenuItem>
+                    </MenuItem>
                     <MenuItem Header="Rename Quest" Command="{Binding RenameCommand}" InputGestureText="Ctrl+R" CommandParameter="{Binding}"/>
                     <MenuItem Header="Delete Quest" Command="{Binding DeleteQuestCommand}" InputGestureText="Delete" CommandParameter="{Binding}"/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>
+        <Setter Property="Foreground" Value="Green"/>
     </Style>
 
     <Style x:Key="NodeItemStyle" TargetType="explorer:SelectableTreeViewItem" BasedOn="{StaticResource BaseSelectableItemStyle}">
@@ -147,7 +168,20 @@
                 </ContextMenu>
             </Setter.Value>
         </Setter>
+        <Setter Property="Foreground" Value="Blue"/>
     </Style>
-    
+
+    <HierarchicalDataTemplate DataType="{x:Type explorer:QuestPackVM}" ItemsSource="{Binding Quests}">
+        <TextBlock Text="{Binding PackName}" />
+    </HierarchicalDataTemplate>
+
+    <HierarchicalDataTemplate DataType="{x:Type explorer:QuestVM}" ItemsSource="{Binding Nodes}">
+        <TextBlock Text="{Binding QuestTag}" />
+    </HierarchicalDataTemplate>
+
+    <HierarchicalDataTemplate DataType="{x:Type nodes:NodeVM}">
+        <TextBlock Text="{Binding NodeType}" />
+    </HierarchicalDataTemplate>
+
     
 </ResourceDictionary>

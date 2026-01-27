@@ -6,8 +6,28 @@ using System.Windows.Input;
 
 namespace QuestEditor.Explorer
 {
+    [TemplatePart(Name = "PART_ItemsHost", Type = typeof(Panel))]
     public class SelectableTreeViewItem : TreeViewItem
     {
+        static SelectableTreeViewItem()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(SelectableTreeViewItem),
+                new FrameworkPropertyMetadata(typeof(SelectableTreeViewItem)));
+
+            ItemsPanelProperty.OverrideMetadata(
+                typeof(SelectableTreeViewItem),
+                new FrameworkPropertyMetadata(
+                    new ItemsPanelTemplate(
+                        new FrameworkElementFactory(typeof(StackPanel)))));
+        }
+
+        protected override DependencyObject GetContainerForItemOverride() => new SelectableTreeViewItem();
+        protected override bool IsItemItsOwnContainerOverride(object item) => item is SelectableTreeViewItem;
+
+
+
+
         public static readonly DependencyProperty ItemSelectedProperty = DependencyProperty.Register(
             "ItemSelected",
             typeof(bool),
@@ -31,14 +51,10 @@ namespace QuestEditor.Explorer
             set => SetValue(ClickedCommandProperty, value);
         }
 
-
-        static SelectableTreeViewItem() => DefaultStyleKeyProperty.OverrideMetadata(typeof(SelectableTreeViewItem), new FrameworkPropertyMetadata(typeof(SelectableTreeViewItem)));
-        
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
-            ClickedCommand.Execute(null);
+            ClickedCommand.Execute(DataContext);
             base.OnMouseLeftButtonDown(e);
         }
-
     }
 }

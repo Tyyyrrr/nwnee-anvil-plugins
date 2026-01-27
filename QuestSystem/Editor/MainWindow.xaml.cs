@@ -10,6 +10,7 @@ namespace QuestEditor;
 
 public partial class MainWindow : Window
 {
+    #region COMMANDS
     static void RouteExecute(ICommand cmd, ExecutedRoutedEventArgs e) => cmd?.Execute(e.Parameter);
     static void RouteCanExecute(ICommand cmd, CanExecuteRoutedEventArgs e) => e.CanExecute = cmd?.CanExecute(e.Parameter) == true;
 
@@ -102,6 +103,22 @@ public partial class MainWindow : Window
     void Find_Executed(object s, ExecutedRoutedEventArgs e) => RouteExecute(FindCommand, e);
     void Find_CanExecute(object s, CanExecuteRoutedEventArgs e) => RouteCanExecute(FindCommand, e);
     #endregion
+    #endregion
+
+
+
+    public static readonly DependencyProperty SelectedQuestProperty = DependencyProperty.Register(
+        "SelectedQuest",
+        typeof(object),
+        typeof(MainWindow),
+        new PropertyMetadata(null));
+
+    public object? SelectedQuest
+    {
+        get => (object?)GetValue(SelectedQuestProperty);
+        set => SetValue(SelectedQuestProperty, value);
+    }
+
 
     public MainWindow()
     {
@@ -131,9 +148,6 @@ public partial class MainWindow : Window
 
     #region Themes
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-    private const int DWMWA_BORDER_COLOR = 34; 
-    private const int DWMWA_CAPTION_COLOR = 35; 
-    private const int DWMWA_TEXT_COLOR = 36;
     public void ToggleLightMode(object? _, RoutedEventArgs __)
     {
         int useDark = 0;

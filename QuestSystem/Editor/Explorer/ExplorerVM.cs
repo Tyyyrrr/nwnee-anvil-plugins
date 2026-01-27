@@ -4,59 +4,37 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Input;
-using System.Collections;
 
 namespace QuestEditor.Explorer
 {
     public sealed class ExplorerVM : StatefulViewModelBase
     {
         public ICommand SelectableItemClickedCommand { get; }
+        public ICommand ClearSelectionCommand { get; }
         public ICommand NewCommand { get; }
         public ICommand OpenCommand { get; }
 
         readonly ICreateFileDialog _createFileDialog;
         readonly IOpenFilesDialog _openFilesDialog;
 
-        public IList SelectedItems => _selectedItems; 
-        private readonly ObservableCollection<object> _selectedItems = new();
+        public QuestVM? SelectedQuest
+        {
+            get => _selectedQuest;
+            private set => SetProperty(ref _selectedQuest, value);
+        } private QuestVM? _selectedQuest = null;
 
-        public ObservableCollection<QuestPackVM> SelectedPacks { get; } = [];
-        public ObservableCollection<QuestVM> SelectedQuests { get; } = [];
-        public ObservableCollection<NodeVM> SelectedNodes { get; } = [];
+        private List<ISelectable> _selectedItems = [];
+        private Dictionary<QuestPackVM, List<QuestVM>> _selectedQuests = [];
+        private Dictionary<QuestVM, List<NodeVM>> _selectedNodes = [];
 
         public ObservableCollection<QuestPackVM> QuestPacks { get; } = [];
 
-        private void UpdateSelection()
-        {
-            SelectedPacks.Clear();
-            SelectedQuests.Clear();
-            SelectedNodes.Clear();
-
-            foreach (var item in SelectedItems)
-            {
-                switch (item)
-                {
-                    case QuestPackVM pack:
-                        SelectedPacks.Add(pack);
-                        break;
-
-                    case QuestVM quest:
-                        SelectedQuests.Add(quest);
-                        break;
-
-                    case NodeVM node:
-                        SelectedNodes.Add(node);
-                        break;
-                }
-            }
-        }
-
         public ExplorerVM()
         {
-            _selectedItems.CollectionChanged += (_, __) => UpdateSelection();
             NewCommand = new RelayCommand(CreateNewPack, _ => true);
             OpenCommand = new RelayCommand(OpenPacks, _ => true);
             SelectableItemClickedCommand = new RelayCommand(OnSelectableItemClicked, _ => true);
+            ClearSelectionCommand = new RelayCommand(_ => ClearSelection(), _ => true);
 
             var fd = new FileDialog();
 
@@ -66,20 +44,77 @@ namespace QuestEditor.Explorer
 
         void OnSelectableItemClicked(object? ctx)
         {
-            if (ctx is QuestPackVM pack)
+            switch (ctx)
             {
-                Trace.WriteLine("Selected PACK!");
+                case QuestPackVM pack:
+                    OnPackClicked(pack);
+                    break;
+
+                case QuestVM quest:
+                    OnQuestClicked(quest);
+                    break;
+
+                case NodeVM node:
+                    OnNodeClicked(node);
+                    break;
+
+                default:
+                    ClearSelection();
+                    break;
             }
-            else if (ctx is QuestVM quest)
-            {
-                Trace.WriteLine("Selected QUEST!");
-            }
-            else if (ctx is NodeVM node)
-            {
-                Trace.WriteLine("Selected NODE!");
-            }
-            else throw new InvalidOperationException("Selected invalid item");
         }
+
+        public void ClearSelection()
+        {
+            Trace.WriteLine(this.GetHashCode().ToString() + "ClearingSelection. Selected items: " + _selectedItems.Count);
+            SelectedQuest = null;
+            foreach (var selectable in _selectedItems)
+                selectable.ClearSelection();
+            _selectedItems.Clear();
+            _selectedQuests.Clear();
+            _selectedNodes.Clear();
+        }
+
+        //////
+        // TODO: suppord multiselection with shift and ctrl
+        private void OnPackClicked(QuestPackVM pack)
+        {
+            ClearSelection();
+            _selectedItems.Add(pack);
+            pack.Select();
+        }
+        private void OnQuestClicked(QuestVM quest)
+        {
+            //todo: set CURRENT quest property for Graph editor
+
+            foreach (var qp in QuestPacks)
+            {
+                if (qp.Quests.Contains(quest))
+                {
+                    OnPackClicked(qp);
+                    quest.Select();
+                    _selectedItems.Add(quest);
+                    _selectedQuests.Add(qp, [quest]);
+                    SelectedQuest = quest;
+                    return;
+                }
+            }
+
+            throw new InvalidOperationException("Pack not found for selected quest");
+        }
+        private void OnNodeClicked(NodeVM node)
+        {
+            if (SelectedQuest == null || !SelectedQuest.Nodes.Contains(node))
+                throw new InvalidOperationException("Active quest not found for selected node");
+
+            foreach (var sn in _selectedNodes[SelectedQuest])
+            {
+                sn.ClearSelection();
+                _selectedItems.Remove(sn);
+            }
+            _selectedNodes[SelectedQuest] = [node];
+        }
+        //////
 
         private sealed class CreateNewPackOperation : IUndoable
         {

@@ -7,33 +7,30 @@
              xmlns:nodes="clr-namespace:QuestEditor.Nodes"
              xmlns:shared="clr-namespace:QuestEditor.Shared"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             x:Name="Explorer"
+             MouseLeftButtonDown="Explorer_MouseLeftButtonDown">
     
-    <UserControl.DataContext>
-        <local:ExplorerVM/>
-    </UserControl.DataContext>
-
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/QuestEditor;component/Themes/Generic.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-            <HierarchicalDataTemplate DataType="{x:Type local:QuestPackVM}" ItemsSource="{Binding Quests}">
-                <local:SelectableTreeViewItem Header="{Binding PackName}" Style="{StaticResource QuestPackItemStyle}"/>
-            </HierarchicalDataTemplate>
+            <local:ExplorerItemStyleSelector x:Key="ExplorerItemStyleSelector"
+                QuestPackStyle="{StaticResource QuestPackItemStyle}"
+                QuestStyle="{StaticResource QuestItemStyle}"
+                NodeStyle="{StaticResource NodeItemStyle}" />
 
-            <HierarchicalDataTemplate DataType="{x:Type local:QuestVM}" ItemsSource="{Binding Nodes}">
-                <local:SelectableTreeViewItem Header="{Binding QuestTag}" Style="{StaticResource QuestItemStyle}"/>
-            </HierarchicalDataTemplate>
-
-            <HierarchicalDataTemplate DataType="{x:Type nodes:NodeVM}">
-                <local:SelectableTreeViewItem Header="{Binding NodeType}" Style="{StaticResource NodeItemStyle}"/>
-            </HierarchicalDataTemplate>
-
+            <Style TargetType="local:ExplorerControl">
+                <Setter Property="ClearSelectionCommand" Value="{Binding ClearSelectionCommand}" />
+            </Style>
+            
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <TreeView ItemsSource="{Binding QuestPacks}"
-              Background="{Binding Background, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+    <local:SelectableTreeView 
+              ItemContainerStyleSelector="{StaticResource ExplorerItemStyleSelector}"
+              ItemsSource="{Binding DataContext.QuestPacks, RelativeSource={RelativeSource AncestorType=UserControl}}"
+              Background="{Binding Background, RelativeSource={RelativeSource AncestorType=UserControl}}" />
 </UserControl>
