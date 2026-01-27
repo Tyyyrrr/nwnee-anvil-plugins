@@ -4,6 +4,7 @@ using QuestSystem;
 using QuestSystem.Nodes;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Windows.Input;
 
 namespace QuestEditor.Explorer
 {
@@ -34,11 +35,6 @@ namespace QuestEditor.Explorer
 
             _questTag = quest.Tag;
             _title = quest.Name;
-
-            var nodeA = new StageNodeVM(new QuestSystem.Nodes.StageNode());
-            var nodeB = new RewardNodeVM(new QuestSystem.Nodes.RewardNode());
-            Nodes.Add(nodeA);
-            Nodes.Add(nodeB);
         }
 
         private bool disposed = false;
@@ -58,7 +54,6 @@ namespace QuestEditor.Explorer
 
         private async Task LoadAllNodes(CancellationToken token)
         {
-            Trace.WriteLine("Loading all nodes");
             if (token.IsCancellationRequested) return;
 
             Nodes.Clear();
@@ -98,7 +93,8 @@ namespace QuestEditor.Explorer
 
             if (loadedNodes != null)
                 Nodes = new(loadedNodes.Select(n => NodeVM.SelectViewModel(n)));
-            Trace.WriteLine("Loaded all nodes");
+
+            RaisePropertyChanged(nameof(Nodes));
         }
 
         public void ClearSelection()

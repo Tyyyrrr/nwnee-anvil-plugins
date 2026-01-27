@@ -7,7 +7,7 @@ using QuestSystem;
 
 namespace QuestEditor.Explorer
 {
-    public sealed class QuestPackVM : StatefulViewModelBase, IDisposable, ISelectable, IClickableViewModel
+    public sealed class QuestPackVM : StatefulViewModelBase, IDisposable, ISelectable
     {
         public static QuestPackVM New(string filePath)
         {
@@ -32,7 +32,6 @@ namespace QuestEditor.Explorer
 
         private readonly CancellationTokenSource _cts = new();
 
-        private CancellationTokenSource? _tmpCTS = null;
         private Quest[]? loadedQuests = null;
         private event Action? LoadCompleted;
         private Task? loadingTask = null;
@@ -44,12 +43,14 @@ namespace QuestEditor.Explorer
             _filePath = filePath;
             _packName = Path.GetFileNameWithoutExtension(_filePath);
             originalQuestPack = EditorQuestPack.OpenRead(File.OpenRead(filePath),globalToken:_cts.Token);
-            ClickedCommand = new RelayCommand(OnClicked, _ => true);
+            AddQuestCommand = new RelayCommand(AddQuest, _ => true);
+
+            LoadCompleted += OnLoadCompleted;
+            loadingTask = LoadAllQuests(_cts.Token);
         }
 
         private async Task LoadAllQuests(CancellationToken token)
         {
-            Trace.WriteLine("Loading all quests");
             if(token.IsCancellationRequested) return;
 
             Quests.Clear();
@@ -72,25 +73,28 @@ namespace QuestEditor.Explorer
         {
             get => _packName;
             private set => SetProperty(ref _packName, value);
-        }
+        } private string _packName;
 
-        public ICommand ClickedCommand { get; }
-        void OnClicked(object? _)
+
+        public ICommand AddQuestCommand { get; }
+        void AddQuest(object? _)
         {
-            if (!IsSelected) 
-                Select();
-            else if (System.Windows.Input.Keyboard.IsKeyDown(Key.LeftCtrl))
-                ClearSelection();
+            string newTag = "New Quest";
+            int count = 1;
+            while (Quests.Any(q => q.QuestTag == newTag))
+                newTag = $"New Quest ({count++})";
+
+            var quest = new Quest() { Tag = newTag, Name = "[text displayed in player's journal]" };
+            var vm = new QuestVM(quest, this);
+            Quests.Add(vm);
+            RaisePropertyChanged(nameof(Quests));
         }
 
-        public bool IsSelected { get => _isSelected; private set => SetProperty(ref _isSelected, value); }
 
-
-        private bool _isSelected = false;
-
-        private string _packName;
-        
-
+        public bool IsSelected { 
+            get => _isSelected;
+            private set => SetProperty(ref _isSelected, value);
+        } private bool _isSelected = false;
 
 
         private bool disposed = false;
@@ -99,6 +103,7 @@ namespace QuestEditor.Explorer
             if (disposed) return;
             disposed = true;
             _cts.Cancel();
+            _cts.Dispose();
             loadingTask?.Dispose();
             originalQuestPack?.Dispose();
             temporaryQuestPack?.Dispose();
@@ -106,37 +111,23 @@ namespace QuestEditor.Explorer
 
         public void Select()
         {
-            LoadCompleted -= OnLoadCompleted;
-            LoadCompleted += OnLoadCompleted;
-            _tmpCTS?.Cancel();
-            _tmpCTS?.Dispose();
-            _tmpCTS = new();
-            loadingTask = LoadAllQuests(_tmpCTS!.Token);
             IsSelected = true;
         }
 
         void OnLoadCompleted()
         {
             LoadCompleted -= OnLoadCompleted;
-            _tmpCTS?.Cancel();
-            _tmpCTS?.Dispose();
-            _tmpCTS = null;
             loadingTask?.Dispose();
             loadingTask = null;
 
             if(loadedQuests != null)
                 Quests = new(loadedQuests.Select(q=>new QuestVM(q, this)));
-            Trace.WriteLine("Loaded all quests");
+
+            RaisePropertyChanged(nameof(Quests));
         }
 
         public void ClearSelection()
         {
-            _tmpCTS?.Cancel();
-            _tmpCTS?.Dispose();
-            _tmpCTS = null;
-            loadingTask?.Dispose();
-            loadingTask = null;
-            Quests.Clear();
             IsSelected = false;
         }
     }
