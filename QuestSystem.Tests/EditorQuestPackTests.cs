@@ -10,22 +10,22 @@ public class EditorQuestPackTests
 {
     private sealed class MockSerializer : IQuestDataSerializer
     {
-        public Task<NodeBase?> DeserializeNodeFromStreamAsync(Stream stream, CancellationToken cancellationToken = default)
+        public NodeBase? DeserializeNodeFromStream(Stream stream)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Quest?> DeserializeQuestFromStreamAsync(Stream stream, CancellationToken cancellationToken = default)
+        public Quest? DeserializeQuestFromStream(Stream stream)
         {
             throw new NotImplementedException();
         }
 
-        public Task SerializeToStreamAsync(Quest quest, Stream stream)
+        public void SerializeNodeToStream(NodeBase node, Stream stream)
         {
             throw new NotImplementedException();
         }
 
-        public Task SerializeToStreamAsync(NodeBase node, Stream stream)
+        public void SerializeQuestToStream(Quest quest, Stream stream)
         {
             throw new NotImplementedException();
         }
@@ -76,7 +76,7 @@ public class EditorQuestPackTests
     public void EditorPackOpenWrite_EmptyWriteableStream_NeverThrows()
     {
         var stream = new MemoryStream();
-        Assert.DoesNotThrow(()=> EditorQuestPack.OpenWrite(stream, _serializer, _cts!.Token));
+        Assert.DoesNotThrow(()=> EditorQuestPack.OpenWrite(stream, _serializer));
 
         stream.Dispose();
     }
@@ -86,7 +86,7 @@ public class EditorQuestPackTests
     {
         var readonlyStream = new MemoryStream(new byte[1],false);
 
-        Assert.Throws<ArgumentException>(()=>{EditorQuestPack.OpenWrite(readonlyStream, _serializer, _cts!.Token);});
+        Assert.Throws<ArgumentException>(()=>{EditorQuestPack.OpenWrite(readonlyStream, _serializer);});
     }
 
 
@@ -94,7 +94,7 @@ public class EditorQuestPackTests
     public void EditorPack_OpenWriteThenDispose_DisposesUnderlyingStream()
     {
         var stream = new MemoryStream();
-        var qp = EditorQuestPack.OpenWrite(stream, _serializer, _cts!.Token);
+        var qp = EditorQuestPack.OpenWrite(stream, _serializer);
         qp.Dispose();
         Assert.Throws<ObjectDisposedException>(()=>stream.Write([1]));
     }
@@ -105,10 +105,10 @@ public class EditorQuestPackTests
         var stream = new MemoryStream();
         var nonClosingStream = new NonClosingStream(stream);
 
-        var wrQP = EditorQuestPack.OpenWrite(nonClosingStream, _serializer, _cts!.Token);
+        var wrQP = EditorQuestPack.OpenWrite(nonClosingStream, _serializer);
         wrQP.Dispose();
 
-        var qp = EditorQuestPack.OpenWrite(stream, _serializer, _cts!.Token);
+        var qp = EditorQuestPack.OpenWrite(stream, _serializer);
         qp.Dispose();
         Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
     }
@@ -119,7 +119,7 @@ public class EditorQuestPackTests
         var stream = new MemoryStream();
         var nonClosingStream = new NonClosingStream(stream);
 
-        var wrQP = EditorQuestPack.OpenWrite(nonClosingStream, _serializer, _cts!.Token);
+        var wrQP = EditorQuestPack.OpenWrite(nonClosingStream, _serializer);
         wrQP.Dispose();
 
         nonClosingStream.Flush();
@@ -127,12 +127,12 @@ public class EditorQuestPackTests
         var roStream = new MemoryStream();
         nonClosingStream.CopyTo(roStream);
 
-        Assert.DoesNotThrow(()=>EditorQuestPack.OpenRead(roStream, _serializer, _cts!.Token).Dispose());
+        Assert.DoesNotThrow(()=>EditorQuestPack.OpenRead(roStream, _serializer).Dispose());
         stream.Dispose();
     }
 
     [Test]
-    public async Task EditorPack_WriteQuest_ReadsTheSameQuest()
+    public void EditorPack_WriteQuest_ReadsTheSameQuest()
     {
         var stream = new MemoryStream();
         var nonClosingStream = new NonClosingStream(stream);
@@ -140,12 +140,12 @@ public class EditorQuestPackTests
 
         using (var qpWO = EditorQuestPack.OpenWrite(nonClosingStream))
         {
-            Assert.That(await qpWO.WriteQuestAsync(quest));
+            Assert.That(qpWO.WriteQuest(quest));
         }
 
         using var qpRO = EditorQuestPack.OpenRead(stream);
 
-        var actual = await qpRO.GetQuestAsync(quest.Tag);
+        var actual = qpRO.GetQuest(quest.Tag);
 
         Assert.That(actual, Is.Not.Null);
         Assert.That(actual!.Tag == "test1" && actual.Name=="test1 name", Is.True);
@@ -182,19 +182,19 @@ public class EditorQuestPackTests
     }
 
     [TestCaseSource(nameof(GetNodes))]
-    public async Task EditorPack_DefaultSerializer_WriteNodeThenReadNode_ReadsTheSameNode(NodeBase node)
+    public void EditorPack_DefaultSerializer_WriteNodeThenReadNode_ReadsTheSameNode(NodeBase node)
     {
         var stream = new MemoryStream();
         var nonClosingStream = new NonClosingStream(stream);
 
-        var qpWO = EditorQuestPack.OpenWrite(nonClosingStream, null, _cts!.Token);
+        var qpWO = EditorQuestPack.OpenWrite(nonClosingStream, null);
         var quest = new Quest() { Tag = "testquest", Name = "Some Title", Pack = qpWO };
-        await qpWO.WriteQuestAsync(new Quest() { Tag = "testquest", Name = "Some Title", Pack = qpWO });
-        await qpWO.WriteNodeAsync(quest, node);
+        qpWO.WriteQuest(new Quest() { Tag = "testquest", Name = "Some Title", Pack = qpWO });
+        qpWO.WriteNode(quest, node);
         qpWO.Dispose();
 
-        var qpRO = EditorQuestPack.OpenRead(stream, null, _cts!.Token);
-        var deserializedNodes = await qpRO.GetNodesAsync(quest.Tag);
+        var qpRO = EditorQuestPack.OpenRead(stream, null);
+        var deserializedNodes = qpRO.GetNodes(quest.Tag);
         qpRO.Dispose();
 
         var disp = Assert.EnterMultipleScope();
@@ -228,23 +228,106 @@ public class EditorQuestPackTests
         {
             throw new NotImplementedException();
         }
+        public override object Clone()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Test]
-    public async Task EditorPack_DefaultSerializer_CorruptedNode_WritesUnknownNode()
+    public void EditorPack_RemoveTwoQuestsAsync_RemovesBoth_LeavesOtherUntouched()
+    {
+        var questA = new Quest() { Tag = "questA" };
+        var nodeA = new StageNode() { ID = 123 };
+        var questB = new Quest() { Tag = "questB" };
+        var nodeB = new RewardNode() { ID = 124 };
+        var questC = new Quest() { Tag = "questC" };
+        var nodeC = new StageNode() { ID = 125 };
+        var stream = new MemoryStream();
+        var nonClosingStream = new NonClosingStream(stream);
+
+        var qpWO = EditorQuestPack.OpenWrite(nonClosingStream, null);
+        qpWO.WriteQuest(questA);
+        qpWO.WriteQuest(questB);
+        qpWO.WriteQuest(questC);
+        qpWO.WriteNode(questA, nodeA);
+        qpWO.WriteNode(questB, nodeB);
+        qpWO.WriteNode(questC, nodeC);
+        qpWO.Dispose();
+
+        var qpRO = EditorQuestPack.OpenRead(nonClosingStream, null);
+        var quests = qpRO.GetQuests();
+        Assert.That(quests, Is.Not.Null);
+        Assert.That(quests, Has.Length.EqualTo(3));
+        Assert.Multiple(() =>
+        {
+            Assert.That(quests![0].Tag, Is.EqualTo(questA.Tag));
+            Assert.That(quests![1].Tag, Is.EqualTo(questB.Tag));
+            Assert.That(quests![2].Tag, Is.EqualTo(questC.Tag));
+        });
+        var nodesA = qpRO.GetNodes(quests![0].Tag);
+        var nodesB = qpRO.GetNodes(quests![1].Tag);
+        var nodesC = qpRO.GetNodes(quests![2].Tag);
+        Assert.Multiple(() =>
+        {
+            Assert.That(nodesA, Is.Not.Null);
+            Assert.That(nodesB, Is.Not.Null);
+            Assert.That(nodesC, Is.Not.Null);
+        });
+        Assert.Multiple(() =>
+        {
+            Assert.That(nodesA, Has.Length.EqualTo(1));
+            Assert.That(nodesB, Has.Length.EqualTo(1));
+            Assert.That(nodesC, Has.Length.EqualTo(1));
+        });
+        Assert.Multiple(() =>
+        {
+            Assert.That(nodesA![0].ID, Is.EqualTo(123));
+            Assert.That(nodesB![0].ID, Is.EqualTo(124));
+            Assert.That(nodesC![0].ID, Is.EqualTo(125));
+        });
+
+        qpRO.Dispose();
+        nonClosingStream = new(stream);
+
+        qpWO = EditorQuestPack.OpenWrite(nonClosingStream, null);
+
+        qpWO.RemoveQuest(questA.Tag);
+        qpWO.RemoveQuest(questB.Tag);
+
+
+        qpWO.Dispose();
+
+        qpRO = EditorQuestPack.OpenRead(stream, null);
+
+        quests = qpRO.GetQuests();
+
+        Assert.That(quests, Is.Not.Null);
+        Assert.That(quests!, Has.Length.EqualTo(1));
+        Assert.That(quests![0].Tag, Is.EqualTo(questC.Tag));
+
+        nodesC = qpRO.GetNodes(questC.Tag);
+
+        Assert.That(nodesC, Is.Not.Null);
+        Assert.That(nodesC!, Has.Length.EqualTo(1));
+        Assert.That(nodesC![0].ID, Is.EqualTo(125));
+    }
+
+    [Test]
+    public void EditorPack_DefaultSerializer_CorruptedNode_WritesUnknownNode()
     {
         var quest = new Quest() { Tag = "questTag" };
         var corruptedNode = new CorruptedNode();
         var stream = new MemoryStream();
         var nonClosingStream = new NonClosingStream(stream);
 
-        var qpWO = EditorQuestPack.OpenWrite(nonClosingStream, null, _cts!.Token);
-        await qpWO.WriteQuestAsync(quest);
-        await qpWO.WriteNodeAsync(quest, corruptedNode);
+        var qpWO = EditorQuestPack.OpenWrite(nonClosingStream, null);
+        qpWO.WriteQuest(quest);
+        qpWO.WriteNode(quest, corruptedNode);
         qpWO.Dispose();
 
-        var qpRO = EditorQuestPack.OpenRead(stream, null, _cts!.Token);
-        var nodes = await qpRO.GetNodesAsync(quest.Tag);
+        var qpRO = EditorQuestPack.OpenRead(stream, null);
+        var nodes = qpRO.GetNodes(quest.Tag);
         qpRO.Dispose();
         var node = nodes![0];
 
@@ -255,35 +338,35 @@ public class EditorQuestPackTests
     }
 
     [Test(ExpectedResult = false)]
-    public async Task<bool> EditorPack_DefaultSerializer_MissingQuest_RefuseToWriteNode()
+    public bool EditorPack_DefaultSerializer_MissingQuest_RefuseToWriteNode()
     {
         var quest = new Quest() { Tag = "not in the pack" };
         var stream = new MemoryStream();
-        using var qpWO = EditorQuestPack.OpenWrite(stream, null, _cts!.Token);
-        return await qpWO.WriteNodeAsync(quest, new StageNode());
+        using var qpWO = EditorQuestPack.OpenWrite(stream, null);
+        return qpWO.WriteNode(quest, new StageNode());
     }
 
     [Test(ExpectedResult = true)]
-    public async Task<bool> EditorPack_DefaultSerializer_DuplicatedQuest_RefuseToWriteQuest()
+    public bool EditorPack_DefaultSerializer_DuplicatedQuest_RefuseToWriteQuest()
     {
         var quest = new Quest() { Tag = "test" };
         var stream = new MemoryStream();
-        using var qpWO = EditorQuestPack.OpenWrite(stream, null, _cts!.Token);
-        bool firstWrite = await qpWO.WriteQuestAsync(quest);
-        bool secondWrite = await qpWO.WriteQuestAsync(quest);
+        using var qpWO = EditorQuestPack.OpenWrite(stream, null);
+        bool firstWrite = qpWO.WriteQuest(quest);
+        bool secondWrite = qpWO.WriteQuest(quest);
         return firstWrite && !secondWrite;
     }
 
     [Test(ExpectedResult = true)]
-    public async Task<bool> EditorPack_DefaultSerializer_DuplicatedNodeID_RefuseToWriteNode()
+    public bool EditorPack_DefaultSerializer_DuplicatedNodeID_RefuseToWriteNode()
     {
         var quest = new Quest() { Tag = "test" };
         var stream = new MemoryStream();
-        using var qpWO = EditorQuestPack.OpenWrite(stream, null, _cts!.Token);
-        bool questWrite = await qpWO.WriteQuestAsync(quest);
-        bool firstWrite = await qpWO.WriteNodeAsync(quest, new StageNode() { ID = 1 });
-        bool secondWrite = await qpWO.WriteNodeAsync(quest, new StageNode() { ID = 2 });
-        bool thirdWrite = await qpWO.WriteNodeAsync(quest, new RewardNode() { ID = 1 });
+        using var qpWO = EditorQuestPack.OpenWrite(stream, null);
+        bool questWrite = qpWO.WriteQuest(quest);
+        bool firstWrite = qpWO.WriteNode(quest, new StageNode() { ID = 1 });
+        bool secondWrite = qpWO.WriteNode(quest, new StageNode() { ID = 2 });
+        bool thirdWrite = qpWO.WriteNode(quest, new RewardNode() { ID = 1 });
         return questWrite && firstWrite && secondWrite && !thirdWrite;
     }
 
@@ -294,32 +377,32 @@ public class EditorQuestPackTests
     }
 
     [Test(ExpectedResult = false)]
-    public async Task<bool> EditorPack_MissingQuest_RefuseToWriteMetadata()
+    public bool EditorPack_MissingQuest_RefuseToWriteMetadata()
     {
         var metadata = new MockMetadata();
         var json = JsonSerializer.Serialize(metadata);
 
         var stream = new MemoryStream();
-        using var qpWO = EditorQuestPack.OpenWrite(stream, null, _cts!.Token);
-        return await qpWO.WriteMetadataAsync("missingQuestTag", json);
+        using var qpWO = EditorQuestPack.OpenWrite(stream, null);
+        return qpWO.WriteMetadata("missingQuestTag", json);
     }
 
     [Test(ExpectedResult = true)]
-    public async Task<bool> EditorPack_MetadataExists_RefuseToOverwriteMetadata()
+    public bool EditorPack_MetadataExists_RefuseToOverwriteMetadata()
     {
         var quest = new Quest() { Tag = "testQuest" };
         var metadata = new MockMetadata();
         var json = JsonSerializer.Serialize(metadata);
 
         var stream = new MemoryStream();
-        using var qpWO = EditorQuestPack.OpenWrite(stream, null, _cts!.Token);
-        var questWrite = await qpWO.WriteQuestAsync(quest);
-        var firstWrite = await qpWO.WriteMetadataAsync(quest.Tag, json);
-        return !(await qpWO.WriteMetadataAsync("missingQuestTag", json)) && questWrite && firstWrite;
+        using var qpWO = EditorQuestPack.OpenWrite(stream, null);
+        var questWrite = qpWO.WriteQuest(quest);
+        var firstWrite = qpWO.WriteMetadata(quest.Tag, json);
+        return !(qpWO.WriteMetadata("missingQuestTag", json)) && questWrite && firstWrite;
     }
 
     [Test]
-    public async Task EditorPack_ComplexRoundTrip()
+    public void EditorPack_ComplexRoundTrip()
     {
         var questAMetadata = new MockMetadata() { SomeString = "QuestA metadata" };
         var questBMetadata = new MockMetadata() { SomeString = "QuestB metadata" };
@@ -337,31 +420,31 @@ public class EditorQuestPackTests
 
         using (var qpWO = EditorQuestPack.OpenWrite(nonClosingStream))
         {
-            Assert.Multiple(async () =>
+            Assert.Multiple(() =>
             {
-                Assert.That(await qpWO.WriteQuestAsync(questA));
-                Assert.That(await qpWO.WriteNodeAsync(questA, stage1));
-                Assert.That(await qpWO.WriteNodeAsync(questA, reward1));
-                Assert.That(await qpWO.WriteMetadataAsync(questA.Tag, JsonSerializer.Serialize(questAMetadata)));
+                Assert.That(qpWO.WriteQuest(questA));
+                Assert.That(qpWO.WriteNode(questA, stage1));
+                Assert.That(qpWO.WriteNode(questA, reward1));
+                Assert.That(qpWO.WriteMetadata(questA.Tag, JsonSerializer.Serialize(questAMetadata)));
 
-                Assert.That(await qpWO.WriteQuestAsync(questB));
-                Assert.That(await qpWO.WriteNodeAsync(questB, stage1));
-                Assert.That(await qpWO.WriteNodeAsync(questB, reward2));
-                Assert.That(await qpWO.WriteNodeAsync(questB, stage2));
-                Assert.That(await qpWO.WriteMetadataAsync(questB.Tag, JsonSerializer.Serialize(questBMetadata)));
+                Assert.That(qpWO.WriteQuest(questB));
+                Assert.That(qpWO.WriteNode(questB, stage1));
+                Assert.That(qpWO.WriteNode(questB, reward2));
+                Assert.That(qpWO.WriteNode(questB, stage2));
+                Assert.That(qpWO.WriteMetadata(questB.Tag, JsonSerializer.Serialize(questBMetadata)));
             });
         }
 
         using var qpRO = EditorQuestPack.OpenRead(nonClosingStream);
 
-        var dQuestA = await qpRO.GetQuestAsync(questA.Tag);
-        var dQuestB = await qpRO.GetQuestAsync(questB.Tag);
+        var dQuestA = qpRO.GetQuest(questA.Tag);
+        var dQuestB = qpRO.GetQuest(questB.Tag);
 
-        var nodesA = (await qpRO.GetNodesAsync(questA.Tag))?.OrderBy(n => n.ID).ToArray();
-        var nodesB = (await qpRO.GetNodesAsync(questB.Tag))?.OrderBy(n => n.ID).ToArray();
+        var nodesA = (qpRO.GetNodes(questA.Tag))?.OrderBy(n => n.ID).ToArray();
+        var nodesB = (qpRO.GetNodes(questB.Tag))?.OrderBy(n => n.ID).ToArray();
 
-        var metadataA = await qpRO.GetMetadataAsync<MockMetadata>(questA.Tag);
-        var metadataB = await qpRO.GetMetadataAsync<MockMetadata>(questB.Tag);
+        var metadataA = qpRO.GetMetadata<MockMetadata>(questA.Tag);
+        var metadataB = qpRO.GetMetadata<MockMetadata>(questB.Tag);
 
         Assert.Multiple(() =>
         {
@@ -412,7 +495,7 @@ public class EditorQuestPackTests
     }
 
     [Test(ExpectedResult = true)]
-    public async Task<bool> EditorPack_CancelBeforeWrite_DoesNotCorruptArchive()
+    public bool EditorPack_CancelBeforeWrite_DoesNotCorruptArchive()
     {
         var cts = new CancellationTokenSource();
         var stream = new MemoryStream();
@@ -422,8 +505,8 @@ public class EditorQuestPackTests
 
         try
         {
-            using var qpWO = EditorQuestPack.OpenWrite(nonClosingSteam, globalToken: cts.Token);
-            await qpWO.WriteQuestAsync(new Quest { Tag = "a", Name = "ABC" });
+            using var qpWO = EditorQuestPack.OpenWrite(nonClosingSteam);
+            qpWO.WriteQuest(new Quest { Tag = "a", Name = "ABC" });
         }
         catch (OperationCanceledException)
         {
@@ -445,29 +528,5 @@ public class EditorQuestPackTests
             return false; // archive is corrupted
         }
 
-    }
-
-    [Test]
-    public void EditorPack_DisposeDuringWork_DoesNotThrowAndCompleteWork()
-    {
-        var stream = new MemoryStream();
-        var nonClosingStream = new NonClosingStream(stream);
-
-        var qpWO = EditorQuestPack.OpenWrite(nonClosingStream, globalToken:_cts!.Token);
-
-        var quest = new Quest() { Tag = "a", Name = "b" };
-
-        var task = qpWO.WriteQuestAsync(quest);
-        qpWO.Dispose();
-        Assert.DoesNotThrowAsync(async () => await task);
-
-        using var qpRO = EditorQuestPack.OpenRead(stream);
-
-        Assert.ThatAsync<bool>(async () =>
-        {
-            var quests = await qpRO.GetQuestsAsync();
-            if (quests == null || quests.Length != 1) return false;
-            return quests[0].Tag == "a" && quests[0].Name == "b";
-        }, Is.True);
     }
 }

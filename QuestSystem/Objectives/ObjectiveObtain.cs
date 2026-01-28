@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using QuestSystem.Wrappers;
 using QuestSystem.Wrappers.Objectives;
 
@@ -13,7 +14,26 @@ namespace QuestSystem.Objectives
         internal override ObjectiveObtainWrapper Wrap() => new(this);
 
         internal override IObjectiveProgress CreateProgressTrack() => new Progress(this);
+        public override object Clone()
+        {
+            var areaTags = base.AreaTags.Select(at => (string)at.Clone()).ToArray();
+            var triggerTags = base.TriggerTags.Select(at => (string)at.Clone()).ToArray();
 
+            return new ObjectiveObtain()
+            {
+                NextStageID = base.NextStageID,
+                PartyMembersAllowed = base.PartyMembersAllowed,
+                JournalEntry = (string)base.JournalEntry.Clone(),
+                ShowInJournal = base.ShowInJournal,
+                AreaTags = areaTags,
+                TriggerTags = triggerTags,
+                Cooldown = (ObjectiveTimer?)base.Cooldown?.Clone() ?? null,
+
+                ItemResRef = this.ItemResRef,
+                ItemTag = this.ItemTag,
+                RequiredAmount = this.RequiredAmount,
+            };
+        }
         private sealed class Progress : IObjectiveProgress
         {
             private readonly ObjectiveObtain _objective;

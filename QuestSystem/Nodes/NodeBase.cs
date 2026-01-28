@@ -2,7 +2,7 @@ using QuestSystem.Wrappers;
 
 namespace QuestSystem.Nodes
 {
-    public abstract class NodeBase : IWrappable
+    public abstract class NodeBase : IWrappable, System.ICloneable
     {
         public virtual int ID {get;set;} = -1;
         public virtual int NextID {get;set;} = -1;
@@ -10,5 +10,7 @@ namespace QuestSystem.Nodes
 
         WrapperBase IWrappable.Wrap() => Wrap();
         internal abstract WrapperBase Wrap();
+
+        public abstract object Clone();
     }
 }

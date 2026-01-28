@@ -1,7 +1,5 @@
 using System.IO;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using QuestSystem.Nodes;
 
 namespace QuestSystem
@@ -26,9 +24,9 @@ namespace QuestSystem
             Options.Converters.Add(new NodeConverter(cleanOptions));
         }
 
-        public Task SerializeToStreamAsync(Quest quest, Stream stream);
-        public Task SerializeToStreamAsync(NodeBase node, Stream stream);
-        public Task<Quest?> DeserializeQuestFromStreamAsync(Stream stream, CancellationToken cancellationToken = default);
-        public Task<NodeBase?> DeserializeNodeFromStreamAsync(Stream stream, CancellationToken cancellationToken = default);
+        public void SerializeQuestToStream(Quest quest, Stream stream);
+        public void SerializeNodeToStream(NodeBase node, Stream stream);
+        public Quest? DeserializeQuestFromStream(Stream stream);
+        public NodeBase? DeserializeNodeFromStream(Stream stream);
     }
 }

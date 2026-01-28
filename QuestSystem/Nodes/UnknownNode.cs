@@ -13,6 +13,16 @@ namespace QuestSystem.Nodes
         public UnknownNode() : this(string.Empty) {}
 
         internal override WrapperBase Wrap() => throw new UnknownNodeWrapException(this);
+
+        public override object Clone()
+        {
+            return new UnknownNode((string)this.RawData.Clone())
+            {
+                ID = base.ID,
+                NextID = base.NextID,
+                Rollback = this.Rollback
+            };
+        }
     }
     internal sealed class UnknownNodeWrapException : Exception
     {

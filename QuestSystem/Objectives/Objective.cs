@@ -16,7 +16,7 @@ namespace QuestSystem.Objectives
     [JsonDerivedType(typeof(ObjectiveKill), "$kill")]
     [JsonDerivedType(typeof(ObjectiveObtain), "$obtain")]
     [JsonDerivedType(typeof(ObjectiveSpellcast), "$spellcast")]
-    public abstract class Objective : IWrappable
+    public abstract class Objective : IWrappable, ICloneable
     {
         public string JournalEntry { get; set; } = string.Empty;
         public int NextStageID { get; set; } = -1;
@@ -26,9 +26,9 @@ namespace QuestSystem.Objectives
         public string[] AreaTags { get; set; } = Array.Empty<string>();
         public string[] TriggerTags { get; set; } = Array.Empty<string>();
 
-        public ObjectiveTimer Cooldown {get;set;} = new();
+        public ObjectiveTimer? Cooldown { get; set; } = null;
 
-        public sealed class ObjectiveTimer : ICooldown
+        public sealed class ObjectiveTimer : ICooldown, ICloneable
         {
             public string CooldownTag {get; set;} = string.Empty;
             public float DurationSeconds {get; set;} = 0;
@@ -36,16 +36,30 @@ namespace QuestSystem.Objectives
 
             public bool ShowInJournal{get; set;} = false;
             public JournalFormat Format {get; set;} = JournalFormat.CountDown;
+
             public enum JournalFormat
             {
                 CountUp,
                 CountDown
             }
+            public object Clone()
+            {
+                return new ObjectiveTimer()
+                {
+                    CooldownTag = (string)this.CooldownTag.Clone(),
+                    DurationSeconds = this.DurationSeconds,
+                    RunOffline = this.RunOffline,
+                    ShowInJournal = this.ShowInJournal,
+                    Format = this.Format
+                };
+            }
+
         }
 
 
         WrapperBase IWrappable.Wrap() => Wrap();
         internal abstract WrapperBase Wrap();
         internal abstract IObjectiveProgress CreateProgressTrack();
+        public abstract object Clone();
     }
 }

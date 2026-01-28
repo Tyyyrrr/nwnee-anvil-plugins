@@ -8,7 +8,7 @@ namespace QuestSystem.Tests
     internal class NodeLoaderTests
     {
         [Test]
-        public async Task NodeLoader_ValidPack_LoadsExpectedNode()
+        public void NodeLoader_ValidPack_LoadsExpectedNode()
         {
             var nodeLoader = new NodeLoader();
 
@@ -20,8 +20,8 @@ namespace QuestSystem.Tests
                 var quest = new Quest() { Tag = "test" };
                 var node = new StageNode() { ID = 0, JournalEntry = "test entry" };
 
-                await eqpWO.WriteQuestAsync(quest);
-                await eqpWO.WriteNodeAsync(quest, node);
+                eqpWO.WriteQuest(quest);
+                eqpWO.WriteNode(quest, node);
             }
 
             var rqpRO = new RuntimeQuestPack(stream);

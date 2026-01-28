@@ -1,341 +1,252 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+
 using QuestSystem.Nodes;
 
 namespace QuestSystem
 {
-    
     /// <summary>
-    /// Provides asynchronous read/write access to the file for GUI editor apps. 
+    /// Provides synchronous read/write access to the file.
     /// </summary>
     public sealed class EditorQuestPack : QuestPack
     {
-        private readonly SemaphoreSlim _zipLock;
-        private readonly CancellationTokenSource _packCTS;        
-        private readonly CancellationTokenSource _linkedCTS;
-        private readonly CancellationToken _linkedCT;
-
         private readonly IQuestDataSerializer _serializer;
 
-        public EditorQuestPack(Stream stream, bool readOnly, IQuestDataSerializer serializer, CancellationToken globalToken = default) : base(stream, readOnly)
+        public EditorQuestPack(Stream stream, bool readOnly, IQuestDataSerializer serializer) : base(stream, readOnly)
         {
-            _zipLock = new(1,1);
-            _packCTS = new();
-            _linkedCTS = CancellationTokenSource.CreateLinkedTokenSource(_packCTS.Token, globalToken);
-            _linkedCT = _linkedCTS.Token;
             _serializer = serializer;
         }
 
         protected override void Dispose(bool disposing)
         {
-            _packCTS.Cancel();
-
-            _zipLock.Wait();
-
-            _packCTS.Dispose();
-            _linkedCTS.Dispose();
-
-            _zipLock.Dispose();
-
             base.Dispose(disposing);
         }
 
         /// <param name="ownedStream">The archive. Callers should not dispose it manually.</param>
         /// <param name="serializer">Serialization interface, fallback to built-in default if null.</param>
-        /// <param name="globalToken">Mechanism for cancelling ongoing I/O and/or serialization operations.</param>
         /// <exception cref="ArgumentException"></exception>
-        public static EditorQuestPack OpenRead(Stream ownedStream, IQuestDataSerializer? serializer = null, CancellationToken globalToken = default)
+        public static EditorQuestPack OpenRead(Stream ownedStream, IQuestDataSerializer? serializer = null)
         {
             if(!ownedStream.CanRead) 
                 throw new ArgumentException("Provided stream is not readable");
 
-            return new EditorQuestPack(ownedStream, true, serializer ?? DefaultSerializer, globalToken);
+            return new EditorQuestPack(ownedStream, true, serializer ?? DefaultSerializer);
         }
 
         /// <inheritdoc cref="OpenRead"/>
-        public static EditorQuestPack OpenWrite(Stream ownedStream, IQuestDataSerializer? serializer = null, CancellationToken globalToken = default)
+        public static EditorQuestPack OpenWrite(Stream ownedStream, IQuestDataSerializer? serializer = null)
         {
             if(!ownedStream.CanWrite) 
                 throw new ArgumentException("Provided stream is not writeable");
 
-            return new EditorQuestPack(ownedStream, false, serializer ?? DefaultSerializer, globalToken);
+            return new EditorQuestPack(ownedStream, false, serializer ?? DefaultSerializer);
         }
 
-        /// <returns>False if there is a quest with the same tag in the pack already.</returns>
-        public async Task<bool> WriteQuestAsync(Quest quest)
+
+
+        /// <returns>False if there is a quest with the same tag in the pack already, or an exception occurred.</returns>
+        public bool WriteQuest(Quest quest)
         {
             ThrowIfReadOnly();
 
-            await _zipLock.WaitAsync(_linkedCT);
-
+            string questPath = GetQuestEntryPath(quest.Tag);
             try
             {
-                _linkedCT.ThrowIfCancellationRequested();
-
-                string questPath = GetQuestEntryPath(quest.Tag);
-
-                if(_archive.Entries.Any(e=>e.FullName == questPath))
+                if (_archive.Entries.Any(e => e.FullName == questPath))
                     return false;
-
-                _linkedCT.ThrowIfCancellationRequested();
 
                 var entry = _archive.CreateEntry(questPath, CompressionLevel.NoCompression);
 
                 using var stream = entry.Open();
 
-                await _serializer.SerializeToStreamAsync(quest, stream); // no cancellation here, to prevent zip corruption
+                _serializer.SerializeQuestToStream(quest, stream);
 
                 return true;
             }
-            finally
-            {
-                _zipLock.Release();
-            }
+            catch (Exception ex) { Trace.WriteLine(ex); return false; }
         }
 
-        /// <returns>False if there is no such quest, or the node with the same ID already exists in the pack.</returns>
-        public async Task<bool> WriteNodeAsync(Quest quest, NodeBase node)
+        /// <returns>False if there is no such quest, or the node with the same ID already exists in the pack, or an exception occurred.</returns>
+        public bool WriteNode(Quest quest, NodeBase node)
         {
             ThrowIfReadOnly();
 
-            await _zipLock.WaitAsync(_linkedCT);
-
+            string questPath = GetQuestEntryPath(quest.Tag);
+            string nodePath = GetNodeEntryPath(quest.Tag, node.ID);
             try
             {
-                _linkedCT.ThrowIfCancellationRequested();
-
-                string questPath = GetQuestEntryPath(quest.Tag);
-                string nodePath = GetNodeEntryPath(quest.Tag, node.ID);
                 bool noQuest = true;
-                foreach(var e in _archive.Entries)
+                foreach (var e in _archive.Entries)
                 {
-                    _linkedCT.ThrowIfCancellationRequested();
-                    if(e.FullName == questPath)
+                    if (e.FullName == questPath)
                         noQuest = false;
-                    else if(e.FullName == nodePath)
+                    else if (e.FullName == nodePath)
                         return false;
                 }
-                if(noQuest) return false;
+                if (noQuest) return false;
 
                 var entry = _archive.CreateEntry(nodePath, CompressionLevel.NoCompression);
 
                 using var stream = entry.Open();
 
-                await _serializer.SerializeToStreamAsync(node, stream); // no cancellation here, to prevent zip corruption
+                _serializer.SerializeNodeToStream(node, stream);
 
                 return true;
             }
-            finally
-            {
-                _zipLock.Release();
-            }
+            catch (Exception ex) { Trace.WriteLine(ex); return false; }
         }
 
         /// <param name="serializedMetadata">Arbitrary object, serialized to JSON</param>
-        /// <returns>False if there is no such quest, or there is some metadata for this quest alerady in the pack.</returns>
-        public async Task<bool> WriteMetadataAsync(string questTag, string serializedMetadata)
+        /// <returns>False if there is no such quest, or there is some metadata for this quest alerady in the pack, or an exception occurred.</returns>
+        public bool WriteMetadata(string questTag, string serializedMetadata)
         {
             ThrowIfReadOnly();
 
-            await _zipLock.WaitAsync(_linkedCT);
-
+            string questPath = GetQuestEntryPath(questTag);
+            string metadataPath = GetMetadataEntryPath(questTag);
             try
             {
-                _linkedCT.ThrowIfCancellationRequested();
-
-                string questPath = GetQuestEntryPath(questTag);
-                string metadataPath = GetMetadataEntryPath(questTag);
                 bool noQuest = true;
-                foreach(var e in _archive.Entries)
+                foreach (var e in _archive.Entries)
                 {
-                    _linkedCT.ThrowIfCancellationRequested();
-                    if(e.FullName == questPath)
+                    if (e.FullName == questPath)
                         noQuest = false;
-                    else if(e.FullName == metadataPath)
+                    else if (e.FullName == metadataPath)
                         return false;
                 }
-                if(noQuest) return false;
+                if (noQuest) return false;
 
-                var entry = _archive.CreateEntry(metadataPath,CompressionLevel.SmallestSize);
-                
+                var entry = _archive.CreateEntry(metadataPath, CompressionLevel.SmallestSize);
+
                 using var sw = new StreamWriter(entry.Open(), leaveOpen: false);
 
-                await sw.WriteAsync(serializedMetadata); // no cancellation here, to prevent zip corruption
+                sw.Write(serializedMetadata);
 
                 return true;
             }
-            finally
-            {
-                _zipLock.Release();
-            }
+            catch (Exception ex) { Trace.WriteLine(ex); return false; }
         }
 
-        /// <returns>False if the quest does not exist.</returns>
-        public async Task<bool> RemoveQuestAsync(string questTag)
+        /// <returns>False if the quest does not exist, or an exception occurred.</returns>
+        public bool RemoveQuest(string questTag)
         {
             ThrowIfReadOnly();
 
-            await _zipLock.WaitAsync(_linkedCT);
+            var questPath = GetQuestEntryPath(questTag);
+            var metadataPath = GetMetadataEntryPath(questTag);
 
             try
             {
-                return await Task.Run(()=>
+                var questEntry = _archive.GetEntry(questPath);
+
+                if (questEntry == null) return false;
+
+                var entriesToDelete = new List<ZipArchiveEntry>();
+
+                foreach (var e in _archive.Entries)
                 {
-                    var questPath = GetQuestEntryPath(questTag);
-                    var metadataPath = GetMetadataEntryPath(questTag);
+                    if (e.FullName.StartsWith(questPath)
+                    && e.FullName.Length != questPath.Length
+                    && (e.FullName == metadataPath || int.TryParse(e.FullName[questPath.Length..], out _)))
+                        entriesToDelete.Add(e);
+                }
 
-                    var questEntry = _archive.GetEntry(questPath);
-                    
-                    if(questEntry == null) return false;
+                foreach (var questData in entriesToDelete)
+                    questData.Delete();
 
-                    var entriesToDelete = new List<ZipArchiveEntry>();
+                _archive.GetEntry(metadataPath)?.Delete();
 
-                    foreach(var e in _archive.Entries)
-                    {
-                        _linkedCT.ThrowIfCancellationRequested();
+                questEntry.Delete();
 
-                        if(e.FullName.StartsWith(questPath)
-                        && e.FullName.Length != questPath.Length
-                        && (e.FullName == metadataPath || int.TryParse(e.FullName[questPath.Length..], out _)))
-                            entriesToDelete.Add(e);   
-                    }
-
-                    foreach(var questData in entriesToDelete)
-                        questData.Delete();
-
-                    _archive.GetEntry(metadataPath)?.Delete();
-
-                    questEntry.Delete();
-
-                    return true;
-
-                }, _linkedCT); // cancel is safe only before the first Delete operation, to avoid Zip corruption
+                return true;
             }
-            finally
-            {
-                _zipLock.Release();
-            }
+            catch (Exception ex) { Trace.WriteLine(ex); return false; }
         }
 
-        public async Task<bool> RemoveNodeAsync(string questTag, int nodeID)
+        /// <returns>False if the quest does not exist, or it does not contain node with specified ID, or an exception occurred.</returns>
+        public bool RemoveNode(string questTag, int nodeID)
         {
             ThrowIfReadOnly();
 
-            await _zipLock.WaitAsync(_linkedCT);
+            var questPath = GetQuestEntryPath(questTag);
 
             try
             {
-                return await Task.Run(() =>
-                {
-                    var questPath = GetQuestEntryPath(questTag);
+                if (!_archive.Entries.Any(e => e.FullName == questPath))
+                    return false;
 
-                    if(!_archive.Entries.Any(e=>e.FullName==questPath))
-                        return false;
+                var entry = _archive.GetEntry(GetNodeEntryPath(questTag, nodeID));
 
-                    var entry = _archive.GetEntry(GetNodeEntryPath(questTag, nodeID));
+                if (entry == null) return false;
 
-                    if(entry == null) return false;
+                entry.Delete();
 
-                    _linkedCT.ThrowIfCancellationRequested();
-
-                    entry.Delete();
-
-                    return true;
-
-                }, _linkedCT); // cancel is safe only before the first Delete operation, to avoid Zip corruption
+                return true;
             }
-            finally
-            {
-                _zipLock.Release();
-            }
+            catch (Exception ex) { Trace.WriteLine(ex); return false; }
         }
 
-        public async Task<bool> RemoveMetadataAsync(string questTag)
+        /// <returns>False if the quest does not exist, or it does not carry metadata, or an exception occurred.</returns>
+        public bool RemoveMetadata(string questTag)
         {
             ThrowIfReadOnly();
 
-            await _zipLock.WaitAsync(_linkedCT);
+            var questPath = GetQuestEntryPath(questTag);
 
             try
-            {            
-                return await Task.Run(() =>
-                {                    
-                    var questPath = GetQuestEntryPath(questTag);
-
-                    if(!_archive.Entries.Any(e=>e.FullName==questPath))
-                        return false;
-
-                    var entry = _archive.GetEntry(GetMetadataEntryPath(questTag));
-
-                    if(entry == null) return false;
-
-                    _linkedCT.ThrowIfCancellationRequested();
-
-                    entry.Delete();
-
-                    return true;
-
-                }, _linkedCT);
-            }
-            finally
             {
-                _zipLock.Release();
+                if (!_archive.Entries.Any(e => e.FullName == questPath))
+                    return false;
+
+                var entry = _archive.GetEntry(GetMetadataEntryPath(questTag));
+
+                if (entry == null) return false;
+
+                entry.Delete();
+
+                return true;
             }
+            catch (Exception ex) { Trace.WriteLine(ex); return false; }
 
         }
-        public async Task<Quest?> GetQuestAsync(string questTag)
+
+        /// <returns>Null if the quest does not exist in the pack, or deserialization failed, or an exception occurred</returns>
+        public Quest? GetQuest(string questTag)
         {
-            await _zipLock.WaitAsync(_linkedCT);
-            
             try
             {  
-                _linkedCT.ThrowIfCancellationRequested();
-
                 var entry = _archive.GetEntry(GetQuestEntryPath(questTag));
 
                 if(entry == null) return default;
 
                 using var stream = entry.Open();
 
-                var obj = await JsonSerializer.DeserializeAsync<Quest>(stream, IQuestDataSerializer.Options, _linkedCT);
-
-                _linkedCT.ThrowIfCancellationRequested();
+                var obj = _serializer.DeserializeQuestFromStream(stream);
 
                 return obj;
             }
-            finally
-            {
-                _zipLock.Release();
-            }
+            catch (Exception ex) { Trace.WriteLine(ex); return null; }
         }
 
 
-        /// <returns>Array of nodes deserialized from the file, or null if quest does not exist in the pack.</returns>
-        public async Task<Quest[]?> GetQuestsAsync()
+        /// <returns>Array of quests deserialized from the file (only the quests, without nodes), or null if any quest is corrupted, or an exception occurred</returns>
+        public Quest[]? GetQuests()
         {
-            await _zipLock.WaitAsync(_linkedCT);
-
             try
             {
-                _linkedCT.ThrowIfCancellationRequested();
-
                 var quests = new List<Quest>();
-
 
                 foreach (var entry in _archive.Entries.Where(e => e.FullName.EndsWith('/')))
                 {
 
                     using var stream = entry.Open();
 
-                    var quest = await _serializer.DeserializeQuestFromStreamAsync(stream, _linkedCT);
-
-                    _linkedCT.ThrowIfCancellationRequested();
+                    var quest = _serializer.DeserializeQuestFromStream(stream);
 
                     if (quest == null) return null;
 
@@ -344,26 +255,19 @@ namespace QuestSystem
 
                 return quests.ToArray();
             }
-            finally
-            {
-                _zipLock.Release();
-            }
+            catch (Exception ex) { Trace.WriteLine(ex); return null; }
         }
 
-        /// <returns>Array of nodes deserialized from the file, or null if quest does not exist in the pack.</returns>
-        public async Task<NodeBase[]?> GetNodesAsync(string questTag)
+        /// <returns>Array of nodes deserialized from the file, or null if quest does not exist in the pack, or an exception occurred.</returns>
+        public NodeBase[]? GetNodes(string questTag)
         {
-            await _zipLock.WaitAsync(_linkedCT);
+            var nodes = new List<NodeBase>();
+
+            string questPath = GetQuestEntryPath(questTag);
+            string metadataEntryPath = GetMetadataEntryPath(questTag);
 
             try
             {
-                _linkedCT.ThrowIfCancellationRequested();
-
-                var nodes = new List<NodeBase>();
-
-                string questPath = GetQuestEntryPath(questTag);
-                string metadataEntryPath = GetMetadataEntryPath(questTag);
-
                 foreach (var entry in _archive.Entries)
                 {
                     if (!entry.FullName.StartsWith(questPath)
@@ -374,9 +278,7 @@ namespace QuestSystem
 
                     using var stream = entry.Open();
 
-                    var node = await _serializer.DeserializeNodeFromStreamAsync(stream,_linkedCT);
-
-                    _linkedCT.ThrowIfCancellationRequested();
+                    var node = _serializer.DeserializeNodeFromStream(stream);
 
                     if(node == null) return null;
 
@@ -385,38 +287,42 @@ namespace QuestSystem
 
                 return nodes.ToArray();
             }
-            finally
+            catch (Exception ex) { Trace.WriteLine(ex); return null; }
+        }
+
+        /// <returns>A single node deserialized from the file, or null if quest does not exist in the pack, or it does not contain node with this ID, or an exception occurred.</returns>
+        public NodeBase? GetNode(string questTag, int nodeID)
+        {
+            string nodeEntryPath = GetNodeEntryPath(questTag, nodeID);
+
+            try
             {
-                _zipLock.Release();
+                var entry = _archive.GetEntry(nodeEntryPath);
+                if(entry == null) return null;
+                using var stream = entry.Open();
+
+                return _serializer.DeserializeNodeFromStream(stream);
             }
+            catch (Exception ex) { Trace.WriteLine(ex); return null; }
         }
 
         /// <param name="options">Explicit serializer options</param>
-        /// <returns>Object deserialized from the file, or null if either quest does not exist, or it does not carry any metadata.</returns>
-        public async Task<T?> GetMetadataAsync<T>(string questTag, JsonSerializerOptions? options = null)
+        /// <returns>Object deserialized from the file, or null if either quest does not exist, or it does not carry any metadata, or an exception occurred.</returns>
+        public T? GetMetadata<T>(string questTag, JsonSerializerOptions? options = null)
         {
-            await _zipLock.WaitAsync(_linkedCT);
-
             try
             {  
-                _linkedCT.ThrowIfCancellationRequested();
-
                 var entry = _archive.GetEntry(GetMetadataEntryPath(questTag));
 
                 if(entry == null) return default;
 
                 using var stream = entry.Open();
 
-                var obj = await JsonSerializer.DeserializeAsync<T>(stream, options, _linkedCT);
-
-                _linkedCT.ThrowIfCancellationRequested();
+                var obj = JsonSerializer.Deserialize<T>(stream, options);
 
                 return obj;
             }
-            finally
-            {
-                _zipLock.Release();
-            }
+            catch (Exception ex) { Trace.WriteLine(ex); return default; }
         }
 
     }

@@ -31,5 +31,18 @@ namespace QuestSystem.Nodes
 
             return Branches.OrderBy(b => b.Key).First().Key;
         }
+        public override object Clone()
+        {
+            var branches = Branches.ToDictionary();
+
+            return new RandomizerNode()
+            {
+                ID = base.ID,
+                NextID = base.NextID,
+                Rollback = this.Rollback,
+
+                Branches = branches
+            };
+        }
     }
 }
