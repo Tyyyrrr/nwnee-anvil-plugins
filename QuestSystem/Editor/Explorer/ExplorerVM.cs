@@ -10,6 +10,8 @@ namespace QuestEditor.Explorer
 {
     public sealed class ExplorerVM : StatefulViewModelBase, IDisposable, IAsyncDisposable
     {
+        public event Action<QuestVM?>? QuestSelected;
+
         public ICommand SelectableItemClickedCommand { get; }
         public ICommand ClearSelectionCommand { get; }
         public ICommand NewCommand { get; }
@@ -22,7 +24,11 @@ namespace QuestEditor.Explorer
         public QuestVM? SelectedQuest
         {
             get => _selectedQuest;
-            private set => SetProperty(ref _selectedQuest, value);
+            private set
+            {
+                if(SetProperty(ref _selectedQuest, value))
+                    QuestSelected?.Invoke(value);
+            }
         } private QuestVM? _selectedQuest = null;
 
         private List<ISelectable> _selectedItems = [];
@@ -105,12 +111,12 @@ namespace QuestEditor.Explorer
         {
             ClearSelection();
             _selectedItems.Add(pack);
+            if (pack != (SelectedQuest?.PackVM ?? null))
+                SelectedQuest = null;
             pack.Select();
         }
         private void OnQuestClicked(QuestVM quest)
         {
-            //todo: set CURRENT quest property for Graph editor
-
             foreach (var qp in QuestPacks)
             {
                 if (qp.Quests.Contains(quest))
@@ -120,6 +126,7 @@ namespace QuestEditor.Explorer
                     _selectedItems.Add(quest);
                     _selectedQuests.Add(qp, [quest]);
                     SelectedQuest = quest;
+                    QuestSelected?.Invoke(quest);
                     return;
                 }
             }
@@ -137,6 +144,7 @@ namespace QuestEditor.Explorer
                 _selectedItems.Remove(sn);
             }
             _selectedNodes[SelectedQuest] = [node];
+            node.Select();
         }
         //////
 

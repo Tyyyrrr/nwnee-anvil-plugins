@@ -12,6 +12,13 @@
         </GradientStopCollection>
     </LinearGradientBrush>
 
+    <LinearGradientBrush x:Key="GraphBackground">
+        <GradientStopCollection>
+            <GradientStop Color="{x:Static Colors.DarkBlue}" Offset="-0.5"/>
+            <GradientStop Color="{x:Static Colors.DimGray}" Offset="2"/>
+        </GradientStopCollection>
+    </LinearGradientBrush>
+    
     <SolidColorBrush x:Key="MenuBackgroundColorBrush"
                  Color="DimGray"/>
 

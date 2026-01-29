@@ -12,6 +12,14 @@
         </GradientStopCollection>
     </LinearGradientBrush>
 
+
+    <LinearGradientBrush x:Key="GraphBackground">
+        <GradientStopCollection>
+            <GradientStop Color="{x:Static Colors.DimGray}" Offset="-0.5"/>
+            <GradientStop Color="{x:Static Colors.LightGray}" Offset="2"/>
+        </GradientStopCollection>
+    </LinearGradientBrush>
+
     <SolidColorBrush x:Key="MenuBackgroundColorBrush"
                  Color="{DynamicResource {x:Static SystemColors.MenuBarColorKey}}"/>
 
@@ -23,5 +31,7 @@
     <SolidColorBrush x:Key="TreeViewItemSelectedBackgroundBrush" Color="LightBlue"/>
     <SolidColorBrush x:Key="TreeViewItemBorderBrush" Color="DarkSlateBlue"/>
     <SolidColorBrush x:Key="TreeViewItemForeground" Color="Black"/>
+    
+    
 
 </ResourceDictionary>

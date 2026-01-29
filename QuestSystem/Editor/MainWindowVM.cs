@@ -26,6 +26,7 @@ namespace QuestEditor
 
             Explorer.Recorded += OnUndoableOperationPushed;
             Explorer.Discarded += OnChangesDiscarded;
+            Explorer.QuestSelected += q => Graph.CurrentQuest = q;
         }
 
         void OnUndoableOperationPushed(UndoableOperation op)
