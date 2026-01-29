@@ -29,14 +29,60 @@ namespace QuestEditor.Nodes
 
         protected virtual NodeBase Node => clone;
 
+        public event Action<NodeVM, int>? OutputChanged;
+
         public int ID => clone.ID;
+
+
+
         public int NextID
         {
             get => _nextID;
-            set { if (SetProperty(ref _nextID, value)) clone.NextID = _nextID; }
+            set 
+            {
+                int oldValue = _nextID;
+                if (SetProperty(ref _nextID, value))
+                {
+                    clone.NextID = _nextID;
+                    OutputChanged?.Invoke(this, _nextID);
+                    RaisePropertyChanged(nameof(NextIDString));
+                }
+            }
         } private int _nextID;
 
+
+        public string NextIDString
+        {
+            get => _nextID.ToString();
+            set
+            {
+                if (!int.TryParse(value, out var nextID) || _nextID == nextID)
+                    return;
+
+                PushOperation(new SetNextIDOperation(this, nextID));
+            }
+        }
+
+
+
+
         public string NodeType { get; }
+
+        private sealed class SetNextIDOperation(NodeVM node, int newVal) : UndoableOperation(node)
+        {
+            private readonly int _oldVal = node.NextID;
+            private readonly int _newVal = newVal;
+            protected override void ProtectedDo()
+            {
+                ((NodeVM)Origin).NextID = _newVal;
+            }
+
+            protected override void ProtectedRedo() => ProtectedDo();
+            protected override void ProtectedUndo()
+            {
+                ((NodeVM)Origin).NextID = _oldVal;
+            }
+        }
 
         public bool IsSelected { get => _isSelected; private set => SetProperty(ref _isSelected, value); }
         private bool _isSelected = false;
@@ -62,5 +108,20 @@ namespace QuestEditor.Nodes
         {
             base.RefreshIsDirty();
         }
+
+        public double CanvasLeft
+        {
+            get => _canvasLeft;
+            set => SetProperty(ref _canvasLeft, value);
+        }
+        double _canvasLeft;
+
+        public double CanvasTop
+        {
+            get => _canvasTop;
+            set => SetProperty(ref _canvasTop, value);
+        }
+        double _canvasTop;
+
     }
 }

@@ -4,21 +4,15 @@
     xmlns:local="clr-namespace:QuestEditor"
     xmlns:shared="clr-namespace:QuestEditor.Shared"
     xmlns:explorer="clr-namespace:QuestEditor.Explorer"
+    xmlns:graph="clr-namespace:QuestEditor.Graph"
     xmlns:nodes="clr-namespace:QuestEditor.Nodes">
     
     
     
     <!-- NODES -->
-    
-    <DataTemplate DataType="{x:Type nodes:StageNodeVM}">
-        <nodes:StageNodeControl />
-    </DataTemplate>
-    
-    <DataTemplate DataType="{x:Type nodes:RewardNodeVM}">
-        <nodes:RewardNodeControl />
-    </DataTemplate>
-
     <Style x:Key="NodeControlBaseStyle" TargetType="nodes:NodeControl">
+        <Setter Property="Canvas.Left" Value="{Binding CanvasLeft, Mode=TwoWay}"/>
+        <Setter Property="Canvas.Top" Value="{Binding CanvasTop, Mode=TwoWay}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="nodes:NodeControl">
@@ -30,7 +24,11 @@
                             Opacity="{TemplateBinding Opacity}">
                         <StackPanel Background="DarkOrange">
                             <TextBlock Text="{Binding}" Foreground="Yellow"/>
-                            <ContentControl Content="{TemplateBinding Content}"/>
+                            <TextBlock Text="{Binding ID}" Background="Green"/>
+                            <ContentPresenter 
+                                Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                            <TextBox Text="{Binding NextIDString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                     </Border>
                 </ControlTemplate>
@@ -38,27 +36,31 @@
         </Setter>
     </Style>
 
-    <Style TargetType="nodes:NodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+
+    <Style x:Key="NodeControlDefaultStyle" TargetType="nodes:NodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
         <Setter Property="Opacity" Value="0.8"/>
     </Style>
-    
-    
-    <Style TargetType="nodes:StageNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
-        <Setter Property="Content">
-            <Setter.Value>
-                <StackPanel>
 
-                </StackPanel>
+    <Style x:Key="StageNodeControlStyle" TargetType="nodes:StageNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="{Binding JournalEntry}" Background="Red" />
+                    </StackPanel>
+                </DataTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-    <Style TargetType="nodes:RewardNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
-        <Setter Property="Content">
+    <Style x:Key="RewardNodeControlStyle" TargetType="nodes:RewardNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="ContentTemplate">
             <Setter.Value>
-                <StackPanel>
-                    
-                </StackPanel>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="RewardNodeControlStyle" Background="Green"/>
+                    </StackPanel>
+                </DataTemplate>
             </Setter.Value>
         </Setter>
     </Style>
@@ -189,5 +191,46 @@
         <TextBlock Text="{Binding NodeType}" />
     </HierarchicalDataTemplate>
 
-    
+        
+    <!-- GRAPH -->
+
+    <graph:BezierPointConverter x:Key="BPC"/>
+
+    <Style TargetType="graph:ConnectionControl">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type graph:ConnectionControl}">
+                    <Path Stroke="{Binding FromToColorGradientBrush}" 
+                        StrokeThickness="3"
+                        Stretch="None"
+                        SnapsToDevicePixels="True">
+                            <Path.Data>
+                            <PathGeometry>
+                                <PathGeometry.Figures>
+                                    <PathFigureCollection>
+                                        <PathFigure 
+                                            StartPoint="{Binding FromToPoint,
+                                                                 Converter={StaticResource BPC},
+                                                                 ConverterParameter=1}">
+                                            <BezierSegment 
+                                                Point1="{Binding FromToPoint,
+                                                                 Converter={StaticResource BPC},
+                                                                 ConverterParameter=2}"
+                                                Point2="{Binding FromToPoint,
+                                                                 Converter={StaticResource BPC},
+                                                                 ConverterParameter=3}"
+                                                Point3="{Binding FromToPoint,
+                                                                 Converter={StaticResource BPC},
+                                                                 ConverterParameter=4}" />
+                                        </PathFigure>
+                                    </PathFigureCollection>
+                                </PathGeometry.Figures>
+                            </PathGeometry>
+                        </Path.Data>
+                    </Path>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

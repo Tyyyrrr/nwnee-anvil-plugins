@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QuestEditor"
-        xmlns:nodes="clr-namespace:QuestEditor.Nodes"
         xmlns:explorer="clr-namespace:QuestEditor.Explorer"
+        xmlns:graph="clr-namespace:QuestEditor.Graph"
+        xmlns:nodes="clr-namespace:QuestEditor.Nodes"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
 
@@ -47,9 +48,9 @@
             <Setter Property="DeleteCommand" Value="{Binding CurrentContext.DeleteCommand}" />
             <Setter Property="FindCommand" Value="{Binding CurrentContext.FindCommand}" />-->
         </Style>
-        
+
     </Window.Resources>
-    
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="120" MaxWidth="360" Width="Auto"/>
@@ -61,11 +62,19 @@
             <RowDefinition Height="5*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
-        <explorer:ExplorerControl DataContext="{Binding Explorer}"
+
+        <explorer:ExplorerControl
+            DataContext="{Binding Explorer}"
             Grid.Row="1"
             Grid.RowSpan="2"
             Background="{DynamicResource ExplorerBackground}"/>
+
+        <graph:GraphControl
+            DataContext="{Binding Graph}"
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            Grid.Column="1"
+            Background="{DynamicResource GraphBackground}"/>
 
         <Menu Grid.ColumnSpan="2" Background="{DynamicResource MenuBackgroundColorBrush}" >
             <MenuItem Header="File" Background="{DynamicResource MenuBackgroundColorBrush}" Foreground="{DynamicResource MenuForegroundColorBrush}">

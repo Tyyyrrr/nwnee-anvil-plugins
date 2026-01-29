@@ -1,4 +1,6 @@
-﻿using System.Reflection.Metadata;
+﻿using QuestEditor.Explorer;
+using System.Diagnostics;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -104,21 +106,6 @@ public partial class MainWindow : Window
     void Find_CanExecute(object s, CanExecuteRoutedEventArgs e) => RouteCanExecute(FindCommand, e);
     #endregion
     #endregion
-
-
-
-    public static readonly DependencyProperty SelectedQuestProperty = DependencyProperty.Register(
-        "SelectedQuest",
-        typeof(object),
-        typeof(MainWindow),
-        new PropertyMetadata(null));
-
-    public object? SelectedQuest
-    {
-        get => (object?)GetValue(SelectedQuestProperty);
-        set => SetValue(SelectedQuestProperty, value);
-    }
-
 
     public MainWindow()
     {
