@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace QuestEditor.Graph
 {
-    internal sealed class GraphVM : StatefulViewModelBase
+    internal sealed class GraphVM : ViewModelBase
     {
 
     }

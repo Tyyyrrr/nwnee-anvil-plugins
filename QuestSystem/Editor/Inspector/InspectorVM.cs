@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace QuestEditor.Inspector
 {
-    internal class InspectorVM : StatefulViewModelBase
+    internal class InspectorVM : ViewModelBase
     {
 
     }

@@ -82,7 +82,6 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- HEADER ROW -->
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -98,10 +97,10 @@
                             </Border>
                         </Grid>
 
-                        <!-- CHILDREN ROW -->
                         <ItemsPresenter x:Name="PART_ItemsHost"
                                 Grid.Row="1"
-                                Margin="19,0,0,0"/>
+                                Margin="19,0,0,0"
+                                Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}"/>
 
                     </Grid>
 
@@ -130,7 +129,9 @@
         <Setter Property="ContextMenu">
             <Setter.Value>
                 <ContextMenu>
-                    <MenuItem Header="Add Quest" Command="{Binding AddQuestCommand}" CommandParameter="{Binding}"/>
+                    <MenuItem Header="Add Quest" Command="{Binding AddQuestCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="Discard changes" Command="{Binding DiscardChangesCommand}"/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>
@@ -140,20 +141,22 @@
     <Style x:Key="QuestItemStyle" TargetType="explorer:SelectableTreeViewItem" BasedOn="{StaticResource BaseSelectableItemStyle}">
         <Setter Property="ContextMenu">
             <Setter.Value>
-                <ContextMenu> <!-- TODO: move to shared resources and use it in Graph too -->
-                    <MenuItem Header="Add Node">
-                        <MenuItem Header="Stage" Command="{Binding AddStageNodeCommand}" CommandParameter="{Binding}"/>
-                        <MenuItem Header="Reward" Command="{Binding AddRewardNodeCommand}" CommandParameter="{Binding}"/>
-                        <MenuItem Header="Randomizer" Command="{Binding AddRandomizerNodeCommand}" CommandParameter="{Binding}"/>
-                        <MenuItem Header="Cooldown" Command="{Binding AddCooldownNodeCommand}" CommandParameter="{Binding}"/>
+                <ContextMenu>
+                    <MenuItem Header="Add Node" IsEnabled="{Binding IsSelected}" >
+                        <MenuItem Header="Stage" Command="{Binding AddStageNodeCommand}"/>
+                        <MenuItem Header="Reward" Command="{Binding AddRewardNodeCommand}"/>
+                        <MenuItem Header="Randomizer" Command="{Binding AddRandomizerNodeCommand}"/>
+                        <MenuItem Header="Cooldown" Command="{Binding AddCooldownNodeCommand}"/>
                         <MenuItem Header="Condition">
-                            <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}" CommandParameter="{Binding}"/>
-                            <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}" CommandParameter="{Binding}"/>
-                            <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}" CommandParameter="{Binding}"/>
+                            <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}"/>
+                            <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}"/>
+                            <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}"/>
                         </MenuItem>
                     </MenuItem>
-                    <MenuItem Header="Rename Quest" Command="{Binding RenameCommand}" InputGestureText="Ctrl+R" CommandParameter="{Binding}"/>
-                    <MenuItem Header="Delete Quest" Command="{Binding DeleteQuestCommand}" InputGestureText="Delete" CommandParameter="{Binding}"/>
+                    <!--<MenuItem Header="Rename Quest" Command="{Binding RenameCommand}" InputGestureText="Ctrl+R"/>-->
+                    <MenuItem Header="Delete Quest" Command="{Binding DeleteQuestCommand}" CommandParameter="{Binding}"/>
+                    <Separator/>
+                    <MenuItem Header="Discard changes" Command="{Binding DiscardChangesCommand}" />
                 </ContextMenu>
             </Setter.Value>
         </Setter>
@@ -165,6 +168,9 @@
             <Setter.Value>
                 <ContextMenu>
                     <MenuItem Header="Delete Node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                    <Separator/>
+                    <MenuItem Header="Discard changes" Command="{Binding DiscardChangesCommand}"/>
+                    <Separator/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>
@@ -172,14 +178,14 @@
     </Style>
 
     <HierarchicalDataTemplate DataType="{x:Type explorer:QuestPackVM}" ItemsSource="{Binding Quests}">
-        <TextBlock Text="{Binding PackName}" />
+        <TextBlock Text="{Binding DisplayText}" FontStyle="{Binding DisplayFontStyle}" FontWeight="{Binding DisplayFontWeight}" />
     </HierarchicalDataTemplate>
 
     <HierarchicalDataTemplate DataType="{x:Type explorer:QuestVM}" ItemsSource="{Binding Nodes}">
-        <TextBlock Text="{Binding QuestTag}" />
+        <TextBlock Text="{Binding DisplayText}" FontStyle="{Binding DisplayFontStyle}" FontWeight="{Binding DisplayFontWeight}" />
     </HierarchicalDataTemplate>
 
-    <HierarchicalDataTemplate DataType="{x:Type nodes:NodeVM}">
+    <HierarchicalDataTemplate DataType="{x:Type nodes:NodeVM}" >
         <TextBlock Text="{Binding NodeType}" />
     </HierarchicalDataTemplate>
 

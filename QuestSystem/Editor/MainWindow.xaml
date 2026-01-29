@@ -39,15 +39,15 @@
             <Setter Property="NewCommand" Value="{Binding Explorer.NewCommand}" />
             <Setter Property="OpenCommand" Value="{Binding Explorer.OpenCommand}" />
             <Setter Property="SaveCommand" Value="{Binding Explorer.SaveCommand}" />
-            <Setter Property="SaveAsCommand" Value="{Binding Explorer.SaveAsCommand}" />
-            <Setter Property="SelectAllCommand" Value="{Binding CurrentContext.SelectAllCommand}" />
+            <!--<Setter Property="SaveAsCommand" Value="{Binding Explorer.SaveAsCommand}" />-->
+            <!--<Setter Property="SelectAllCommand" Value="{Binding CurrentContext.SelectAllCommand}" />
             <Setter Property="CopyCommand" Value="{Binding CurrentContext.CopyCommand}" />
             <Setter Property="CutCommand" Value="{Binding CurrentContext.CutCommand}" />
             <Setter Property="PasteCommand" Value="{Binding CurrentContext.PasteCommand}" />
             <Setter Property="DeleteCommand" Value="{Binding CurrentContext.DeleteCommand}" />
-            <Setter Property="FindCommand" Value="{Binding CurrentContext.FindCommand}" />
+            <Setter Property="FindCommand" Value="{Binding CurrentContext.FindCommand}" />-->
         </Style>
-
+        
     </Window.Resources>
     
     <Grid>
@@ -71,20 +71,19 @@
             <MenuItem Header="File" Background="{DynamicResource MenuBackgroundColorBrush}" Foreground="{DynamicResource MenuForegroundColorBrush}">
                 <MenuItem Header ="New" Command="{x:Static ApplicationCommands.New}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
                 <MenuItem Header ="Open" Command="{x:Static ApplicationCommands.Open}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
-                <MenuItem Header ="Save" Command="{x:Static ApplicationCommands.Save}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
-                <MenuItem Header ="Save As" Command="{x:Static ApplicationCommands.SaveAs}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
-                <Separator/>
-                <MenuItem Header ="Find" Command="{x:Static ApplicationCommands.Find}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <MenuItem Header ="Save All" Command="{x:Static ApplicationCommands.Save}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <!--<Separator/>-->
+                <!--<MenuItem Header ="Find" Command="{x:Static ApplicationCommands.Find}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>-->
                 <Separator/>
                 <MenuItem Header ="Close" Command="{x:Static ApplicationCommands.Close}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
             </MenuItem>
             <MenuItem Header="Edit" Background="{DynamicResource MenuBackgroundColorBrush}" Foreground="{DynamicResource MenuForegroundColorBrush}">
-                <MenuItem Header ="Select All" Command="{x:Static ApplicationCommands.SelectAll}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
-                <Separator/>
-                <MenuItem Header ="Copy" Command="{x:Static ApplicationCommands.Copy}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
-                <MenuItem Header ="Cut" Command="{x:Static ApplicationCommands.Cut}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
-                <MenuItem Header ="Paste" Command="{x:Static ApplicationCommands.Paste}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
-                <MenuItem Header ="Delete" Command="{x:Static ApplicationCommands.Delete}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+                <!--<MenuItem Header ="Select All" Command="{x:Static ApplicationCommands.SelectAll}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>-->
+                <!--<Separator/>-->
+                <!--<MenuItem Header ="Copy" Command="{x:Static ApplicationCommands.Copy}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>-->
+                <!--<MenuItem Header ="Cut" Command="{x:Static ApplicationCommands.Cut}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>-->
+                <!--<MenuItem Header ="Paste" Command="{x:Static ApplicationCommands.Paste}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>-->
+                <!--<MenuItem Header ="Delete" Command="{x:Static ApplicationCommands.Delete}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>-->
                 <Separator/>
                 <MenuItem Header ="Undo" Command="{x:Static ApplicationCommands.Undo}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
                 <MenuItem Header ="Redo" Command="{x:Static ApplicationCommands.Redo}" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
