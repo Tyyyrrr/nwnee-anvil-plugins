@@ -1,72 +1,33 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
 using System.Windows.Input;
 using QuestEditor.Shared;
 using QuestSystem;
 
 namespace QuestEditor.Explorer
 {
-    public sealed class QuestPackVM : StatefulViewModelBase, IDisposable, ISelectable
+    public sealed class QuestPackVM : StatefulViewModelBase, ISelectable
     {
-        public static QuestPackVM New(string filePath)
-        {
-            bool overwriteExisting = File.Exists(filePath);
-            var fs = overwriteExisting ? 
-                File.Open(filePath, FileMode.Truncate, FileAccess.ReadWrite) :
-                File.Open(filePath, FileMode.CreateNew, FileAccess.ReadWrite);
-            EditorQuestPack.OpenWrite(fs).Dispose();
-
-            return Edit(filePath);
-        }
-
-        public static QuestPackVM Edit(string filePath) => new(filePath);
 
 
-        private readonly string _filePath;
-
-        private EditorQuestPack originalQuestPack;
-        private EditorQuestPack? temporaryQuestPack = null;
-
-        public EditorQuestPack QuestPack => temporaryQuestPack ?? originalQuestPack;
-
-        private readonly CancellationTokenSource _cts = new();
-
-        private Quest[]? loadedQuests = null;
-        private event Action? LoadCompleted;
-        private Task? loadingTask = null;
-
+        private readonly PackManager _manager;
         public ObservableCollection<QuestVM> Quests { get; set; } = [];
+        protected override IReadOnlyList<StatefulViewModelBase>? DirectDescendants => Quests;
 
-        private QuestPackVM(string filePath)
+
+        public QuestPackVM(string filePath, ExplorerVM explorer, PackManager manager) : base(explorer)
         {
-            _filePath = filePath;
-            _packName = Path.GetFileNameWithoutExtension(_filePath);
-            originalQuestPack = EditorQuestPack.OpenRead(File.OpenRead(filePath),globalToken:_cts.Token);
+            _manager = manager;
+
+            manager.QuestsLoadCompleted += OnLoadCompleted;
+
+            _packName = Path.GetFileNameWithoutExtension(filePath);
+
             AddQuestCommand = new RelayCommand(AddQuest, _ => true);
 
-            LoadCompleted += OnLoadCompleted;
-            loadingTask = LoadAllQuests(_cts.Token);
-        }
-
-        private async Task LoadAllQuests(CancellationToken token)
-        {
-            if(token.IsCancellationRequested) return;
-
-            Quests.Clear();
-
-            var task = originalQuestPack.GetQuestsAsync();
-            loadedQuests = null;
-
-            loadedQuests = await task;
-
-            if (task.IsCanceled || loadedQuests == null || token.IsCancellationRequested) 
-                return;
-
-            if (token.IsCancellationRequested)
-                loadedQuests = null;
-
-            LoadCompleted?.Invoke();
+            manager.LoadAllQuests();
         }
 
         public string PackName
@@ -75,8 +36,63 @@ namespace QuestEditor.Explorer
             private set => SetProperty(ref _packName, value);
         } private string _packName;
 
+        public override void RefreshIsDirty()
+        {
+            base.RefreshIsDirty();
+            RaisePropertyChanged(nameof(DisplayFontStyle));
+            RaisePropertyChanged(nameof(DisplayFontWeight));
+            RaisePropertyChanged(nameof(DisplayText));
+        }
+
+        public override bool IsDirty => base.IsDirty || Quests.Any(n => n.IsDirty);
+
+        public string DisplayText => IsDirty ? $"{PackName}*" : PackName;
+        public FontWeight DisplayFontWeight => IsDirty ? FontWeights.Bold : FontWeights.Regular;
+        public FontStyle DisplayFontStyle => IsDirty ? FontStyles.Italic : FontStyles.Normal;
+
+
 
         public ICommand AddQuestCommand { get; }
+
+        private sealed class AddQuestOperation(Quest model, QuestPackVM pack) : UndoableOperation(pack)
+        {
+            private readonly Quest _model = model;
+            private QuestVM? viewModel;
+
+            protected override void ProtectedDo()
+            {
+                var pack = ((QuestPackVM)Origin);
+                pack._manager.WriteQuest(_model);
+                viewModel = new(_model, pack, pack._manager);
+                pack.Quests.Add(viewModel!);
+            }
+            protected override void ProtectedUndo()
+            {
+                ((QuestPackVM)Origin).Quests.Remove(viewModel!);
+                ((QuestPackVM)Origin)._manager.RemoveQuest(_model.Tag);
+            }
+            protected override void ProtectedRedo()
+            {
+                ((QuestPackVM)Origin).Quests.Add(viewModel!);
+                ((QuestPackVM)Origin)._manager.WriteQuest(_model);
+            }
+        }
+
+        private sealed class RemoveQuestOperation(QuestVM questVM, QuestPackVM pack) : UndoableOperation(pack)
+        {
+            private readonly QuestVM _viewModel = questVM;
+            protected override void ProtectedDo() => ProtectedRedo();
+            protected override void ProtectedUndo()
+            {
+                ((QuestPackVM)Origin).Quests.Add(_viewModel);
+                ((QuestPackVM)Origin)._manager.WriteQuest(_viewModel.Model);
+            }
+            protected override void ProtectedRedo()
+            {
+                ((QuestPackVM)Origin).Quests.Remove(_viewModel);
+                ((QuestPackVM)Origin)._manager.RemoveQuest(_viewModel.Model.Tag);
+            }
+        }
         void AddQuest(object? _)
         {
             string newTag = "New Quest";
@@ -85,50 +101,92 @@ namespace QuestEditor.Explorer
                 newTag = $"New Quest ({count++})";
 
             var quest = new Quest() { Tag = newTag, Name = "[text displayed in player's journal]" };
-            var vm = new QuestVM(quest, this);
-            Quests.Add(vm);
-            RaisePropertyChanged(nameof(Quests));
+            Trace.WriteLine("Adding new quest");
+            PushOperation(new AddQuestOperation(quest, this));
+        }
+
+        public void DeleteQuest(object? parameter)
+        {
+            if (parameter is not QuestVM questVM) throw new InvalidOperationException("Parameter is not a QuestVM");
+            if (!Quests.Remove(questVM)) throw new InvalidOperationException("QuestVM <-> QuestPackVM mismatch");
+            PushOperation(new RemoveQuestOperation(questVM, this));
+        }
+
+        public void ReloadAllQuests()
+        {
+            Quests.Clear();
+            Discard();
+            _manager.LoadAllQuests();
+        }
+
+        public void ReloadSingleQuest(QuestVM questVM)
+        {
+            questVM.Nodes.Clear();
+            _manager.LoadAllNodes(questVM.Model);
         }
 
 
         public bool IsSelected { 
             get => _isSelected;
             private set => SetProperty(ref _isSelected, value);
-        } private bool _isSelected = false;
-
-
-        private bool disposed = false;
-        public void Dispose()
-        {
-            if (disposed) return;
-            disposed = true;
-            _cts.Cancel();
-            _cts.Dispose();
-            loadingTask?.Dispose();
-            originalQuestPack?.Dispose();
-            temporaryQuestPack?.Dispose();
         }
+        private bool _isSelected = false;
 
-        public void Select()
+        public void Select() => IsSelected = true;
+
+        void OnLoadCompleted(Quest[]? quests)
         {
-            IsSelected = true;
-        }
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Trace.WriteLine($"{PackName}: On quests load completed");
+                if (quests == null)
+                {
+                    Trace.WriteLine("... but operation has failed.");
+                    return;
+                }
 
-        void OnLoadCompleted()
-        {
-            LoadCompleted -= OnLoadCompleted;
-            loadingTask?.Dispose();
-            loadingTask = null;
+                string str = "";
+                foreach (var quest in quests)
+                    str += $"\n{quest}";
+                
+                Trace.WriteLine("Loaded quests:" + str);
 
-            if(loadedQuests != null)
-                Quests = new(loadedQuests.Select(q=>new QuestVM(q, this)));
-
-            RaisePropertyChanged(nameof(Quests));
+                Quests.Clear();
+                foreach (var quest in quests)
+                {
+                    Quests.Add(new(quest, this, _manager));
+                }
+            });
         }
 
         public void ClearSelection()
         {
             IsSelected = false;
         }
+
+        protected override void Apply()
+        {
+            //Trace.WriteLine("QuestPack saving");
+
+            //foreach (var questVM in Quests)
+            //{
+            //    Trace.WriteLine("QuestPack saving quest");
+            //    var quest = questVM.Model;
+            //    _manager.RemoveQuest(quest.Tag);
+            //    _manager.WriteQuest(quest);
+
+            //    foreach(var nodeVM in questVM.ActualNodes)
+            //    {
+            //        Trace.WriteLine("QuestPack saving node");
+            //        var node = nodeVM.Model;
+            //        _manager.WriteNode(quest, node);
+            //    }
+
+            //    //TODO: write metadata
+            //}
+
+            _manager.ApplyChanges();
+        }
+
     }
 }

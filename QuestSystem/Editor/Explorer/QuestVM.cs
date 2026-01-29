@@ -4,107 +4,209 @@ using QuestSystem;
 using QuestSystem.Nodes;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Windows;
 using System.Windows.Input;
 
 namespace QuestEditor.Explorer
 {
-    public sealed class QuestVM : ViewModelBase, IDisposable, ISelectable
+    public sealed class QuestVM : StatefulViewModelBase, ISelectable
     {
-        private readonly Quest _quest;
-        private readonly QuestPackVM _packVM;
+        public readonly Quest Model;
+        public readonly QuestPackVM PackVM;
+        private readonly PackManager _packManager;
+
         public bool IsSelected { get => _isSelected; private set => SetProperty(ref _isSelected, value); }
         private bool _isSelected = false;
+
+        public override bool IsDirty => base.IsDirty || Nodes.Any(n => n.IsDirty);
+
+        public string DisplayText => IsDirty ? $"{QuestTag}*" : QuestTag;
+        public FontWeight DisplayFontWeight => IsDirty ? FontWeights.Bold : FontWeights.Regular;
+        public FontStyle DisplayFontStyle => IsDirty ? FontStyles.Italic : FontStyles.Normal;
 
         public string QuestTag
         { 
             get => _questTag;
-            set { if (SetProperty(ref _questTag, value)) _quest.Name = _questTag; }
+            set { if (SetProperty(ref _questTag, value)) Model.Name = _questTag; }
         }
         private string _questTag;
         public string Title
         {
             get => _title;
-            set { if (SetProperty(ref _title, value)) _quest.Name = _title; }
+            set { if (SetProperty(ref _title, value)) Model.Name = _title; }
         }
         private string _title;
-        public ObservableCollection<NodeVM?> Nodes { get; set; } = [];
-        public QuestVM(Quest quest, QuestPackVM packVM)
+
+        public ObservableCollection<NodeVM> Nodes { get; } = [];
+
+        protected override IReadOnlyList<StatefulViewModelBase>? DirectDescendants => Nodes;
+
+        public ICommand AddStageNodeCommand { get; }
+        //public ICommand AddRewardNodeCommand { get; }
+        //public ICommand AddRandomizerNodeCommand { get; }
+        //public ICommand AddCooldownNodeCommand { get; }
+        //...
+
+        public ICommand DeleteQuestCommand { get; }
+
+
+
+        public QuestVM(Quest quest, QuestPackVM packVM, PackManager packManager) : base(packVM)
         {
-            _quest = quest;
-            _packVM = packVM;
+            Model = quest;
+            PackVM = packVM;
+            _packManager = packManager;
+            _packManager.NodesLoadCompleted += OnLoadCompleted;
 
             _questTag = quest.Tag;
             _title = quest.Name;
-        }
 
-        private bool disposed = false;
-        public void Dispose()
-        {
-            if (disposed) return;
-            disposed = true;
-            _cts.Cancel();
-            loadingTask?.Dispose();
-        }
+            AddStageNodeCommand = new RelayCommand(AddStageNode, _ => IsSelected);
+            //...
 
-        private readonly CancellationTokenSource _cts = new();
-        private CancellationTokenSource? _tmpCTS = null;
-        private event Action? LoadCompleted;
-        private Task? loadingTask;
-        private NodeBase[]? loadedNodes = null;
+            DeleteQuestCommand = new RelayCommand(PackVM.DeleteQuest, _ => true);
 
-        private async Task LoadAllNodes(CancellationToken token)
-        {
-            if (token.IsCancellationRequested) return;
-
-            Nodes.Clear();
-
-            var task = _packVM.QuestPack.GetNodesAsync(_quest.Tag);
-            loadedNodes = null;
-
-            loadedNodes = await task;
-
-            if (task.IsCanceled || loadedNodes == null || token.IsCancellationRequested)
-                return;
-
-            if (token.IsCancellationRequested)
-                loadedNodes = null;
-
-            LoadCompleted?.Invoke();
-        }
-        public void Select()
-        {
-            LoadCompleted -= OnLoadCompleted;
-            LoadCompleted += OnLoadCompleted;
-            _tmpCTS?.Cancel();
-            _tmpCTS?.Dispose();
-            _tmpCTS = new();
-            loadingTask = LoadAllNodes(_tmpCTS!.Token);
+            _packManager.LoadAllNodes(quest);
 
         }
 
-        void OnLoadCompleted()
+        public override void RefreshIsDirty()
         {
-            LoadCompleted -= OnLoadCompleted;
-            _tmpCTS?.Cancel();
-            _tmpCTS?.Dispose();
-            _tmpCTS = null;
-            loadingTask?.Dispose();
-            loadingTask = null;
+            base.RefreshIsDirty();
+            RaisePropertyChanged(nameof(DisplayFontStyle));
+            RaisePropertyChanged(nameof(DisplayFontWeight));
+            RaisePropertyChanged(nameof(DisplayText));
+        }
 
-            if (loadedNodes != null)
-                Nodes = new(loadedNodes.Select(n => NodeVM.SelectViewModel(n)));
 
-            RaisePropertyChanged(nameof(Nodes));
+        private sealed class AddNodeOperation<T>(T model, QuestVM quest) : UndoableOperation(quest) where T : NodeBase
+        {
+            private readonly T _model = model;
+            private NodeVM? viewModel;
+            protected override void ProtectedDo()
+            {
+                viewModel = NodeVM.SelectViewModel(_model, quest) ?? throw new NotImplementedException($"View of the model \'{typeof(T).Name}\' is not implemented");
+                ProtectedRedo();
+            }
+            protected override void ProtectedRedo()
+            {
+                var questVM = (QuestVM)Origin;
+                questVM.Nodes.Add(viewModel!);
+                questVM._packManager.WriteNode(questVM.Model, viewModel!.Model);
+            }
+            protected override void ProtectedUndo()
+            {
+                var questVM = (QuestVM)Origin;
+                questVM.Nodes.Remove(viewModel!);
+                questVM._packManager.RemoveNode(questVM.Model.Tag, viewModel!.Model.ID);
+            }
+        }
+
+        private sealed class RemoveNodeOperation(NodeVM nodeVM, QuestVM quest) : UndoableOperation(quest)
+        {
+            private readonly NodeVM _viewModel = nodeVM;
+
+            protected override void ProtectedDo()
+            {
+                var questVM = (QuestVM)Origin;
+                questVM.Nodes.Remove(_viewModel);
+                questVM._packManager.RemoveNode(questVM.QuestTag, _viewModel.ID);
+            }
+            protected override void ProtectedUndo()
+            {
+                var questVM = (QuestVM)Origin;
+                questVM.Nodes.Add(_viewModel);
+                questVM._packManager.WriteNode(questVM.Model, _viewModel.Model);
+            }
+            protected override void ProtectedRedo() => ProtectedDo();
+        }
+
+        private sealed class RemoveNodesOperation(QuestVM quest, IEnumerable<NodeVM> nodes) : UndoableOperation(quest)
+        {
+            private readonly NodeVM[] _viewModels = [..nodes];
+
+            protected override void ProtectedDo() => ProtectedRedo();
+            protected override void ProtectedRedo()
+            {
+                foreach (var node in _viewModels)
+                    ((QuestVM)Origin).Nodes.Remove(node);
+
+                Trace.WriteLine("Nodes: " + ((QuestVM)Origin).Nodes.Count);
+            }
+            protected override void ProtectedUndo()
+            {
+                foreach (var node in _viewModels)
+                    ((QuestVM)Origin).Nodes.Add(node);
+
+                Trace.WriteLine("Nodes: " + ((QuestVM)Origin).Nodes.Count);
+            }
+        }
+
+        public void RemoveNode(object? parameter)
+        {
+            if (parameter is not NodeVM nodeVM) throw new InvalidOperationException("Parameter is not a NodeVM");
+            PushOperation(new RemoveNodeOperation(nodeVM, this));
+        }
+
+        void AddStageNode(object? _)
+        {
+            int nextID = 0;
+            foreach(var n in Nodes.OrderBy(n=>n.ID))
+            {
+                if (nextID >= n.ID)
+                    nextID++;
+                else break;
+            }
+            var model = new StageNode() { ID = nextID, JournalEntry = $"Stage Node {nextID}" };
+            PushOperation(new AddNodeOperation<StageNode>(model, this));
+        }
+
+
+        protected override void Apply()
+        {
+            Model.Tag = QuestTag;
+            Model.Name = Title;
+            _packManager.RemoveQuest(QuestTag);
+            _packManager.WriteQuest(Model);
+            foreach(var n in Nodes)
+                _packManager.WriteNode(Model, n.Model);
+        }
+        public void Select() => IsSelected = true;
+
+        void OnLoadCompleted(string tag, NodeBase[]? nodes)
+        {
+            if (tag != this.QuestTag) return; // loaded nodes for another quest
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Trace.WriteLine($"{this}: all nodes loaded");
+                if(nodes == null)
+                {
+                    Trace.WriteLine("... but operation has failed");
+                    return;
+                }
+
+                Nodes.Clear();
+
+                int validNodes = 0;
+                foreach (var node in nodes)
+                {
+                    var vm = NodeVM.SelectViewModel(node, this);
+                    if (vm == null)
+                    {
+                        Trace.WriteLine($"Failed to create view model for node {node.ID} ({node.GetType().Name})");
+                        continue;
+                    }
+                    validNodes++;
+                    Nodes.Add(vm);
+                }
+                Trace.WriteLineIf(validNodes != nodes.Length, $"{nodes.Length - validNodes} out of {nodes.Length} loaded nodes were incompatibile");
+            });
         }
 
         public void ClearSelection()
         {
-            _tmpCTS?.Cancel();
-            _tmpCTS?.Dispose();
-            _tmpCTS = null;
-            loadingTask?.Dispose();
-            loadingTask = null;
-            Nodes.Clear();
+            IsSelected = false;
         }
     }
 }

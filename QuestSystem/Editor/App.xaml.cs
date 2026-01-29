@@ -19,12 +19,29 @@ public partial class App : Application
         public bool DarkMode { get; set; } = false;
     }
 
-    private List<IDisposable> disposables = new();
+    private readonly List<IDisposable> disposables = new();
+    private readonly List<IAsyncDisposable> asyncDisposables = new();
 
     public App()
     {
-
         UserPreferences=LoadUserPrefs();
+
+        this.Exit += async (_, _) =>
+        {
+            foreach (var asyncDisposable in asyncDisposables)
+                await asyncDisposable.DisposeAsync();
+            
+        };
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        SaveUserPrefs(UserPreferences);
+
+        foreach (var disposable in disposables)
+            disposable.Dispose();
+
+        base.OnExit(e);
     }
 
     private static string? GetPrefsPath()
@@ -79,15 +96,13 @@ public partial class App : Application
         if (UserPreferences.DarkMode)
             mw.ToggleDarkMode(null, new());
         else mw.ToggleLightMode(null, new());
+
+        var mwvm = (MainWindowVM)mw.DataContext;
+
+        disposables.Add(mwvm.Explorer);
+        asyncDisposables.Add(mwvm.Explorer);
     }
 
-    protected override void OnExit(ExitEventArgs e)
-    {
-        SaveUserPrefs(UserPreferences);
-        foreach(var disposable in disposables)
-            { disposable.Dispose(); }
-        base.OnExit(e);
-    }
 
     public void SetLightTheme()
     {

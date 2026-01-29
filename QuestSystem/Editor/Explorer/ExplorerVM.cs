@@ -1,5 +1,6 @@
 ﻿using QuestEditor.Nodes;
 using QuestEditor.Shared;
+using QuestSystem;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -7,12 +8,13 @@ using System.Windows.Input;
 
 namespace QuestEditor.Explorer
 {
-    public sealed class ExplorerVM : StatefulViewModelBase
+    public sealed class ExplorerVM : StatefulViewModelBase, IDisposable, IAsyncDisposable
     {
         public ICommand SelectableItemClickedCommand { get; }
         public ICommand ClearSelectionCommand { get; }
         public ICommand NewCommand { get; }
         public ICommand OpenCommand { get; }
+        public ICommand SaveCommand { get; }
 
         readonly ICreateFileDialog _createFileDialog;
         readonly IOpenFilesDialog _openFilesDialog;
@@ -27,19 +29,41 @@ namespace QuestEditor.Explorer
         private Dictionary<QuestPackVM, List<QuestVM>> _selectedQuests = [];
         private Dictionary<QuestVM, List<NodeVM>> _selectedNodes = [];
 
+        private List<PackManager> _packManagers = new();
         public ObservableCollection<QuestPackVM> QuestPacks { get; } = [];
 
         public ExplorerVM()
         {
             NewCommand = new RelayCommand(CreateNewPack, _ => true);
             OpenCommand = new RelayCommand(OpenPacks, _ => true);
+
             SelectableItemClickedCommand = new RelayCommand(OnSelectableItemClicked, _ => true);
             ClearSelectionCommand = new RelayCommand(_ => ClearSelection(), _ => true);
-
+            SaveCommand = new RelayCommand(_ =>
+            {
+                foreach (var qp in QuestPacks.Where(qp=>qp.IsDirty))
+                {
+                    qp.RecursiveApply();
+                }
+                RefreshIsDirty();
+            },
+            _=>QuestPacks.Any(qp=>qp.IsDirty));
             var fd = new FileDialog();
 
             _openFilesDialog = fd;
             _createFileDialog = fd;
+        }
+
+
+        public override bool IsDirty => base.IsDirty || QuestPacks.Any(n => n.IsDirty);
+
+        protected override IReadOnlyList<StatefulViewModelBase>? DirectDescendants => QuestPacks;
+
+
+
+        public void ReopenAllPacks()
+        {
+            throw new NotImplementedException();
         }
 
         void OnSelectableItemClicked(object? ctx)
@@ -116,46 +140,26 @@ namespace QuestEditor.Explorer
         }
         //////
 
-        private sealed class CreateNewPackOperation : IUndoable
-        {
-            private readonly string _packFileName;
-            private QuestPackVM? _pack;
-            private readonly ExplorerVM _origin;
-            public void Redo()
-            {
-                _pack = QuestPackVM.New(_packFileName);
-                _origin.QuestPacks.Add(_pack);
-            }
-
-            public void Undo()
-            {
-                _origin.QuestPacks.Remove(_pack!);
-                _pack?.Dispose();
-                File.Delete(_packFileName);
-            }
-
-            public CreateNewPackOperation(ExplorerVM origin, string fileName)
-            {
-                _packFileName = fileName;
-                _origin = origin;
-                Redo();
-            }
-        }
-
-        void CreateNewPack(object? _) // creation is undoable
+        void CreateNewPack(object? _)
         {
             string fname = _createFileDialog.GetFileNameFromUser();
 
             if (fname == string.Empty) return;
 
-            PushOperation(new CreateNewPackOperation(this, fname));
+            bool overwriteExisting = File.Exists(fname);
+            var fs = overwriteExisting ?
+                File.Open(fname, FileMode.Truncate, FileAccess.ReadWrite) :
+                File.Open(fname, FileMode.CreateNew, FileAccess.ReadWrite);
+            EditorQuestPack.OpenWrite(fs).Dispose();
+
+            var manager = new PackManager(fname);
+            _packManagers.Add(manager);
+            var packVM = new QuestPackVM(fname, this, manager);
+            QuestPacks.Add(packVM);
         }
 
-        void OpenPacks(object? _) // opening is not undoable
+        void OpenPacks(object? _)
         {
-            foreach (var qp in QuestPacks)
-                qp.Dispose();
-
             QuestPacks.Clear();
 
             string[] fnames = _openFilesDialog.GetFileNamesFromUser();
@@ -164,8 +168,24 @@ namespace QuestEditor.Explorer
 
             foreach(var fname in fnames)
             {
-                QuestPacks.Add(QuestPackVM.Edit(fname));
+                var manager = new PackManager(fname);
+                _packManagers.Add(manager);
+                var pack = new QuestPackVM(fname, this, manager);
+                QuestPacks.Add(pack);
             }
+        }
+
+        public void Dispose()
+        {
+            QuestPacks.Clear();
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            foreach (var manager in _packManagers)
+                await manager.DisposeAsync();
+
+            _packManagers.Clear();
         }
     }
 }
