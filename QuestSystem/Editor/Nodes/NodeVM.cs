@@ -31,39 +31,45 @@ namespace QuestEditor.Nodes
 
         public event Action<NodeVM, int>? OutputChanged;
 
-        public int ID => clone.ID;
-
-
+        public int ID => Model.ID;
 
         public int NextID
         {
-            get => _nextID;
-            set 
+            get => Model.NextID;
+            set
             {
-                int oldValue = _nextID;
-                if (SetProperty(ref _nextID, value))
-                {
-                    clone.NextID = _nextID;
-                    OutputChanged?.Invoke(this, _nextID);
-                    RaisePropertyChanged(nameof(NextIDString));
-                }
-            }
-        } private int _nextID;
+                if(Model.NextID == value) return;
 
+                Model.NextID = value;
+                OutputChanged?.Invoke(this, value);
+                RaisePropertyChanged(nameof(NextID));
+                RaisePropertyChanged(nameof(NextIDString));
+            }
+
+        }
 
         public string NextIDString
         {
-            get => _nextID.ToString();
+            get => NextID.ToString();
             set
             {
-                if (!int.TryParse(value, out var nextID) || _nextID == nextID)
+                if (!int.TryParse(value, out var nextID) || NextID == nextID)
                     return;
 
                 PushOperation(new SetNextIDOperation(this, nextID));
             }
         }
 
+        public bool Rollback
+        {
+            get => Model.Rollback;
+            set
+            {
+                if(Model.Rollback == value) return;
 
+                PushOperation(new SetRollbackOperation(this, value));
+            }
+        }
 
 
         public string NodeType { get; }
@@ -84,6 +90,26 @@ namespace QuestEditor.Nodes
             }
         }
 
+        private sealed class SetRollbackOperation(NodeVM node, bool rollback) : UndoableOperation(node)
+        {
+            private bool _oldVal = node.Rollback;
+            private bool _rollback = rollback;
+
+            protected override void ProtectedDo()
+            {
+                var vm = (NodeVM)Origin;
+                vm.Model.Rollback = _rollback;
+                vm.RaisePropertyChanged(nameof(Rollback));
+            }
+
+            protected override void ProtectedRedo() => ProtectedDo();
+            protected override void ProtectedUndo()
+            {
+                var vm = (NodeVM)Origin;
+                vm.Model.Rollback = _oldVal;
+                vm.RaisePropertyChanged(nameof(Rollback));
+            }
+        }
         public bool IsSelected { get => _isSelected; private set => SetProperty(ref _isSelected, value); }
         private bool _isSelected = false;
         public void Select()

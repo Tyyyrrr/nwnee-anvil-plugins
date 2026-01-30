@@ -42,7 +42,7 @@ namespace QuestEditor.Explorer
         protected override IReadOnlyList<StatefulViewModelBase>? DirectDescendants => Nodes;
 
         public ICommand AddStageNodeCommand { get; }
-        //public ICommand AddRewardNodeCommand { get; }
+        public ICommand AddRewardNodeCommand { get; }
         //public ICommand AddRandomizerNodeCommand { get; }
         //public ICommand AddCooldownNodeCommand { get; }
         //...
@@ -62,6 +62,7 @@ namespace QuestEditor.Explorer
             _title = quest.Name;
 
             AddStageNodeCommand = new RelayCommand(AddStageNode, _ => IsSelected);
+            AddRewardNodeCommand = new RelayCommand(AddRewardNode, _ => IsSelected);
             //...
 
             DeleteQuestCommand = new RelayCommand(PackVM.DeleteQuest, _ => true);
@@ -148,17 +149,29 @@ namespace QuestEditor.Explorer
             PushOperation(new RemoveNodeOperation(nodeVM, this));
         }
 
-        void AddStageNode(object? _)
+        int GetNextNodeID()
         {
             int nextID = 0;
-            foreach(var n in Nodes.OrderBy(n=>n.ID))
+            foreach (var n in Nodes.OrderBy(n => n.ID))
             {
                 if (nextID >= n.ID)
                     nextID++;
                 else break;
             }
+            return nextID;
+        }
+        void AddStageNode(object? _)
+        {
+            int nextID = GetNextNodeID();
             var model = new StageNode() { ID = nextID, JournalEntry = $"Stage Node {nextID}" };
             PushOperation(new AddNodeOperation<StageNode>(model, this));
+        }
+
+        void AddRewardNode(object? _)
+        {
+            int nextID = GetNextNodeID();
+            var model = new RewardNode() { ID = nextID };
+            PushOperation(new AddNodeOperation<RewardNode>(model, this));
         }
 
 

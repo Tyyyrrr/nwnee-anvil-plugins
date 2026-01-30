@@ -44,6 +44,7 @@ namespace QuestEditor
 
         void DropOperations(IReadOnlyList<IStateful> discardedOrigins)
         {
+            Trace.WriteLine("Dropping operations from " + discardedOrigins.Count.ToString() + " origins");
             _undo.RemoveAll(op => discardedOrigins.Contains(op.Origin));
             _redo.RemoveAll(op => discardedOrigins.Contains(op.Origin));
 
@@ -61,6 +62,7 @@ namespace QuestEditor
                     explorer.RefreshIsDirty();
                     break;
                 case QuestPackVM questPack:
+                    questPack.ResetTemporaryFile();
                     questPack.ReloadAllQuests();
                     questPack.RefreshIsDirty();
                     break;
@@ -69,7 +71,7 @@ namespace QuestEditor
                     quest.RefreshIsDirty();
                     break;
                 case NodeVM node:
-                    node.RecursiveApply();
+                    Trace.WriteLine("Discarding node changes is not implemented");
                     node.RefreshIsDirty();
                     break;
             }

@@ -2,6 +2,8 @@
 using QuestEditor.Nodes;
 using QuestEditor.Shared;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Diagnostics;
 
 namespace QuestEditor.Graph
 {
@@ -19,6 +21,8 @@ namespace QuestEditor.Graph
                 {
                     if(value == null)
                     {
+                        Nodes.CollectionChanged -= OnNodesCollectionChanged;
+
                         foreach (var node in Nodes)
                             node.OutputChanged -= OnNodeOutputChanged;
                         Nodes = [];
@@ -27,6 +31,9 @@ namespace QuestEditor.Graph
                     else
                     {
                         Nodes = value.Nodes;
+
+                        Nodes.CollectionChanged += OnNodesCollectionChanged;
+
                         foreach (var node in Nodes)
                             node.OutputChanged += OnNodeOutputChanged;
                         ReconnectNodes();
@@ -36,6 +43,35 @@ namespace QuestEditor.Graph
                 }
             }
         }QuestVM? _currentQuest = null;
+
+        void OnNodesCollectionChanged(object? s, NotifyCollectionChangedEventArgs e)
+        {
+            Trace.WriteLine("Nodes collection changed action: " + e.Action.ToString());
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    if (e.NewItems == null) return;
+                    foreach(var item in e.NewItems)
+                    {
+                        if (item is not NodeVM node) continue;
+
+                        node.OutputChanged += OnNodeOutputChanged;
+                    }
+                    ReconnectNodes();
+                    break;
+
+                case NotifyCollectionChangedAction.Remove:
+                    if(e.OldItems == null) return;
+                    foreach(var item in e.OldItems)
+                    {
+                        if (item is not NodeVM node) continue;
+
+                        node.OutputChanged -= OnNodeOutputChanged;
+                    }
+                    ReconnectNodes();
+                    break;
+            }
+        }
 
         private void ReconnectNodes()
         {

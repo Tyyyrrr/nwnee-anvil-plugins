@@ -71,6 +71,22 @@
                 </DataTemplate>
             </Setter.Value>
         </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Add objective">
+                        <MenuItem Header="Interact" Command="{Binding AddObjectiveInteract}"/>
+                        <MenuItem Header="Kill" Command="{Binding AddObjectiveKill}"/>
+                        <MenuItem Header="Deliver" Command="{Binding AddObjectiveDeliver}"/>
+                        <MenuItem Header="Obtain" Command="{Binding AddObjectiveObtain}"/>
+                        <MenuItem Header="Explore" Command="{Binding AddObjectiveExplore}"/>
+                        <MenuItem Header="Spellcast" Command="{Binding AddObjectiveSpellcast}"/>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="RewardNodeControlStyle" TargetType="nodes:RewardNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
@@ -81,6 +97,13 @@
                         <TextBlock Text="RewardNodeControlStyle" Background="Green"/>
                     </StackPanel>
                 </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
             </Setter.Value>
         </Setter>
     </Style>
