@@ -14,7 +14,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/QuestEditor;component/Themes/Generic.xaml"/>
+                <ResourceDictionary Source="/QuestEditor;component/Themes/ExplorerStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <local:ExplorerItemStyleSelector x:Key="ExplorerItemStyleSelector"

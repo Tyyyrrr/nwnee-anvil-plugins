@@ -1,0 +1,45 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:QuestEditor.Objectives">
+
+    <Style x:Key="ObjectiveControlBaseStyle" TargetType="local:ObjectiveControl">
+        <Setter Property="Canvas.Left" Value="{Binding CanvasLeft, Mode=TwoWay}"/>
+        <Setter Property="Canvas.Top" Value="{Binding CanvasTop, Mode=TwoWay}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:ObjectiveControl">
+                    <Border 
+                            Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" 
+                            CornerRadius="{DynamicResource NodeCornerRadius}"
+                            Opacity="{TemplateBinding Opacity}">
+                        <StackPanel Background="Orange">
+                            <TextBlock Text="{Binding}" Foreground="Black"/>
+                            <TextBlock Text="{Binding NextStageID}" Background="White"/>
+                            <ContentPresenter 
+                                Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox Content="Rollback" IsChecked="{Binding Rollback}"/>
+                                <!--<TextBox Text="{Binding NextIDString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>-->
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <Style x:Key="ObjectiveControlDefaultStyle"  TargetType="local:ObjectiveControl">
+        <!--<Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplat>
+                    
+                </ControlTemplat>
+            </Setter.Value>
+        </Setter>-->
+    </Style>
+    
+</ResourceDictionary>

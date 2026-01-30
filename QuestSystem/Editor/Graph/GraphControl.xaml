@@ -14,7 +14,8 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/QuestEditor;component/Themes/Generic.xaml"/>
+                <ResourceDictionary Source="/QuestEditor;component/Themes/NodeStyles.xaml"/>
+                <ResourceDictionary Source="/QuestEditor;component/Themes/GraphStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -33,9 +34,7 @@
                       Grid.Column="0">
             <ItemsControl.Resources>
                 <DataTemplate DataType="{x:Type local:ConnectionVM}">
-                    <StackPanel>
-                        <local:ConnectionControl />
-                    </StackPanel>
+                    <local:ConnectionControl />
                 </DataTemplate>
             </ItemsControl.Resources>
             <ItemsControl.ItemsPanel>
@@ -43,12 +42,6 @@
                     <Canvas Background="Transparent" ClipToBounds="True"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemContainerStyle>
-                <Style TargetType="ContentPresenter">
-                    <Setter Property="Canvas.Left" Value="0"/>
-                    <Setter Property="Canvas.Top" Value="0"/>
-                </Style>
-            </ItemsControl.ItemContainerStyle>
         </ItemsControl>
 
         <!-- Nodes -->
