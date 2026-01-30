@@ -1,0 +1,22 @@
+﻿using QuestEditor.Nodes;
+using QuestSystem.Objectives;
+
+namespace QuestEditor.Objectives
+{
+    internal class ObjectiveExploreVM(ObjectiveExplore model, StageNodeVM parent) : ObjectiveVM(model, parent)
+    {
+        public override ObjectiveExplore Objective => (ObjectiveExplore)base.Objective;
+
+        public int AreaExplorePercentage
+        {
+            get => Objective.AreaExplorePercentage;
+            set
+            {
+                if (Objective.AreaExplorePercentage == value) return;
+                var backup = (Objective)Objective.Clone();
+                Objective.AreaExplorePercentage = value;
+                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(AreaExplorePercentage)));
+            }
+        }
+    }
+}

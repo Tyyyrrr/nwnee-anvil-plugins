@@ -24,7 +24,7 @@ namespace QuestEditor.Explorer
         public QuestVM? SelectedQuest
         {
             get => _selectedQuest;
-            private set
+            set
             {
                 if(SetProperty(ref _selectedQuest, value))
                     QuestSelected?.Invoke(value);

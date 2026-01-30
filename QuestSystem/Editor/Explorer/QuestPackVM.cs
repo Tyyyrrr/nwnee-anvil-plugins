@@ -115,9 +115,10 @@ namespace QuestEditor.Explorer
         public void ReloadAllQuests()
         {
             Quests.Clear();
-            Discard();
             _manager.LoadAllQuests();
         }
+
+        public void ResetTemporaryFile() => _manager.DiscardChanges();
 
         public void ReloadSingleQuest(QuestVM questVM)
         {
