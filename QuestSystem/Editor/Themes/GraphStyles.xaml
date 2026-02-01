@@ -17,17 +17,17 @@
                                 <PathGeometry.Figures>
                                     <PathFigureCollection>
                                         <PathFigure 
-                                            StartPoint="{Binding FromToPoint,
+                                            StartPoint="{Binding FromTo,
                                                                  Converter={StaticResource BPC},
                                                                  ConverterParameter=1}">
                                             <BezierSegment 
-                                                Point1="{Binding FromToPoint,
+                                                Point1="{Binding FromTo,
                                                                  Converter={StaticResource BPC},
                                                                  ConverterParameter=2}"
-                                                Point2="{Binding FromToPoint,
+                                                Point2="{Binding FromTo,
                                                                  Converter={StaticResource BPC},
                                                                  ConverterParameter=3}"
-                                                Point3="{Binding FromToPoint,
+                                                Point3="{Binding FromTo,
                                                                  Converter={StaticResource BPC},
                                                                  ConverterParameter=4}" />
                                         </PathFigure>
@@ -40,5 +40,35 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
+
+    <Style x:Key="ConnectionSocketControlBaseStyle" TargetType="graph:ConnectionSocketControl">
+        <Setter Property="CanBeTargeted" Value="{Binding CanBeTargeted}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="graph:ConnectionSocketControl">
+                    <Border x:Name="PART_Border"
+                        CornerRadius="100"
+                        Height="8" Width="8"
+                        BorderThickness="2"
+                        Background="Black"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                        ClipToBounds="True"/>
+                    <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                                <Condition Property="CanBeTargeted" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter Property="BorderThickness" Value="3" TargetName="PART_Border"/>
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

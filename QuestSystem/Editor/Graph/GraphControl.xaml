@@ -7,9 +7,14 @@
              xmlns:local="clr-namespace:QuestEditor.Graph"
              xmlns:explorer="clr-namespace:QuestEditor.Explorer"
              xmlns:nodes="clr-namespace:QuestEditor.Nodes"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-
+             mc:Ignorable="d"
+             Focusable="True"
+             IsTabStop="True"
+             KeyDown="UserControl_KeyDown"
+             KeyUp="UserControl_KeyUp"
+             MouseWheel="UserControl_MouseWheel"
+             MouseMove="UserControl_MouseMove"
+             MouseLeftButtonUp="UserControl_MouseLeftButtonUp">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -17,10 +22,26 @@
                 <ResourceDictionary Source="/QuestEditor;component/Themes/NodeStyles.xaml"/>
                 <ResourceDictionary Source="/QuestEditor;component/Themes/GraphStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="local:GraphControl">
+                <Setter Property="DrawConnection" Value="{Binding DrawConnection, Mode=OneWayToSource}"/>
+                <Setter Property="DrawConnectionFromTo" Value="{Binding DrawConnectionContext.FromTo, Mode=OneWayToSource}"/>
+                <Setter Property="EstablishConnectionCommand" Value="{Binding EstablishConnectionCommand}"/>
+                <Setter Property="ClearConnectionCommand" Value="{Binding ClearConnectionCommand}"/>
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid ClipToBounds="True">
+    <Grid MouseEnter="Grid_MouseEnter"
+          MouseLeave="Grid_MouseLeave">
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="{Binding Zoom.ScaleX}"
+                                    ScaleY="{Binding Zoom.ScaleY}" />
+                    <TranslateTransform X="{Binding Pan.X}"
+                                        Y="{Binding Pan.Y}" />
+                </TransformGroup>
+            </Grid.RenderTransform>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -39,7 +60,7 @@
             </ItemsControl.Resources>
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <Canvas Background="Transparent" ClipToBounds="True"/>
+                    <Canvas Background="Transparent"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
         </ItemsControl>
@@ -61,12 +82,9 @@
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Canvas
-                            ClipToBounds="True"
                             Background="Transparent" 
                             HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            MouseMove="Canvas_MouseMove"
-                            MouseLeftButtonUp="Canvas_MouseLeftButtonUp" />
+                            VerticalAlignment="Stretch"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
 
@@ -78,6 +96,7 @@
             </ItemsControl.ItemContainerStyle>
         </ItemsControl>
 
+        </Grid>
 
         <StackPanel Orientation="Horizontal" MaxHeight="20" MaxWidth="360" Background="IndianRed" HorizontalAlignment="left" VerticalAlignment="Top" 
                   Panel.ZIndex="2"

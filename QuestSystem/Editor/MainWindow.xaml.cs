@@ -1,11 +1,7 @@
-﻿using QuestEditor.Explorer;
-using System.Diagnostics;
-using System.Reflection.Metadata;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
 using System.Windows.Shell;
 
 namespace QuestEditor;

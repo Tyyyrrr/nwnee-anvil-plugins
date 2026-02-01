@@ -1,7 +1,9 @@
 ﻿using QuestEditor.Explorer;
+using QuestEditor.Graph;
 using QuestEditor.Shared;
 using QuestSystem.Nodes;
 using System.Diagnostics;
+using System.Windows;
 using System.Windows.Input;
 
 namespace QuestEditor.Nodes
@@ -11,9 +13,45 @@ namespace QuestEditor.Nodes
         private NodeBase model;
         private NodeBase clone;
         public NodeBase Model => clone;
+
+        public ConnectionInputVM InputVM
+        {
+            get => _inputVM;
+            set => SetProperty(ref _inputVM, value);
+        }private ConnectionInputVM _inputVM;
+
+        public bool IsOutputAvailable
+        {
+            get => _isOutputAvailable;
+            set
+            {
+                if(SetProperty(ref _isOutputAvailable, value))
+                {
+                    foreach (var oVM in OutputVMs)
+                        oVM.CanBeTargeted = value;
+                }
+            }
+        } bool _isOutputAvailable;
+
+        public bool IsInputAvailable
+        {
+            get => _isInputAvailable;
+            set
+            {
+                if (SetProperty(ref _isInputAvailable, value))
+                    _inputVM.CanBeTargeted = value;
+            }
+        } private bool _isInputAvailable;
+
+        public abstract IReadOnlyList<ConnectionOutputVM> OutputVMs { get; }
+
+
+
+
         public NodeVM(NodeBase node, QuestVM quest) : base(quest)
         {
             model = node;
+            _inputVM = new(node.ID);
             clone = (NodeBase)node.Clone();
             NodeType = clone.GetType().Name;
             DeleteNodeCommand = new RelayCommand(quest.RemoveNode, _=>true);
@@ -29,9 +67,8 @@ namespace QuestEditor.Nodes
 
         protected virtual NodeBase Node => clone;
 
-        public event Action<NodeVM, int>? OutputChanged;
-
         public int ID => Model.ID;
+        public int TargetID => Model.NextID;
 
         public int NextID
         {
@@ -41,7 +78,6 @@ namespace QuestEditor.Nodes
                 if(Model.NextID == value) return;
 
                 Model.NextID = value;
-                OutputChanged?.Invoke(this, value);
                 RaisePropertyChanged(nameof(NextID));
                 RaisePropertyChanged(nameof(NextIDString));
             }
@@ -135,19 +171,59 @@ namespace QuestEditor.Nodes
             base.RefreshIsDirty();
         }
 
+        public Point CanvasPosition
+        {
+            get => _canvasPosition;
+            set
+            {
+                if (SetProperty(ref _canvasPosition, value))
+                {
+                    _canvasLeft = value.X;
+                    _canvasTop = value.Y;
+                    RaisePropertyChanged(nameof(CanvasLeft));
+                    RaisePropertyChanged(nameof(CanvasTop));
+                }
+            }
+        }
+        Point _canvasPosition;
         public double CanvasLeft
         {
             get => _canvasLeft;
-            set => SetProperty(ref _canvasLeft, value);
+            set
+            {
+                if (SetProperty(ref _canvasLeft, value))
+                    CanvasPosition = new(value,_canvasTop);
+            }
         }
         double _canvasLeft;
 
         public double CanvasTop
         {
             get => _canvasTop;
-            set => SetProperty(ref _canvasTop, value);
+            set
+            {
+                if (SetProperty(ref _canvasTop, value))
+                    CanvasPosition = new(_canvasLeft, value);
+            }
         }
         double _canvasTop;
+    }
 
+    public abstract class SingleOutputNodeVM : NodeVM
+    {
+        public ConnectionOutputVM OutputVM
+        {
+            get => _outputVM;
+            set => SetProperty(ref _outputVM, value);
+        }
+        ConnectionOutputVM _outputVM;
+
+        public override IReadOnlyList<ConnectionOutputVM> OutputVMs { get; }
+
+        public SingleOutputNodeVM(NodeBase node, QuestVM quest) : base(node, quest)
+        {
+            _outputVM = new(node.ID, node.NextID);
+            OutputVMs = [_outputVM];
+        }
     }
 }

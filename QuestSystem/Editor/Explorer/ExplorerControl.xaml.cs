@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -26,6 +25,11 @@ namespace QuestEditor.Explorer
         private void Explorer_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             ClearSelectionCommand.Execute(null);
+        }
+
+        private void SelectableTreeView_MouseEnter(object sender, MouseEventArgs e)
+        {
+            Keyboard.Focus(this);
         }
     }
 }

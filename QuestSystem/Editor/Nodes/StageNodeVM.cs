@@ -1,7 +1,9 @@
 ﻿using QuestEditor.Explorer;
+using QuestEditor.Graph;
 using QuestEditor.Objectives;
 using QuestEditor.Shared;
 using QuestSystem.Nodes;
+using QuestSystem.Objectives;
 using System.Collections.ObjectModel;
 
 namespace QuestEditor.Nodes
@@ -10,13 +12,26 @@ namespace QuestEditor.Nodes
     {
         public StageNodeVM(StageNode node, QuestVM quest) : base(node, quest)
         {
-            foreach(var obj in node.Objectives)
+            _outputVM = new(node.ID, node.NextID);
+            foreach (var obj in node.Objectives)
             {
                 var vm = ObjectiveVM.SelectViewModel(obj, this);
                 if (vm == null) continue;
                 Objectives.Add(vm);
             }
+
+            IsInputAvailable = false;
+            IsOutputAvailable = true;
         }
+
+        public ConnectionOutputVM OutputVM
+        {
+            get => _outputVM;
+            set => SetProperty(ref _outputVM, value);
+        } ConnectionOutputVM _outputVM;
+
+        public override IReadOnlyList<ConnectionOutputVM> OutputVMs => [_outputVM, .. Objectives.Select(o => o.OutputVM)];
+
 
         protected override StageNode Node => (StageNode)base.Node;
 
@@ -62,6 +77,27 @@ namespace QuestEditor.Nodes
                 var vm = (StageNodeVM)Origin;
                 vm.Node.ShowInJournal = _initialiValue;
                 vm.RaisePropertyChanged(nameof(ShowInJournal));
+            }
+        }
+
+        private sealed class AddObjectiveOperation<T>(StageNodeVM stageVM, T objective) : UndoableOperation(stageVM) where T : Objective
+        {
+            private readonly T _model = objective;
+            private ObjectiveVM? viewModel;
+            protected override void ProtectedDo()
+            {
+                viewModel = ObjectiveVM.SelectViewModel(_model, stageVM) ?? throw new NotImplementedException($"View of the model \'{typeof(T).Name}\' is not implemented");
+                ProtectedRedo();
+            }
+            protected override void ProtectedRedo()
+            {
+                var stageVM = (StageNodeVM)Origin;
+                stageVM.Objectives.Add(viewModel!);
+            }
+            protected override void ProtectedUndo()
+            {
+                var stageVM = (StageNodeVM)Origin;
+                stageVM.Objectives.Remove(viewModel!);
             }
         }
 

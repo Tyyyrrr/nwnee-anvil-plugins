@@ -4,7 +4,6 @@ using QuestEditor.Inspector;
 using QuestEditor.Nodes;
 using QuestEditor.Shared;
 using System.Diagnostics;
-using System.Windows;
 using System.Windows.Input;
 
 namespace QuestEditor

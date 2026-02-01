@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
@@ -20,6 +19,8 @@ namespace QuestEditor.Graph
 
             if (value is not FromToPoint ftp) throw new ArgumentException(value.ToString(), nameof(value));
 
+            if(ftp.From.X >= ftp.To.X) ftp = new(ftp.To, ftp.From);
+            
             return i switch
             {
                 1 => ftp.From,

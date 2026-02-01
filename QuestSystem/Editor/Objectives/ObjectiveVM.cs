@@ -1,13 +1,21 @@
-﻿using QuestEditor.Nodes;
+﻿using QuestEditor.Graph;
+using QuestEditor.Nodes;
 using QuestEditor.Shared;
 using QuestSystem.Objectives;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Windows;
 
 namespace QuestEditor.Objectives
 {
     public abstract class ObjectiveVM : StatefulViewModelBase
     {
+        public ConnectionOutputVM OutputVM
+        {
+            get => _outputVM;
+            set => SetProperty(ref _outputVM, value);
+        } ConnectionOutputVM _outputVM;
+
         public static ObjectiveVM? SelectViewModel(Objective objective, StageNodeVM node)
         {
             return objective switch
@@ -26,9 +34,13 @@ namespace QuestEditor.Objectives
         public ObjectiveVM(Objective model, StageNodeVM parent) : base(parent)
         {
             snapshot = model;
+            _outputVM = new(parent.ID, model.NextStageID);
             this.model = (Objective)model.Clone();
             AreaTags = new(model.AreaTags);
             TriggerTags = new(model.TriggerTags);
+
+            SourceID = parent.ID;
+            TargetID = model.NextStageID;
 
             AreaTags.CollectionChanged += OnAreaTagsChanged;
             TriggerTags.CollectionChanged += OnTriggerTagsChanged;
@@ -167,17 +179,56 @@ namespace QuestEditor.Objectives
                 PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(ShowInJournal)));
             }
         }
+
+        public event Action<ObjectiveVM, int>? OutputChanged;
+
         public int NextStageID
         {
             get => Objective.NextStageID;
             set
             {
                 if (Objective.NextStageID == value) return;
-                var backup = (Objective)Objective.Clone();
+
                 Objective.NextStageID = value;
-                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(NextStageID)));
+                OutputChanged?.Invoke(this, value);
+                RaisePropertyChanged(nameof(NextStageID));
+                RaisePropertyChanged(nameof(NextStageIDString));
+            }
+
+        }
+
+        public string NextStageIDString
+        {
+            get => NextStageID.ToString();
+            set
+            {
+                if (!int.TryParse(value, out var nextID) || NextStageID == nextID)
+                    return;
+
+                PushOperation(new SetNextIDOperation(this, nextID));
             }
         }
+
+
+        private sealed class SetNextIDOperation(ObjectiveVM node, int newVal) : UndoableOperation(node)
+        {
+            private readonly int _oldVal = node.NextStageID;
+            private readonly int _newVal = newVal;
+            protected override void ProtectedDo()
+            {
+                ((ObjectiveVM)Origin).NextStageID = _newVal;
+            }
+
+            protected override void ProtectedRedo() => ProtectedDo();
+            protected override void ProtectedUndo()
+            {
+                ((ObjectiveVM)Origin).NextStageID = _oldVal;
+            }
+        }
+
+
+
+
         public bool PartyMembersAllowed
         {
             get => Objective.PartyMembersAllowed;
@@ -264,5 +315,10 @@ namespace QuestEditor.Objectives
             }
         }
 
+        public int SourceID { get; }
+
+        public int TargetID { get; private set; }
+
+        public Point Position { get; }
     }
 }

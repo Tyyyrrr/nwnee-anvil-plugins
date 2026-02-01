@@ -1,7 +1,6 @@
 ﻿using QuestEditor.Nodes;
 using System.Windows.Controls;
 using System.Windows;
-using System.Diagnostics;
 
 namespace QuestEditor.Explorer
 {

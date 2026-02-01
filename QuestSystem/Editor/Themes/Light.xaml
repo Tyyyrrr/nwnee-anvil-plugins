@@ -31,7 +31,10 @@
     <SolidColorBrush x:Key="TreeViewItemSelectedBackgroundBrush" Color="LightBlue"/>
     <SolidColorBrush x:Key="TreeViewItemBorderBrush" Color="DarkSlateBlue"/>
     <SolidColorBrush x:Key="TreeViewItemForeground" Color="Black"/>
-    
-    
 
+
+
+    <SolidColorBrush x:Key="StageNodeBorderBrush" Color="DarkMagenta"/>
+    <SolidColorBrush x:Key="StageNodeBorderBrush_Highlighted" Color="Magenta"/>
+    <SolidColorBrush x:Key="StageNodeBackgroundBrush" Color="Gray"/>
 </ResourceDictionary>

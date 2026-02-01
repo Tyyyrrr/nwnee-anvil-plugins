@@ -9,6 +9,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:Name="Explorer"
+             Focusable="True"
+             IsTabStop="True"
              MouseLeftButtonDown="Explorer_MouseLeftButtonDown">
     
     <UserControl.Resources>
@@ -32,5 +34,6 @@
     <local:SelectableTreeView 
               ItemContainerStyleSelector="{StaticResource ExplorerItemStyleSelector}"
               ItemsSource="{Binding DataContext.QuestPacks, RelativeSource={RelativeSource AncestorType=UserControl}}"
-              Background="{Binding Background, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+              Background="{Binding Background, RelativeSource={RelativeSource AncestorType=UserControl}}"
+              MouseEnter="SelectableTreeView_MouseEnter"/>
 </UserControl>

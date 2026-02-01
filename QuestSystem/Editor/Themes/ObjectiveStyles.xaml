@@ -1,7 +1,14 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:QuestEditor.Objectives">
+                    xmlns:local="clr-namespace:QuestEditor.Objectives"
+                    xmlns:graph="clr-namespace:QuestEditor.Graph">
 
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/QuestEditor;component/Themes/GraphStyles.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+    
     <Style x:Key="ObjectiveControlBaseStyle" TargetType="local:ObjectiveControl">
         <Setter Property="Canvas.Left" Value="{Binding CanvasLeft, Mode=TwoWay}"/>
         <Setter Property="Canvas.Top" Value="{Binding CanvasTop, Mode=TwoWay}"/>
@@ -14,16 +21,19 @@
                             BorderThickness="{TemplateBinding BorderThickness}" 
                             CornerRadius="{DynamicResource NodeCornerRadius}"
                             Opacity="{TemplateBinding Opacity}">
-                        <StackPanel Background="Orange">
-                            <TextBlock Text="{Binding}" Foreground="Black"/>
-                            <TextBlock Text="{Binding NextStageID}" Background="White"/>
+                        <StackPanel>
+                            <TextBlock Text="{Binding}" />
+                            <StackPanel Orientation="Horizontal">
+                                <graph:ConnectionSocketControl 
+                                    Style="{StaticResource ConnectionSocketControlBaseStyle}"
+                                    BorderBrush="IndianRed"
+                                    HorizontalAlignment="Right"
+                                    DataContext="{Binding OutputVM}"
+                                    CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
+                            </StackPanel>
                             <ContentPresenter 
                                 Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
                                 ContentTemplate="{TemplateBinding ContentTemplate}"/>
-                            <StackPanel Orientation="Horizontal">
-                                <CheckBox Content="Rollback" IsChecked="{Binding Rollback}"/>
-                                <!--<TextBox Text="{Binding NextIDString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>-->
-                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </ControlTemplate>
@@ -31,15 +41,73 @@
         </Setter>
     </Style>
 
-
-    <Style x:Key="ObjectiveControlDefaultStyle"  TargetType="local:ObjectiveControl">
-        <!--<Setter Property="Template">
+    <Style x:Key="ObjectiveControlDefaultStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
             <Setter.Value>
-                <ControlTemplat>
-                    
-                </ControlTemplat>
+                <DataTemplate>
+                    <TextBlock Text="DEFAULT OBJECTIVE"/>
+                </DataTemplate>
             </Setter.Value>
-        </Setter>-->
+        </Setter>
     </Style>
-    
+
+    <Style x:Key="ObjectiveInteractControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="Objective Interact"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveKillControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="Objective Kill"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveDeliverControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="Objective Deliver"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveObtainControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="Objective Obtain"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveExploreControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="Objective Explore"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveSpellcastControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="Objective Spellcast"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>
