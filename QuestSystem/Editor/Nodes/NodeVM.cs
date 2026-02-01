@@ -1,7 +1,10 @@
 ﻿using QuestEditor.Explorer;
 using QuestEditor.Graph;
+using QuestEditor.Objectives;
 using QuestEditor.Shared;
 using QuestSystem.Nodes;
+using QuestSystem.Objectives;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
@@ -54,7 +57,6 @@ namespace QuestEditor.Nodes
             model = node;
             _inputVM = new(node.ID);
             clone = (NodeBase)node.Clone();
-            NodeType = clone.GetType().Name;
             DeleteNodeCommand = new RelayCommand(quest.RemoveNode, _=>true);
         }
         public static NodeVM? SelectViewModel(NodeBase node, QuestVM quest)
@@ -70,6 +72,8 @@ namespace QuestEditor.Nodes
 
         public int ID => Model.ID;
         public virtual bool CanChangeRollback => true;
+        public abstract string NodeType { get; }
+        public string NodeTitle => NodeType;
 
 
         public event Action<NodeVM, (int, int)>? OutputChanged;
@@ -122,9 +126,6 @@ namespace QuestEditor.Nodes
             }
         }
 
-
-        public string NodeType { get; }
-
         private sealed class SetNextIDOperation(NodeVM node, int newVal) : UndoableOperation(node)
         {
             private readonly int _oldVal = node.NextID;
@@ -161,6 +162,30 @@ namespace QuestEditor.Nodes
                 vm.RaisePropertyChanged(nameof(Rollback));
             }
         }
+
+        protected sealed class UpdateNodeOperation(NodeVM origin, NodeBase before, NodeBase after, string propertyName) : UndoableOperation(origin)
+        {
+            readonly NodeBase _before = before;
+            readonly NodeBase _after = after;
+            readonly string _propertyName = propertyName;
+
+            protected override void ProtectedDo() { }
+
+            protected override void ProtectedRedo()
+            {
+                var vm = (NodeVM)Origin;
+                vm.clone = _after;
+                vm.RaisePropertyChanged(_propertyName);
+            }
+
+            protected override void ProtectedUndo()
+            {
+                var vm = (NodeVM)Origin;
+                vm.clone = _before;
+                vm.RaisePropertyChanged(_propertyName);
+            }
+        }
+
         public bool IsSelected { get => _isSelected; private set => SetProperty(ref _isSelected, value); }
         private bool _isSelected = false;
         public void Select()

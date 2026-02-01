@@ -63,6 +63,17 @@
                 </Style.Triggers>
             </Style>
 
+            <Style TargetType="Expander" x:Key="StyledExpander">
+                <Setter Property="Background" Value="{DynamicResource ControlBackground}"/>
+                <Setter Property="Foreground" Value="{DynamicResource ControlForeground}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>
+            </Style>
+
+            <Style TargetType="ListBox" x:Key="StyledListBox">
+                <Setter Property="Background" Value="{DynamicResource ControlBackground}"/>
+                <Setter Property="Foreground" Value="{DynamicResource ControlForeground}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>
+            </Style>
         </ResourceDictionary>
         
 

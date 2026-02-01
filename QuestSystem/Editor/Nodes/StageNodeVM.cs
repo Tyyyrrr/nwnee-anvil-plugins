@@ -23,8 +23,11 @@ namespace QuestEditor.Nodes
 
             IsInputAvailable = false;
             IsOutputAvailable = true;
+
+            NodeType = "Stage " + node.ID.ToString();
         }
 
+        public override string NodeType { get; }
         public override bool CanChangeRollback => false;
 
         public ConnectionOutputVM OutputVM

@@ -2,7 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:graph="clr-namespace:QuestEditor.Graph"
                     xmlns:nodes="clr-namespace:QuestEditor.Nodes"
-                    xmlns:objectives="clr-namespace:QuestEditor.Objectives">
+                    xmlns:objectives="clr-namespace:QuestEditor.Objectives"
+                    xmlns:shared="clr-namespace:QuestEditor.Shared">
 
 
     <ResourceDictionary.MergedDictionaries>
@@ -142,11 +143,63 @@
     <Style x:Key="RewardNodeControlStyle" TargetType="nodes:RewardNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
         <Setter Property="BorderBrush" Value="{DynamicResource RewardNodeBorderBrush}"/>
         <Setter Property="Background" Value="{DynamicResource RewardNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
                     <StackPanel>
-                        <TextBlock Text="RewardNodeControlStyle" Background="Green"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Gold: " Style="{StaticResource StyledTextBlock}"/>
+                            <TextBox Text="{Binding GoldString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                            <TextBlock Text="XP: " Style="{StaticResource StyledTextBlock}"/>
+                            <TextBox Text="{Binding XpString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Good/Evil change: " Style="{StaticResource StyledTextBlock}"/>
+                            <TextBox Text="{Binding AlignmentGEString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Law/Chaos change: " Style="{StaticResource StyledTextBlock}"/>
+                            <TextBox Text="{Binding AlignmentLCString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                        </StackPanel>
+                        <Expander Style="{StaticResource StyledExpander}">
+                            <Expander.Header>
+                                <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Item:" Style="{StaticResource StyledTextBlock}"/>
+                                        <TextBox Text="{Binding NewItemString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource StyledTextBox}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Amount:" Style="{StaticResource StyledTextBlock}"/>
+                                        <TextBox Text="{Binding NewItemAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource StyledTextBox}"/>
+                                        <Button Content="+" Command="{Binding AddItemCommand}" Style="{StaticResource StyledButton}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Expander.Header>
+                            <ListBox ItemsSource="{Binding Items}" Style="{StaticResource StyledListBox}">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="shared:StringIntListItemVM">
+                                        <DockPanel LastChildFill="True">
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                            <TextBlock Text="{Binding StringValue}" Style="{StaticResource StyledTextBlock}" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding IntValue}" Style="{StaticResource StyledTextBlock}"/>
+                                            </StackPanel>
+                                            <Button Content="-"
+                                                Command="{Binding DataContext.RemoveItemCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource StyledButton}"
+                                                DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ListBox>
+                        </Expander>
                     </StackPanel>
                 </DataTemplate>
             </Setter.Value>
