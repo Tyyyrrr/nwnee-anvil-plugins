@@ -5,6 +5,7 @@ using QuestEditor.Shared;
 using QuestSystem.Nodes;
 using QuestSystem.Objectives;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace QuestEditor.Nodes
 {
@@ -25,6 +26,35 @@ namespace QuestEditor.Nodes
             IsOutputAvailable = true;
 
             NodeType = "Stage " + node.ID.ToString();
+
+            AddObjectiveInteractCommand = new RelayCommand(AddObjectiveInteract, _ => true);
+            AddObjectiveKillCommand = new RelayCommand(AddObjectiveKill, _ => true);
+            AddObjectiveDeliverCommand = new RelayCommand(AddObjectiveDeliver, _ => true);
+            AddObjectiveObtainCommand = new RelayCommand(AddObjectiveObtain, _ => true);
+            AddObjectiveExploreCommand = new RelayCommand(AddObjectiveExplore, _ => true);
+            AddObjectiveSpellcastCommand = new RelayCommand(AddObjectiveSpellcast, _ => true);
+        }
+
+
+        public ICommand AddObjectiveInteractCommand { get; }
+        void AddObjectiveInteract(object? _) => PushOperation(new AddObjectiveOperation<ObjectiveInteract>(this, new()));
+        public ICommand AddObjectiveKillCommand { get; }
+        void AddObjectiveKill(object? _) => PushOperation(new AddObjectiveOperation<ObjectiveKill>(this, new()));
+        public ICommand AddObjectiveDeliverCommand { get; }
+        void AddObjectiveDeliver(object? _) => PushOperation(new AddObjectiveOperation<ObjectiveDeliver>(this, new()));
+        public ICommand AddObjectiveObtainCommand { get; }
+        void AddObjectiveObtain(object? _) => PushOperation(new AddObjectiveOperation<ObjectiveObtain>(this, new()));
+        public ICommand AddObjectiveExploreCommand { get; }
+        void AddObjectiveExplore(object? _) => PushOperation(new AddObjectiveOperation<ObjectiveExplore>(this, new()));
+        public ICommand AddObjectiveSpellcastCommand { get; }
+        void AddObjectiveSpellcast(object? _) => PushOperation(new AddObjectiveOperation<ObjectiveSpellcast>(this, new()));
+
+        public void RemoveObjective(object? parameter)
+        {
+            if (parameter is not ObjectiveVM objective) return;
+
+            if(this.Objectives.Contains(objective))
+                PushOperation(new RemoveObjectiveOperation(this,objective));
         }
 
         public override string NodeType { get; }
@@ -106,6 +136,25 @@ namespace QuestEditor.Nodes
                 var stageVM = (StageNodeVM)Origin;
                 stageVM.Objectives.Remove(viewModel!);
                 viewModel!.OutputChanged -= stageVM.OnObjectiveOutputChanged;
+            }
+        }
+
+        private sealed class RemoveObjectiveOperation(StageNodeVM stageVM, ObjectiveVM objective) : UndoableOperation(stageVM)
+        {
+            private readonly ObjectiveVM _viewModel = objective;
+
+            protected override void ProtectedDo()
+            {
+                var vm = (StageNodeVM)Origin;
+                vm.Objectives.Remove(_viewModel);
+                vm.Node.Objectives = vm.Objectives.Select(o => o.Objective).ToArray();
+            }
+            protected override void ProtectedRedo() => ProtectedDo();
+            protected override void ProtectedUndo()
+            {
+                var vm = (StageNodeVM)Origin;
+                vm.Objectives.Add(_viewModel);
+                vm.Node.Objectives = [.. vm.Node.Objectives, _viewModel.Objective];
             }
         }
 

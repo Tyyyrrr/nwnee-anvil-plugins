@@ -15,28 +15,43 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:ObjectiveControl">
-                    <Border 
-                            Background="{TemplateBinding Background}" 
-                            BorderBrush="{TemplateBinding BorderBrush}" 
-                            BorderThickness="{TemplateBinding BorderThickness}" 
-                            CornerRadius="{DynamicResource NodeCornerRadius}"
-                            Opacity="{TemplateBinding Opacity}">
-                        <StackPanel>
-                            <TextBlock Text="{Binding}"  Style="{StaticResource StyledTextBlock}"/>
-                            <StackPanel Orientation="Horizontal">
-                                <graph:ConnectionSocketControl 
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <ToggleButton Width="10" Height="10" x:Name="ToggleBtn" Grid.Row="0" Grid.Column="0" Style="{StaticResource StyledToggleButton}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ObjectiveType}" Style="{StaticResource StyledTextBlock}" Grid.Row="0" Grid.Column="1"/>
+                        <ContentPresenter 
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Visibility="{Binding IsChecked, Source={x:Reference ToggleBtn}, Converter={StaticResource BoolToVis}}"
+                                Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                        <graph:ConnectionSocketControl 
                                     Style="{StaticResource ConnectionSocketControlBaseStyle}"
                                     BorderBrush="IndianRed"
                                     HorizontalAlignment="Right"
                                     DataContext="{Binding OutputVM}"
-                                    CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
-                            </StackPanel>
-                            <ContentPresenter 
-                                Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
-                                ContentTemplate="{TemplateBinding ContentTemplate}"/>
-                        </StackPanel>
-                    </Border>
+                                    CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"
+                                    Grid.Column="2"
+                                    Grid.Row="0"
+                                    CanBeTargeted="{Binding CanBeTargeted}"/>
+                    </Grid>
                 </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
             </Setter.Value>
         </Setter>
     </Style>
@@ -49,6 +64,13 @@
                 </DataTemplate>
             </Setter.Value>
         </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="ObjectiveInteractControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
@@ -57,6 +79,13 @@
                 <DataTemplate>
                     <TextBlock Text="Objective Interact" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
             </Setter.Value>
         </Setter>
     </Style>
@@ -69,6 +98,13 @@
                 </DataTemplate>
             </Setter.Value>
         </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="ObjectiveDeliverControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
@@ -77,6 +113,13 @@
                 <DataTemplate>
                     <TextBlock Text="Objective Deliver" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
             </Setter.Value>
         </Setter>
     </Style>
@@ -89,6 +132,13 @@
                 </DataTemplate>
             </Setter.Value>
         </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="ObjectiveExploreControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
@@ -99,6 +149,13 @@
                 </DataTemplate>
             </Setter.Value>
         </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="ObjectiveSpellcastControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
@@ -107,6 +164,13 @@
                 <DataTemplate>
                     <TextBlock Text="Objective Spellcast" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
             </Setter.Value>
         </Setter>
     </Style>

@@ -98,6 +98,8 @@ namespace QuestEditor.Nodes
                 var item = new StringIntListItem(kvp.Key, kvp.Value);
                 Items.Add(item);
             }
+            IsInputAvailable = false;
+            IsOutputAvailable = true;
         }
 
         public ICommand AddItemCommand { get; }

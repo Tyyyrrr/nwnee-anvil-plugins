@@ -7,6 +7,7 @@ namespace QuestEditor.Objectives
     {
         public override ObjectiveExplore Objective => (ObjectiveExplore)base.Objective;
 
+        public override string ObjectiveType => "Explore";
         public int AreaExplorePercentage
         {
             get => Objective.AreaExplorePercentage;

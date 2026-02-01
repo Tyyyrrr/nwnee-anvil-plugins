@@ -7,6 +7,7 @@ namespace QuestEditor.Objectives
     {
         public override ObjectiveDeliver Objective => (ObjectiveDeliver)base.Objective;
 
+        public override string ObjectiveType => "Deliver";
         public string ItemResRef
         {
             get => Objective.ItemResRef;

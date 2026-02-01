@@ -7,6 +7,7 @@ namespace QuestEditor.Objectives
     {
         public override ObjectiveKill Objective => (ObjectiveKill)base.Objective;
 
+        public override string ObjectiveType => "Kill";
         public string ResRef
         {
             get => Objective.ResRef;

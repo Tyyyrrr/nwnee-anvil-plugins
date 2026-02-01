@@ -8,6 +8,7 @@
 
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/QuestEditor;component/Themes/GraphStyles.xaml"/>
+        <ResourceDictionary Source="/QuestEditor;component/Themes/ObjectiveStyles.xaml"/>
     </ResourceDictionary.MergedDictionaries>
     
     <Style x:Key="NodeControlBaseStyle" TargetType="nodes:NodeControl">
@@ -111,7 +112,14 @@
                             <CheckBox VerticalAlignment="Center" IsChecked="{Binding ShowInJournal}"/>
                             <TextBlock Text="Show in journal" Style="{StaticResource StyledTextBlock}"/>
                         </StackPanel>
-                        <ListBox ItemsSource="{Binding Objectives}"/>
+                        <ListBox ItemsSource="{Binding Objectives}" Style="{StaticResource StyledListBox}" HorizontalContentAlignment="Stretch">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
                     </StackPanel>
                 </DataTemplate>
             </Setter.Value>
@@ -120,12 +128,12 @@
             <Setter.Value>
                 <ContextMenu>
                     <MenuItem Header="Add objective">
-                        <MenuItem Header="Interact" Command="{Binding AddObjectiveInteract}"/>
-                        <MenuItem Header="Kill" Command="{Binding AddObjectiveKill}"/>
-                        <MenuItem Header="Deliver" Command="{Binding AddObjectiveDeliver}"/>
-                        <MenuItem Header="Obtain" Command="{Binding AddObjectiveObtain}"/>
-                        <MenuItem Header="Explore" Command="{Binding AddObjectiveExplore}"/>
-                        <MenuItem Header="Spellcast" Command="{Binding AddObjectiveSpellcast}"/>
+                        <MenuItem Header="Interact" Command="{Binding AddObjectiveInteractCommand}"/>
+                        <MenuItem Header="Kill" Command="{Binding AddObjectiveKillCommand}"/>
+                        <MenuItem Header="Deliver" Command="{Binding AddObjectiveDeliverCommand}"/>
+                        <MenuItem Header="Obtain" Command="{Binding AddObjectiveObtainCommand}"/>
+                        <MenuItem Header="Explore" Command="{Binding AddObjectiveExploreCommand}"/>
+                        <MenuItem Header="Spellcast" Command="{Binding AddObjectiveSpellcastCommand}"/>
                     </MenuItem>
                     <Separator/>
                     <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>

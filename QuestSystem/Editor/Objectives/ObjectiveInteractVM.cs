@@ -7,6 +7,7 @@ namespace QuestEditor.Objectives
     {
         public override ObjectiveInteract Objective => (ObjectiveInteract)base.Objective;
 
+        public override string ObjectiveType => "Interact";
         public ObjectiveInteract.InteractionType Interaction
         {
             get => Objective.Interaction;

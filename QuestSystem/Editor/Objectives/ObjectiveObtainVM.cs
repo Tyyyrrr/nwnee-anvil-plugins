@@ -7,6 +7,7 @@ namespace QuestEditor.Objectives
     {
         public override ObjectiveObtain Objective => (ObjectiveObtain)base.Objective;
 
+        public override string ObjectiveType => "Obtain";
         public string ItemResRef
         {
             get => Objective.ItemResRef;

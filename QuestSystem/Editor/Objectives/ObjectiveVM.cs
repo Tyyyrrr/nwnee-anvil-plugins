@@ -5,6 +5,7 @@ using QuestSystem.Objectives;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows;
+using System.Windows.Input;
 
 namespace QuestEditor.Objectives
 {
@@ -35,6 +36,7 @@ namespace QuestEditor.Objectives
         {
             snapshot = model;
             _outputVM = new(parent.ID, model.NextStageID);
+            _outputVM.CanBeTargeted = true;
             this.model = (Objective)model.Clone();
             AreaTags = new(model.AreaTags);
             TriggerTags = new(model.TriggerTags);
@@ -44,11 +46,18 @@ namespace QuestEditor.Objectives
 
             AreaTags.CollectionChanged += OnAreaTagsChanged;
             TriggerTags.CollectionChanged += OnTriggerTagsChanged;
+
+            DeleteObjectiveCommand = new RelayCommand(o => parent.RemoveObjective(o), _ => true);
         }
 
         private Objective snapshot;
         private Objective model;
         public virtual Objective Objective => model;
+
+        public abstract string ObjectiveType { get; }
+
+        public ICommand DeleteObjectiveCommand { get; }
+
 
         protected override void Apply()
         {

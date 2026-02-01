@@ -7,6 +7,8 @@ namespace QuestEditor.Objectives
     {
         public override ObjectiveSpellcast Objective => (ObjectiveSpellcast)base.Objective;
 
+        public override string ObjectiveType => "Spellcast";
+
         public int SpellID
         {
             get => Objective.SpellID;

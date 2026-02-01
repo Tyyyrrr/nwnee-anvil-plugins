@@ -49,8 +49,8 @@
                 <ControlTemplate TargetType="graph:ConnectionSocketControl">
                     <Border x:Name="PART_Border"
                         CornerRadius="100"
-                        Height="8" Width="8"
-                        BorderThickness="2"
+                        Height="10" Width="10"
+                        BorderThickness="3"
                         Background="Black"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
@@ -62,7 +62,7 @@
                                 <Condition Property="CanBeTargeted" Value="True"/>
                             </MultiTrigger.Conditions>
                             <MultiTrigger.Setters>
-                                <Setter Property="BorderThickness" Value="3" TargetName="PART_Border"/>
+                                <Setter Property="BorderThickness" Value="4" TargetName="PART_Border"/>
                             </MultiTrigger.Setters>
                         </MultiTrigger>
                     </ControlTemplate.Triggers>
