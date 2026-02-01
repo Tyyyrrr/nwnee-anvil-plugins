@@ -53,7 +53,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition MinWidth="120" MaxWidth="360" Width="Auto"/>
+            <ColumnDefinition Width="140"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         

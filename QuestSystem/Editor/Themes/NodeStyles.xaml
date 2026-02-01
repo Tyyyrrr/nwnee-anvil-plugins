@@ -29,22 +29,26 @@
                                 HorizontalAlignment="Left"
                                 CanBeTargeted="{Binding DataContext.IsInputAvailable, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
                                 CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
-                            
-                            <TextBlock Text="{Binding NodeTitle}" />
+
+                            <TextBlock Text="{Binding NodeTitle}" Style="{StaticResource StyledTextBlock}"/>
                             <ContentPresenter 
                                 Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
                                 ContentTemplate="{TemplateBinding ContentTemplate}"/>
-                            <StackPanel Orientation="Horizontal">
-                                <CheckBox Content="Rollback" IsChecked="{Binding Rollback}"/>
-                                <TextBox Text="{Binding NextIDString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <DockPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox VerticalAlignment="Center" IsChecked="{Binding Rollback}" DockPanel.Dock="Left" Visibility="{Binding CanChangeRollback, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="Rollback" Style="{StaticResource StyledTextBlock}" Visibility="{Binding CanChangeRollback, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
                                 <graph:ConnectionSocketControl 
+                                    DockPanel.Dock="Right"
                                     DataContext="{Binding OutputVM}"
                                     Style="{StaticResource ConnectionSocketControlBaseStyle}"
                                     BorderBrush="IndianRed"
                                     HorizontalAlignment="Right"
                                     CanBeTargeted="{Binding DataContext.IsOutputAvailable, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
                                     CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
-                            </StackPanel>
+                            </DockPanel>
                         </StackPanel>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -70,6 +74,7 @@
         <Setter Property="Opacity" Value="0.8"/>
     </Style>
 
+    <!-- STAGE NODE -->
     <Style x:Key="StageNodeControlStyle" TargetType="nodes:StageNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
         <Style.Resources>
             <DataTemplate DataType="{x:Type objectives:ObjectiveVM}">
@@ -100,8 +105,11 @@
             <Setter.Value>
                 <DataTemplate>
                     <StackPanel Width="150" MaxHeight="360">
-                        <TextBlock Text="{Binding JournalEntry}"/>
-                        <CheckBox IsChecked="{Binding ShowInJournal}"/>
+                        <TextBox Text="{Binding JournalEntry, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" MaxHeight="250" Visibility="{Binding ShowInJournal, Converter={StaticResource BoolToVis}}" Style="{StaticResource StyledTextBox}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding ShowInJournal}"/>
+                            <TextBlock Text="Show in journal" Style="{StaticResource StyledTextBlock}"/>
+                        </StackPanel>
                         <ListBox ItemsSource="{Binding Objectives}"/>
                     </StackPanel>
                 </DataTemplate>
@@ -130,7 +138,10 @@
         </Style.Triggers>
     </Style>
 
+    <!-- REWARD NODE -->
     <Style x:Key="RewardNodeControlStyle" TargetType="nodes:RewardNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource RewardNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource RewardNodeBackgroundBrush}"/>
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
@@ -147,6 +158,11 @@
                 </ContextMenu>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource RewardNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
 

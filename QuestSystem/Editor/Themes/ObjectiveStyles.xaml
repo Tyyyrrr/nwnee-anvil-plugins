@@ -22,7 +22,7 @@
                             CornerRadius="{DynamicResource NodeCornerRadius}"
                             Opacity="{TemplateBinding Opacity}">
                         <StackPanel>
-                            <TextBlock Text="{Binding}" />
+                            <TextBlock Text="{Binding}"  Style="{StaticResource StyledTextBlock}"/>
                             <StackPanel Orientation="Horizontal">
                                 <graph:ConnectionSocketControl 
                                     Style="{StaticResource ConnectionSocketControlBaseStyle}"
@@ -45,7 +45,7 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="DEFAULT OBJECTIVE"/>
+                    <TextBlock Text="DEFAULT OBJECTIVE" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -55,7 +55,7 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="Objective Interact"/>
+                    <TextBlock Text="Objective Interact" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -65,7 +65,7 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="Objective Kill"/>
+                    <TextBlock Text="Objective Kill" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -75,7 +75,7 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="Objective Deliver"/>
+                    <TextBlock Text="Objective Deliver" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -85,7 +85,7 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="Objective Obtain"/>
+                    <TextBlock Text="Objective Obtain" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -95,7 +95,7 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="Objective Explore"/>
+                    <TextBlock Text="Objective Explore" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -105,7 +105,7 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="Objective Spellcast"/>
+                    <TextBlock Text="Objective Spellcast" Style="{StaticResource StyledTextBlock}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>

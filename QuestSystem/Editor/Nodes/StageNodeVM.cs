@@ -25,6 +25,8 @@ namespace QuestEditor.Nodes
             IsOutputAvailable = true;
         }
 
+        public override bool CanChangeRollback => false;
+
         public ConnectionOutputVM OutputVM
         {
             get => _outputVM;

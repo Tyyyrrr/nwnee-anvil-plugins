@@ -11,6 +11,58 @@
 
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
+            <Style TargetType="TextBox" x:Key="StyledTextBox">
+                <Setter Property="Background" Value="{DynamicResource ControlBackground}"/>
+                <Setter Property="Foreground" Value="{DynamicResource ControlForeground}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="4"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="{DynamicResource ControlBackgroundDisabled}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource ControlForegroundDisabled}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderDisabled}"/>
+                    </Trigger>
+                    <Trigger Property="IsFocused" Value="True">
+                        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderFocused}"/>
+                    </Trigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource ControlBackgroundHover}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style TargetType="TextBlock" x:Key="StyledTextBlock">
+                <!--<Setter Property="Background" Value="{DynamicResource ControlBackground}"/>-->
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{DynamicResource ControlForeground}"/>
+                <Setter Property="Padding" Value="4"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="{DynamicResource ControlBackgroundDisabled}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource ControlForegroundDisabled}"/>
+                    </Trigger>
+                    <!--<Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource ControlBackgroundHover}"/>
+                    </Trigger>-->
+                </Style.Triggers>
+            </Style>
+
+            <Style TargetType="Button" x:Key="StyledButton">
+                <Setter Property="Background" Value="{DynamicResource ControlBackground}"/>
+                <Setter Property="Foreground" Value="{DynamicResource ControlForeground}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>
+                <Setter Property="Padding" Value="6,3"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource ControlBackgroundHover}"/>
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPressed}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
         </ResourceDictionary>
         
 

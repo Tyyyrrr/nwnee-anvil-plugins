@@ -35,5 +35,5 @@
               ItemContainerStyleSelector="{StaticResource ExplorerItemStyleSelector}"
               ItemsSource="{Binding DataContext.QuestPacks, RelativeSource={RelativeSource AncestorType=UserControl}}"
               Background="{Binding Background, RelativeSource={RelativeSource AncestorType=UserControl}}"
-              MouseEnter="SelectableTreeView_MouseEnter"/>
+              MouseEnter="SelectableTreeView_MouseEnter" />
 </UserControl>

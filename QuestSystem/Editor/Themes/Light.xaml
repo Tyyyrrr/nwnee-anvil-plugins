@@ -1,40 +1,128 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Color x:Key="PackNormalColor">#B13F2124</Color>
-    <Color x:Key="PackExpandedColor">#B26F2124</Color>
-    <Color x:Key="PackSelectedColor">#F123A124</Color>
+    <!-- BASE NEUTRALS -->
+    <Color x:Key="NodeBackgroundColor">#F7F7FA</Color>
+    <Color x:Key="NodeBorderNeutral">#C8CCD4</Color>
+    <Color x:Key="HoverColor">#E8EEF7</Color>
+    <Color x:Key="SelectionColor">#D0E2FF</Color>
+    <Color x:Key="TextColor">#1A1A1A</Color>
+    <Color x:Key="GraphBackgroundColor">#F0F0F0</Color>
 
-    <LinearGradientBrush x:Key="ExplorerBackground">
-        <GradientStopCollection>
-            <GradientStop Color="{x:Static Colors.AliceBlue}" Offset="-0.5"/>
-            <GradientStop Color="{x:Static Colors.DarkSlateBlue}" Offset="2"/>
-        </GradientStopCollection>
+    <!-- GENERIC LIGHT THEME BRUSHES -->
+
+    <!-- Text / Foreground -->
+    <SolidColorBrush x:Key="ControlForeground" Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="ControlForegroundDisabled" Color="#8A8A8A"/>
+
+    <!-- Backgrounds -->
+    <SolidColorBrush x:Key="ControlBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ControlBackgroundDisabled" Color="#F2F2F2"/>
+    <SolidColorBrush x:Key="ControlBackgroundHover" Color="#F5F7FA"/>
+    
+    <!-- Borders -->
+    <SolidColorBrush x:Key="ControlBorder" Color="#C8CCD4"/>
+    <SolidColorBrush x:Key="ControlBorderHover" Color="#AAB1BC"/>
+    <SolidColorBrush x:Key="ControlBorderFocused" Color="#3A7BDA"/>
+    <SolidColorBrush x:Key="ControlBorderDisabled" Color="#D5D5D5"/>
+
+
+    <SolidColorBrush x:Key="GraphBackground" Color="{StaticResource GraphBackgroundColor}" />
+
+    <!-- TREEVIEW COLORS -->
+    <!-- Background -->
+    <LinearGradientBrush x:Key="ExplorerBackground" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#F7F9FC" Offset="0"/>
+        <GradientStop Color="#E3E9F3" Offset="0.5"/>
+        <GradientStop Color="#D5DCE8" Offset="1"/>
     </LinearGradientBrush>
 
+    <!-- QuestPack = Blue -->
+    <SolidColorBrush x:Key="QuestPackForeground" Color="#2A5DB0"/>
+    <SolidColorBrush x:Key="QuestPackBackground" Color="#E7F0FF"/>
 
-    <LinearGradientBrush x:Key="GraphBackground">
-        <GradientStopCollection>
-            <GradientStop Color="{x:Static Colors.DimGray}" Offset="-0.5"/>
-            <GradientStop Color="{x:Static Colors.LightGray}" Offset="2"/>
-        </GradientStopCollection>
-    </LinearGradientBrush>
+    <!-- Quest = Teal -->
+    <SolidColorBrush x:Key="QuestForeground" Color="#1E8C82"/>
+    <SolidColorBrush x:Key="QuestBackground" Color="#E6F7F5"/>
 
-    <SolidColorBrush x:Key="MenuBackgroundColorBrush"
-                 Color="{DynamicResource {x:Static SystemColors.MenuBarColorKey}}"/>
+    <!-- Node = Purple -->
+    <SolidColorBrush x:Key="NodeForeground" Color="#6A4FBF"/>
+    <SolidColorBrush x:Key="NodeBackground" Color="#F1ECFF"/>
 
-    <SolidColorBrush x:Key="MenuForegroundColorBrush"
-                 Color="{DynamicResource {x:Static SystemColors.MenuTextColorKey}}"/>
+    <!-- TreeView shared -->
+    <SolidColorBrush x:Key="TreeViewItemHoveredBrush" Color="{StaticResource HoverColor}"/>
+    <SolidColorBrush x:Key="TreeViewItemSelectedBackgroundBrush" Color="{StaticResource SelectionColor}"/>
+    <SolidColorBrush x:Key="TreeViewItemBorderBrush" Color="{StaticResource NodeBorderNeutral}"/>
+    <SolidColorBrush x:Key="TreeViewItemForeground" Color="{StaticResource TextColor}"/>
+
+    <!-- GRAPH NODES-->
+
+    <!-- StageNode = Indigo -->
+    <SolidColorBrush x:Key="StageNodeBorderBrush" Color="#4B4FC1"/>
+    <SolidColorBrush x:Key="StageNodeBorderBrush_Highlighted" Color="#6A73FF"/>
+    <SolidColorBrush x:Key="StageNodeBackgroundBrush" Color="#EEF0FF"/>
+
+    <!-- RewardNode = Green -->
+    <SolidColorBrush x:Key="RewardNodeBorderBrush" Color="#3A9D4F"/>
+    <SolidColorBrush x:Key="RewardNodeBorderBrush_Highlighted" Color="#57C96F"/>
+    <SolidColorBrush x:Key="RewardNodeBackgroundBrush" Color="#ECF7EE"/>
+
+    <!-- CooldownNode = Orange -->
+    <SolidColorBrush x:Key="CooldownNodeBorderBrush" Color="#D98A2B"/>
+    <SolidColorBrush x:Key="CooldownNodeBorderBrush_Highlighted" Color="#FFB057"/>
+    <SolidColorBrush x:Key="CooldownNodeBackgroundBrush" Color="#FFF4E6"/>
+
+    <!-- RandomizerNode = Cyan -->
+    <SolidColorBrush x:Key="RandomizerNodeBorderBrush" Color="#2AAACF"/>
+    <SolidColorBrush x:Key="RandomizerBorderBrush_Highlighted" Color="#4ED4F7"/>
+    <SolidColorBrush x:Key="RandomizerNodeBackgroundBrush" Color="#E6F7FB"/>
+
+    <!-- ConditionNode = Gold -->
+    <SolidColorBrush x:Key="ConditionNodeBorderBrush" Color="#C9A21A"/>
+    <SolidColorBrush x:Key="ConditionNodeBorderBrush_Highlighted" Color="#FFD84D"/>
+    <SolidColorBrush x:Key="ConditionNodeBackgroundBrush" Color="#FFF8E1"/>
+
+    <!-- VisibilityNode = Pink -->
+    <SolidColorBrush x:Key="VisibilityNodeBorderBrush" Color="#C94F8A"/>
+    <SolidColorBrush x:Key="VisibilityNodeBorderBrush_Highlighted" Color="#FF7AB8"/>
+    <SolidColorBrush x:Key="VisibilityNodeBackgroundBrush" Color="#FDEAF3"/>
+
+    <!-- UnknownNode = Gray -->
+    <SolidColorBrush x:Key="UnknownNodeBorderBrush" Color="#8A8A8A"/>
+    <SolidColorBrush x:Key="UnknownNodeBorderBrush_Highlighted" Color="#B5B5B5"/>
+    <SolidColorBrush x:Key="UnknownNodeBackgroundBrush" Color="#F2F2F2"/>
 
 
-    <SolidColorBrush x:Key="TreeViewItemHoveredBrush">White</SolidColorBrush>
-    <SolidColorBrush x:Key="TreeViewItemSelectedBackgroundBrush" Color="LightBlue"/>
-    <SolidColorBrush x:Key="TreeViewItemBorderBrush" Color="DarkSlateBlue"/>
-    <SolidColorBrush x:Key="TreeViewItemForeground" Color="Black"/>
+    <!-- OBJECTIVES -->
 
+    <!-- Kill = Red -->
+    <SolidColorBrush x:Key="ObjectiveKillBorderBrush" Color="#C74343"/>
+    <SolidColorBrush x:Key="ObjectiveKillBorderBrush_Highlighted" Color="#FF6B6B"/>
+    <SolidColorBrush x:Key="ObjectiveKillBackgroundBrush" Color="#FDECEC"/>
 
+    <!-- Interact = Blue -->
+    <SolidColorBrush x:Key="ObjectiveInteractBorderBrush" Color="#3A7BDA"/>
+    <SolidColorBrush x:Key="ObjectiveInteractBorderBrush_Highlighted" Color="#5CA0FF"/>
+    <SolidColorBrush x:Key="ObjectiveInteractBackgroundBrush" Color="#EAF2FF"/>
 
-    <SolidColorBrush x:Key="StageNodeBorderBrush" Color="DarkMagenta"/>
-    <SolidColorBrush x:Key="StageNodeBorderBrush_Highlighted" Color="Magenta"/>
-    <SolidColorBrush x:Key="StageNodeBackgroundBrush" Color="Gray"/>
+    <!-- Deliver = Purple -->
+    <SolidColorBrush x:Key="ObjectiveDeliverBorderBrush" Color="#7A4FD1"/>
+    <SolidColorBrush x:Key="ObjectiveDeliverBorderBrush_Highlighted" Color="#A07BFF"/>
+    <SolidColorBrush x:Key="ObjectiveDeliverBackgroundBrush" Color="#F3ECFF"/>
+
+    <!-- Obtain = Green -->
+    <SolidColorBrush x:Key="ObjectiveObtainBorderBrush" Color="#3A9D4F"/>
+    <SolidColorBrush x:Key="ObjectiveObtaintBorderBrush_Highlighted" Color="#57C96F"/>
+    <SolidColorBrush x:Key="ObjectiveObtainBackgroundBrush" Color="#ECF7EE"/>
+
+    <!-- Explore = Orange -->
+    <SolidColorBrush x:Key="ObjectiveExploreBorderBrush" Color="#D98A2B"/>
+    <SolidColorBrush x:Key="ObjectiveExploreBorderBrush_Highlighted" Color="#FFB057"/>
+    <SolidColorBrush x:Key="ObjectiveExploreBackgroundBrush" Color="#FFF4E6"/>
+
+    <!-- Spellcast = Violet -->
+    <SolidColorBrush x:Key="ObjectiveSpellcastBorderBrush" Color="#8A4FC9"/>
+    <SolidColorBrush x:Key="ObjectiveSpellcastBorderBrush_Highlighted" Color="#B57AFF"/>
+    <SolidColorBrush x:Key="ObjectiveSpellcastBackgroundBrush" Color="#F5ECFF"/>
+
 </ResourceDictionary>

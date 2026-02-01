@@ -48,6 +48,7 @@ namespace QuestEditor.Nodes
 
 
 
+
         public NodeVM(NodeBase node, QuestVM quest) : base(quest)
         {
             model = node;
@@ -68,7 +69,7 @@ namespace QuestEditor.Nodes
         protected virtual NodeBase Node => clone;
 
         public int ID => Model.ID;
-        public int TargetID => Model.NextID;
+        public virtual bool CanChangeRollback => true;
 
 
         public event Action<NodeVM, (int, int)>? OutputChanged;

@@ -78,7 +78,7 @@
                 </ContextMenu>
             </Setter.Value>
         </Setter>
-        <Setter Property="Foreground" Value="Red"/>
+        <Setter Property="Foreground" Value="{DynamicResource QuestPackForeground}"/>
     </Style>
 
     <Style x:Key="QuestItemStyle" TargetType="explorer:SelectableTreeViewItem" BasedOn="{StaticResource BaseSelectableItemStyle}">
@@ -103,7 +103,7 @@
                 </ContextMenu>
             </Setter.Value>
         </Setter>
-        <Setter Property="Foreground" Value="Green"/>
+        <Setter Property="Foreground" Value="{DynamicResource QuestPackForeground}"/>
     </Style>
 
     <Style x:Key="NodeItemStyle" TargetType="explorer:SelectableTreeViewItem" BasedOn="{StaticResource BaseSelectableItemStyle}">
@@ -117,19 +117,19 @@
                 </ContextMenu>
             </Setter.Value>
         </Setter>
-        <Setter Property="Foreground" Value="Blue"/>
+        <Setter Property="Foreground" Value="{DynamicResource NodeForeground}"/>
     </Style>
 
     <HierarchicalDataTemplate DataType="{x:Type explorer:QuestPackVM}" ItemsSource="{Binding Quests}">
-        <TextBlock Text="{Binding DisplayText}" FontStyle="{Binding DisplayFontStyle}" FontWeight="{Binding DisplayFontWeight}" />
+        <TextBlock Text="{Binding DisplayText}" FontStyle="{Binding DisplayFontStyle}" FontWeight="{Binding DisplayFontWeight}" Style="{StaticResource StyledTextBlock}"/>
     </HierarchicalDataTemplate>
 
     <HierarchicalDataTemplate DataType="{x:Type explorer:QuestVM}" ItemsSource="{Binding Nodes}">
-        <TextBlock Text="{Binding DisplayText}" FontStyle="{Binding DisplayFontStyle}" FontWeight="{Binding DisplayFontWeight}" />
+        <TextBlock Text="{Binding DisplayText}" FontStyle="{Binding DisplayFontStyle}" FontWeight="{Binding DisplayFontWeight}" Style="{StaticResource StyledTextBlock}"/>
     </HierarchicalDataTemplate>
 
     <HierarchicalDataTemplate DataType="{x:Type nodes:NodeVM}" >
-        <TextBlock Text="{Binding NodeType}" />
+        <TextBlock Text="{Binding NodeType}" Style="{StaticResource StyledTextBlock}"/>
     </HierarchicalDataTemplate>
 
 </ResourceDictionary>
