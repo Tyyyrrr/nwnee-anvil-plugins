@@ -84,6 +84,7 @@ namespace QuestEditor.Nodes
                 if(Model.NextID == value) return;
 
                 Model.NextID = value;
+                OutputVMs[0].TargetID = value;
                 RaisePropertyChanged(nameof(NextID));
                 RaisePropertyChanged(nameof(NextIDString));
                 RaiseOutputChanged(0, NextID);

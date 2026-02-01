@@ -61,6 +61,7 @@ namespace QuestEditor
                     explorer.RefreshIsDirty();
                     break;
                 case QuestPackVM questPack:
+                    Explorer.ClearSelection();
                     questPack.ResetTemporaryFile();
                     questPack.ReloadAllQuests();
                     questPack.RefreshIsDirty();

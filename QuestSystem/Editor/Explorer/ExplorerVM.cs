@@ -138,12 +138,20 @@ namespace QuestEditor.Explorer
             if (SelectedQuest == null || !SelectedQuest.Nodes.Contains(node))
                 throw new InvalidOperationException("Active quest not found for selected node");
 
-            foreach (var sn in _selectedNodes[SelectedQuest])
+            if (!_selectedNodes.TryGetValue(SelectedQuest, out var selectedNodes))
             {
-                sn.ClearSelection();
-                _selectedItems.Remove(sn);
+                selectedNodes = new List<NodeVM>() { node };
+                _selectedNodes.Add(SelectedQuest, selectedNodes);
             }
-            _selectedNodes[SelectedQuest] = [node];
+            else
+            {
+                foreach (var sn in _selectedNodes[SelectedQuest])
+                {
+                    sn.ClearSelection();
+                    _selectedItems.Remove(sn);
+                }
+                _selectedNodes[SelectedQuest] = [node];
+            }
             node.Select();
         }
         //////
@@ -168,6 +176,8 @@ namespace QuestEditor.Explorer
 
         void OpenPacks(object? _)
         {
+            ClearSelection();
+
             QuestPacks.Clear();
 
             string[] fnames = _openFilesDialog.GetFileNamesFromUser();

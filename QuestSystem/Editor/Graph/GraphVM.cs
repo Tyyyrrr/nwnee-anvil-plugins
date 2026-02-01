@@ -169,7 +169,7 @@ namespace QuestEditor.Graph
                             if (value.NodePositions.TryGetValue(node.ID, out var pos))
                                 node.CanvasPosition = pos;
 
-                            Trace.WriteLine("Restored node position at " + pos);
+                            //Trace.WriteLine("Restored node position at " + pos);
                             node.OutputChanged += OnNodeOutputChanged;
                         }
 
@@ -214,16 +214,15 @@ namespace QuestEditor.Graph
 
         void OnNodeOutputChanged(object s, (int,int) fromTo)
         {
-            Trace.WriteLine("On node connection changed");
             var node = (NodeVM)s;
             var outputIndex = fromTo.Item1;
             var targetIndex = fromTo.Item2;
+            //Trace.WriteLine($"On node connection changed {node.ID}:{outputIndex} points to {targetIndex}");
 
             var output = node.OutputVMs[outputIndex];
-            var targetNode = Nodes.FirstOrDefault(n => n.ID == targetIndex);
             if(output.Connections.Count > 0)
             {
-                Trace.WriteLine("Clearing old connection from output no. " + outputIndex);
+                //Trace.WriteLine("Clearing old connection from output no. " + outputIndex);
                 var c = output.Connections.First();
 
                 if(c != null)
@@ -235,7 +234,15 @@ namespace QuestEditor.Graph
                 }
 
             }
-            if (targetNode == null) return;
+
+            if (targetIndex < 0) return;
+
+            var targetNode = Nodes.FirstOrDefault(n => n.ID == targetIndex);
+            if (targetNode == null)
+            {
+                Trace.WriteLine("Target node not found");
+                return;
+            }
 
             var conn = new ConnectionVM(output, targetNode.InputVM);
             targetNode.InputVM.Connections.Add(conn);
@@ -245,7 +252,7 @@ namespace QuestEditor.Graph
 
         private void ReconnectNodes()
         {
-            Trace.WriteLine("Reconnecting all nodes");
+            //Trace.WriteLine("Reconnecting all nodes");
             Connections.Clear();
 
             foreach (var node in Nodes)
