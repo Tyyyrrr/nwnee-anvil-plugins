@@ -4,6 +4,7 @@ using QuestSystem;
 using QuestSystem.Nodes;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 
@@ -179,10 +180,13 @@ namespace QuestEditor.Explorer
         {
             Model.Tag = QuestTag;
             Model.Name = Title;
+            SaveNodePositions();
             _packManager.RemoveQuest(QuestTag);
             _packManager.WriteQuest(Model);
-            foreach(var n in Nodes)
-                _packManager.WriteNode(Model, n.Model);
+            foreach (var node in Nodes)
+                _packManager.WriteNode(Model,node.Model);
+            var nodePositions = JsonSerializer.Serialize(NodePositions);
+            _packManager.WriteMetadata(Model, nodePositions);
         }
         public void Select() => IsSelected = true;
 
@@ -214,12 +218,56 @@ namespace QuestEditor.Explorer
                     Nodes.Add(vm);
                 }
                 Trace.WriteLineIf(validNodes != nodes.Length, $"{nodes.Length - validNodes} out of {nodes.Length} loaded nodes were incompatibile");
+
+                _packManager.MetadataReadCompleted += OnMetadataLoadCompleted;
+                _packManager.LoadMetadata(Model);
             });
         }
 
+        void OnMetadataLoadCompleted(string tag, object? o)
+        {
+            if(tag != this.QuestTag) return;
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Trace.WriteLine($"{this} metadata loaded");
+
+                if (o != null)
+                {
+                    Trace.WriteLine("o is of type " + o.GetType().Name);
+                    var dict = JsonSerializer.Deserialize<Dictionary<int, Point>>((JsonElement)o);
+                    NodePositions = dict!;
+
+                    Trace.WriteLine("dict stored positions: " + NodePositions.Count);
+
+                    foreach (var node in Nodes)
+                        if (dict!.TryGetValue(node.ID, out Point point))
+                        {
+                            node.CanvasPosition = point;
+                        }
+                        else dict.Add(node.ID, default);
+                    return;
+                }
+                else
+                {
+                    SaveNodePositions();
+                }
+
+            });
+        }
         public void ClearSelection()
         {
             IsSelected = false;
+        }
+
+
+        public Dictionary<int, Point> NodePositions { get; private set; } = [];
+
+        public void SaveNodePositions()
+        {
+            NodePositions.Clear();
+            foreach(var node in Nodes)
+                NodePositions.Add(node.ID, node.CanvasPosition);
         }
     }
 }

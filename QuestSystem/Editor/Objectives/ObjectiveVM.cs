@@ -190,11 +190,17 @@ namespace QuestEditor.Objectives
                 if (Objective.NextStageID == value) return;
 
                 Objective.NextStageID = value;
-                OutputChanged?.Invoke(this, value);
                 RaisePropertyChanged(nameof(NextStageID));
                 RaisePropertyChanged(nameof(NextStageIDString));
+                OutputChanged?.Invoke(this, value);
             }
 
+        }
+
+        public void SetNextStageID(int nextStageID)
+        {
+            if(NextStageID == nextStageID) return;
+            PushOperation(new SetNextIDOperation(this, nextStageID));
         }
 
         public string NextStageIDString

@@ -30,24 +30,23 @@ namespace QuestEditor.Graph
             get => _canvasPosition;
             set
             {
-                if (SetProperty(ref _canvasPosition, value) && Connection != null)
+                if (SetProperty(ref _canvasPosition, value) && Connections.Count > 0)
                 {
                     if (GetType().Equals(typeof(ConnectionInputVM)))
                     {
-                        Connection.FromTo = new(Connection.FromTo.From, value);
+                        foreach(var conn in Connections)
+                        {
+                            conn.FromTo = new(conn.FromTo.From, value);
+                        }
                     }
                     else
                     {
-                        Connection.FromTo = new(value, Connection.FromTo.To);
+                        Connections.First().FromTo = new(value, Connections.First().FromTo.To);
                     }
                 }
             }
         } Point _canvasPosition;
 
-        public ConnectionVM? Connection
-        {
-            get => _connection;
-            set => SetProperty(ref _connection, value);
-        } ConnectionVM? _connection;
+        public readonly HashSet<ConnectionVM> Connections = [];
     }
 }

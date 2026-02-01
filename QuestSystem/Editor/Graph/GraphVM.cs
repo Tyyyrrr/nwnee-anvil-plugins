@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Xml.Linq;
 
 namespace QuestEditor.Graph
 {
@@ -35,39 +36,68 @@ namespace QuestEditor.Graph
             var outPos = output.CanvasPosition;
             var inPos = input.CanvasPosition;
             Trace.WriteLine($"Establishing connection between [ {output.SourceID} : {outPos} ] and [ {input.SourceID} : {inPos} ]");
-            if(output.Connection?.Input == input)
+
+            if(input.SourceID == output.SourceID)
             {
-                Trace.WriteLine($"Already connected");
+                Trace.WriteLine("Can't connect to self");
                 return;
             }
-            else if(output.Connection != null)
+            if(output.Connections.Count > 0)
             {
-                ClearConnection(output.Connection);
+                if(output.Connections.First().Input == input)
+                {
+                    Trace.WriteLine($"Already connected");
+                    return;
+                }
+                ClearConnection(output.Connections.First());
                 Trace.WriteLine("Clearing old connection");
             }
             var conn = new ConnectionVM(output, input);
-            output.Connection = conn;
-            input.Connection = conn;
-            // todo: update NextIDs
-            Connections.Add(conn);
+            output.Connections.Clear();
+            output.Connections.Add(conn);
+            input.Connections.Add(conn);
+            var node = Nodes.FirstOrDefault(n=>n.ID == output.SourceID);
+            if(node != null)
+            {
+                var outputs = node.OutputVMs;
+                int outputIndex = 0;
+                foreach (var o in node.OutputVMs)
+                    if (o != output)
+                    {
+                        outputIndex++;
+                    }
+                    else break;
+
+                node?.SetNextID(input.SourceID, outputIndex);
+            }
         }
         void ClearConnection(object? parameter)
         {
             ConnectionVM? connectionVM = null;
 
-            if(parameter is ConnectionSocketVM socketVM)
-                connectionVM = socketVM.Connection;
+            if(parameter is ConnectionOutputVM socketVM)
+                connectionVM = socketVM.Connections.FirstOrDefault();
             else if(parameter is ConnectionVM)
                 connectionVM = (ConnectionVM)parameter;
 
-            if (connectionVM != null)
+            if (connectionVM != null && connectionVM.Output != null)
             {
-                if (connectionVM.Output != null)
-                    connectionVM.Output.Connection = null;
-                if(connectionVM.Input != null)
-                    connectionVM.Input.Connection = null;
+                var node = Nodes.FirstOrDefault(n => n.ID == connectionVM.Output.SourceID);
+                if(node != null)
+                {
+                    var outputs = node.OutputVMs;
+                    int outputIndex = 0;
+                    foreach (var output in node.OutputVMs)
+                        if (output != connectionVM.Output)
+                        {
+                            outputIndex++;
+                        }
+                        else break;
 
-                // todo: update NextIDs
+                    node?.SetNextID(-1,outputIndex);
+                }
+                connectionVM.Output?.Connections.Clear();
+                connectionVM.Input?.Connections.Remove(connectionVM);
                 Connections.Remove(connectionVM);
             }
 
@@ -108,22 +138,49 @@ namespace QuestEditor.Graph
             get => _currentQuest;
             set
             {
+                if(value != _currentQuest && _currentQuest != null)
+                {
+                    _currentQuest.SaveNodePositions();
+                }
+
                 if (SetProperty(ref _currentQuest, value))
                 {
                     if(value == null)
                     {
                         Nodes.CollectionChanged -= OnNodesCollectionChanged;
+
+                        foreach (var node in Nodes)
+                            node.OutputChanged -= OnNodeOutputChanged;
+
                         Nodes = [];
+                        foreach(var conn in Connections)
+                        {
+                            if (conn.Input != null) conn.Input.Connections.Clear();
+                            if (conn.Output != null) conn.Output.Connections.Clear();
+                        }
                         Connections.Clear();
                     }
                     else
                     {
                         Nodes = value.Nodes;
-
                         Nodes.CollectionChanged += OnNodesCollectionChanged;
+                        foreach (var node in Nodes)
+                        {
+                            if (value.NodePositions.TryGetValue(node.ID, out var pos))
+                                node.CanvasPosition = pos;
+
+                            Trace.WriteLine("Restored node position at " + pos);
+                            node.OutputChanged += OnNodeOutputChanged;
+                        }
+
                         ReconnectNodes();
+
                     }
 
+                    Pan.X = 0;
+                    Pan.Y = 0;
+                    Zoom.ScaleX = 1;
+                    Zoom.ScaleY = 1;
                     RaisePropertyChanged(nameof(Nodes));
                 }
             }
@@ -131,7 +188,6 @@ namespace QuestEditor.Graph
 
         void OnNodesCollectionChanged(object? s, NotifyCollectionChangedEventArgs e)
         {
-            //Trace.WriteLine("Nodes collection changed action: " + e.Action.ToString());
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
@@ -139,6 +195,7 @@ namespace QuestEditor.Graph
                     foreach(var item in e.NewItems)
                     {
                         if (item is not NodeVM node) continue;
+                        node.OutputChanged += OnNodeOutputChanged;
                     }
                     ReconnectNodes();
                     break;
@@ -148,29 +205,59 @@ namespace QuestEditor.Graph
                     foreach(var item in e.OldItems)
                     {
                         if (item is not NodeVM node) continue;
+                        node.OutputChanged -= OnNodeOutputChanged;
                     }
                     ReconnectNodes();
                     break;
             }
         }
 
+        void OnNodeOutputChanged(object s, (int,int) fromTo)
+        {
+            Trace.WriteLine("On node connection changed");
+            var node = (NodeVM)s;
+            var outputIndex = fromTo.Item1;
+            var targetIndex = fromTo.Item2;
+
+            var output = node.OutputVMs[outputIndex];
+            var targetNode = Nodes.FirstOrDefault(n => n.ID == targetIndex);
+            if(output.Connections.Count > 0)
+            {
+                Trace.WriteLine("Clearing old connection from output no. " + outputIndex);
+                var c = output.Connections.First();
+
+                if(c != null)
+                {
+
+                    c.Input?.Connections.Remove(c);
+                    Connections.Remove(c);
+                    output.Connections.Clear();
+                }
+
+            }
+            if (targetNode == null) return;
+
+            var conn = new ConnectionVM(output, targetNode.InputVM);
+            targetNode.InputVM.Connections.Add(conn);
+            output.Connections.Add(conn);
+            Connections.Add(conn);
+        }
+
         private void ReconnectNodes()
         {
-            //Connections.Clear();
+            Trace.WriteLine("Reconnecting all nodes");
+            Connections.Clear();
 
-            //foreach(var node in Nodes)
-            //{
-            //    var outputs = node.OutputVMs;
+            foreach (var node in Nodes)
+            {
+                var outputs = node.OutputVMs;
 
-            //    foreach(var output in outputs)
-            //    {
-            //        if (output.TargetID < 0 || output.TargetID == node.ID) continue;
+                for(int i = 0; i < outputs.Count; i++)
+                {
+                    OnNodeOutputChanged(node, (i, outputs[i].TargetID));
+                }
 
-            //        var input = Nodes.FirstOrDefault(n => n.ID == output.TargetID)?.InputVM ?? null;
-
-            //        if (input != null) Connections.Add(new(output, input));
-            //    }
-            //}
+            }
         }
     }
 }

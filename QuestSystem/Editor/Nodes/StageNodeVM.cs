@@ -18,6 +18,7 @@ namespace QuestEditor.Nodes
                 var vm = ObjectiveVM.SelectViewModel(obj, this);
                 if (vm == null) continue;
                 Objectives.Add(vm);
+                vm.OutputChanged += OnObjectiveOutputChanged;
             }
 
             IsInputAvailable = false;
@@ -93,12 +94,20 @@ namespace QuestEditor.Nodes
             {
                 var stageVM = (StageNodeVM)Origin;
                 stageVM.Objectives.Add(viewModel!);
+                viewModel!.OutputChanged += stageVM.OnObjectiveOutputChanged;
             }
             protected override void ProtectedUndo()
             {
                 var stageVM = (StageNodeVM)Origin;
                 stageVM.Objectives.Remove(viewModel!);
+                viewModel!.OutputChanged -= stageVM.OnObjectiveOutputChanged;
             }
+        }
+
+        void OnObjectiveOutputChanged(ObjectiveVM objective, int nextID)
+        {
+            var index = Objectives.IndexOf(objective);
+            RaiseOutputChanged(index, nextID);
         }
 
         public string JournalEntry
@@ -118,6 +127,21 @@ namespace QuestEditor.Nodes
             {
                 if(Node.ShowInJournal == value) return;
                 PushOperation(new ToggleJournalEntryOperation(this));
+            }
+        }
+
+        public override void SetNextID(int nextID, int outputIndex = 0)
+        {
+            if (outputIndex == 0)
+            {
+                base.SetNextID(nextID);
+                return;
+            }
+            
+            if(Objectives.Count > 0 && Objectives.Count < outputIndex)
+            {
+                var obj = Objectives[outputIndex];
+                obj.NextStageID = nextID;
             }
         }
     }

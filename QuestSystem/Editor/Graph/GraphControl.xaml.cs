@@ -1,9 +1,12 @@
 ﻿using QuestEditor.Nodes;
 using QuestEditor.Shared;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 
 namespace QuestEditor.Graph
@@ -12,11 +15,29 @@ namespace QuestEditor.Graph
     {
         private Point draggedNodeGrabOffset;
         private NodeControl? draggedNode;
+        private Canvas? _nodesCanvas;
         
         public GraphControl()
         {
             InitializeComponent();
+
+            Loaded += (_, __) =>
+            {
+                _nodesCanvas = NodesItemsControl.FindChild<Canvas>();
+                var ctx = (GraphVM)DataContext;
+                NodesItemsControl.ItemContainerGenerator.StatusChanged += OnNodesGenerated;
+            };
         }
+        void OnNodesGenerated(object? sender, EventArgs e)
+        {
+            if (NodesItemsControl.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
+            {
+                Dispatcher.BeginInvoke(
+                    new Action(UpdateNodePositions),
+                    DispatcherPriority.Loaded);
+            }
+        }
+
 
         public static readonly DependencyProperty DrawConnectionProperty = DependencyProperty.Register(
             "DrawConnection",
@@ -101,12 +122,43 @@ namespace QuestEditor.Graph
         private void UserControl_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             draggedNode = null;
+            if(drawConnectionOrigin != null)
+            {
+                var node = ((GraphVM)DataContext).Nodes.FirstOrDefault(n=>n.ID == ((ConnectionSocketVM)drawConnectionOrigin.DataContext).SourceID);
+                if(node != null)
+                {
+                    foreach (var o in node.OutputVMs)
+                        if (o == drawConnectionOrigin.DataContext)
+                        {
+                            o.TargetID = -1;
+                            break;
+                        }
+                }
+            }
             DrawConnection = false;
             drawConnectionOrigin = null;
             this.ReleaseMouseCapture();
         }
 
         private Point _lastPanMousePos;
+
+        void UpdateNodePositions()
+        {
+            var nodesControl = NodesItemsControl;
+            var vm = (GraphVM)DataContext;
+            foreach(var child in _nodesCanvas!.Children)
+            {
+                var cp = (ContentPresenter)child;
+                var node = cp.FindChild<NodeControl>();
+                if (node == null) continue;
+                foreach (var s in node.GetSockets())
+                {
+                    var sPos = s.TranslatePoint(new(s.ActualWidth / 2, s.ActualHeight / 2), this);
+                    s.CanvasPosition = ScreenToGraph(sPos);
+                }
+            }
+        }
+
         private void UserControl_MouseMove(object sender, MouseEventArgs e)
         {
             if (panMode)
@@ -118,7 +170,6 @@ namespace QuestEditor.Graph
                 pan.X += delta.X;
                 pan.Y += delta.Y;
                 _lastPanMousePos = pos;
-
             }
 
             if (draggedNode != null)

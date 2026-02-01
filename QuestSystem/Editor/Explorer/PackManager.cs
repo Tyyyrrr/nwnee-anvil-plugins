@@ -50,7 +50,7 @@ namespace QuestEditor.Explorer
 
             _temporaryFilePath = filePath + ".tmp";
             if (File.Exists(_temporaryFilePath))
-                throw new InvalidOperationException("Temporary pack file already exists");
+                throw new InvalidOperationException("Temporary pack file already exists"); // todo: show warning and restore backup state from existing .tmp file
 
             File.Copy(_originalFilePath, _temporaryFilePath, true);
         }

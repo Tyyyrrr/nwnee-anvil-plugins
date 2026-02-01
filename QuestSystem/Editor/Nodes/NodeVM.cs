@@ -70,6 +70,12 @@ namespace QuestEditor.Nodes
         public int ID => Model.ID;
         public int TargetID => Model.NextID;
 
+
+        public event Action<NodeVM, (int, int)>? OutputChanged;
+        protected void RaiseOutputChanged(int outputIndex, int targetNodeID)
+        {
+            OutputChanged?.Invoke(this,(outputIndex, targetNodeID));
+        }
         public int NextID
         {
             get => Model.NextID;
@@ -80,8 +86,15 @@ namespace QuestEditor.Nodes
                 Model.NextID = value;
                 RaisePropertyChanged(nameof(NextID));
                 RaisePropertyChanged(nameof(NextIDString));
+                RaiseOutputChanged(0, NextID);
             }
 
+        }
+
+        public virtual void SetNextID(int nextID, int outputIndex = 0)
+        {
+            if (nextID != NextID)
+                PushOperation(new SetNextIDOperation(this, nextID));
         }
 
         public string NextIDString
