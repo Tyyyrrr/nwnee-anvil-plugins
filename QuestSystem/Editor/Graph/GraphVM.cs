@@ -28,6 +28,8 @@ namespace QuestEditor.Graph
         {
             EstablishConnectionCommand = new RelayCommand(EstablishConnection, _ => true);
             ClearConnectionCommand = new RelayCommand(ClearConnection, _ => true);
+
+            NodeVM.ShouldReconnectAllNodes += ReconnectNodes;
         }
 
         void EstablishConnection(object? parameter)

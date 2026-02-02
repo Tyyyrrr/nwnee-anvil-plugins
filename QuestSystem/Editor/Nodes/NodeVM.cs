@@ -83,6 +83,8 @@ namespace QuestEditor.Nodes
 
 
         public event Action<NodeVM, (int, int)>? OutputChanged;
+        public static event Action? ShouldReconnectAllNodes;
+        protected static void RaiseShouldReconnectAllNodes() => ShouldReconnectAllNodes?.Invoke();
         protected void RaiseOutputChanged(int outputIndex, int targetNodeID)
         {
             OutputChanged?.Invoke(this,(outputIndex, targetNodeID));

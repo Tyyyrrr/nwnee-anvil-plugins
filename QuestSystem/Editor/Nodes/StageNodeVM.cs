@@ -152,12 +152,14 @@ namespace QuestEditor.Nodes
                 stageVM.Objectives.Add(viewModel!);
                 stageVM.Node.Objectives = [.. stageVM.Objectives.Select(o => o.Objective)];
                 viewModel!.OutputChanged += stageVM.OnObjectiveOutputChanged;
+                RaiseShouldReconnectAllNodes();
             }
             protected override void ProtectedUndo()
             {
                 stageVM.Objectives.Remove(viewModel!);
                 stageVM.Node.Objectives = [.. stageVM.Objectives.Select(o => o.Objective)];
                 viewModel!.OutputChanged -= stageVM.OnObjectiveOutputChanged;
+                RaiseShouldReconnectAllNodes();
             }
         }
 
@@ -170,6 +172,7 @@ namespace QuestEditor.Nodes
                 stageVM.Objectives.Remove(_viewModel);
                 stageVM.Node.Objectives = [.. stageVM.Objectives.Select(o => o.Objective)];
                 stageVM.Node.Objectives = stageVM.Objectives.Select(o => o.Objective).ToArray();
+                RaiseShouldReconnectAllNodes();
             }
             protected override void ProtectedRedo() => ProtectedDo();
             protected override void ProtectedUndo()
@@ -177,6 +180,7 @@ namespace QuestEditor.Nodes
                 stageVM.Objectives.Add(_viewModel);
                 stageVM.Node.Objectives = [.. stageVM.Objectives.Select(o => o.Objective)];
                 stageVM.Node.Objectives = [.. stageVM.Node.Objectives, _viewModel.Objective];
+                RaiseShouldReconnectAllNodes();
             }
         }
 

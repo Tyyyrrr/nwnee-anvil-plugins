@@ -96,6 +96,7 @@ namespace QuestEditor.Nodes
             {
                 var vm = (RandomizerNodeVM)Origin;
                 vm.Elements.Add(_element);
+                RaiseShouldReconnectAllNodes();
             }
 
             protected override void ProtectedRedo() => ProtectedDo();
@@ -104,6 +105,7 @@ namespace QuestEditor.Nodes
             {
                 var vm = (RandomizerNodeVM)Origin;
                 vm.Elements.Remove(_element);
+                RaiseShouldReconnectAllNodes();
             }
         }
 
@@ -114,6 +116,7 @@ namespace QuestEditor.Nodes
             {
                 var vm = (RandomizerNodeVM)Origin;
                 vm.Elements.Remove(_element);
+                RaiseShouldReconnectAllNodes();
             }
 
             protected override void ProtectedRedo() => ProtectedDo();
@@ -122,6 +125,7 @@ namespace QuestEditor.Nodes
             {
                 var vm = (RandomizerNodeVM)Origin;
                 vm.Elements.Add(_element);
+                RaiseShouldReconnectAllNodes();
             }
         }
 
