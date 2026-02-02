@@ -24,16 +24,26 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <ToggleButton Width="10" Height="10" x:Name="ToggleBtn" Grid.Row="0" Grid.Column="0" Style="{StaticResource StyledToggleButton}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding ObjectiveType}" Style="{StaticResource StyledTextBlock}" Grid.Row="0" Grid.Column="1"/>
-                        <ContentPresenter 
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                Grid.ColumnSpan="2"
-                                Visibility="{Binding IsChecked, Source={x:Reference ToggleBtn}, Converter={StaticResource BoolToVis}}"
-                                Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
-                                ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                        <StackPanel 
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Visibility="{Binding IsChecked, Source={x:Reference ToggleBtn}, Converter={StaticResource BoolToVis}}">
+                            <ContentPresenter 
+                                    Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                            <!--TODO: add Cooldown timer -->
+                            <Expander Header="Area tags" Style="{StaticResource StyledExpander}">
+                                <!--TODO: add tags list -->
+                            </Expander>
+                            <Expander Header="Trigger tags" Style="{StaticResource StyledExpander}">
+                                <!--TODO: add tags list -->
+                            </Expander>
+                        </StackPanel>
                         <graph:ConnectionSocketControl 
                                     Style="{StaticResource ConnectionSocketControlBaseStyle}"
                                     SocketColorBrush="{DynamicResource OutputSocketBrush}"
@@ -76,8 +86,45 @@
     <Style x:Key="ObjectiveInteractControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
         <Setter Property="ContentTemplate">
             <Setter.Value>
-                <DataTemplate>
-                    <TextBlock Text="Objective Interact" Style="{StaticResource StyledTextBlock}"/>
+                <DataTemplate DataType="local:ObjectiveInteractVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Interaction:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <ComboBox Grid.Row="0"
+                                  Grid.Column="1"
+                                  ItemsSource="{Binding InteractionTypes}"
+                                  SelectedItem="{Binding Interaction}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="ResRef:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding ResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding Tag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+                    </Grid>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -93,8 +140,45 @@
     <Style x:Key="ObjectiveKillControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
         <Setter Property="ContentTemplate">
             <Setter.Value>
-                <DataTemplate>
-                    <TextBlock Text="Objective Kill" Style="{StaticResource StyledTextBlock}"/>
+                <DataTemplate DataType="local:ObjectiveKillVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="ResRef:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding ResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding Tag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="Amount:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding AmountString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+                    </Grid>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -110,8 +194,63 @@
     <Style x:Key="ObjectiveDeliverControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
         <Setter Property="ContentTemplate">
             <Setter.Value>
-                <DataTemplate>
-                    <TextBlock Text="Objective Deliver" Style="{StaticResource StyledTextBlock}"/>
+                <DataTemplate DataType="local:ObjectiveDeliverVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="ResRef:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding ItemResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding ItemTag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="Amount:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding RequiredAmountString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <CheckBox   Grid.Row="3" 
+                                    Grid.Column="0"
+                                    IsChecked="{Binding AllowPartialDelivery, Mode=TwoWay}"/>
+                        <TextBlock  Grid.Row="3" 
+                                    Grid.Column="1"
+                                    Text="Allow partial delivery" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+
+                        <CheckBox   Grid.Row="4" 
+                                    Grid.Column="0"
+                                    IsChecked="{Binding DestroyItemsOnDelivery, Mode=TwoWay}"/>
+                        <TextBlock  Grid.Row="4" 
+                                    Grid.Column="1"
+                                    Text="Destroy items on delivery" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                    </Grid>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -127,8 +266,45 @@
     <Style x:Key="ObjectiveObtainControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
         <Setter Property="ContentTemplate">
             <Setter.Value>
-                <DataTemplate>
-                    <TextBlock Text="Objective Obtain" Style="{StaticResource StyledTextBlock}"/>
+                <DataTemplate DataType="local:ObjectiveObtainVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="ResRef:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding ItemResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding ItemTag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="Amount:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding RequiredAmountString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+                    </Grid>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -144,8 +320,25 @@
     <Style x:Key="ObjectiveExploreControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
         <Setter Property="ContentTemplate">
             <Setter.Value>
-                <DataTemplate>
-                    <TextBlock Text="Objective Explore" Style="{StaticResource StyledTextBlock}"/>
+                <DataTemplate DataType="local:ObjectiveExploreVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Explore percentage:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding AreaExplorePercentageString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+                    </Grid>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
@@ -161,8 +354,45 @@
     <Style x:Key="ObjectiveSpellcastControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
         <Setter Property="ContentTemplate">
             <Setter.Value>
-                <DataTemplate>
-                    <TextBlock Text="Objective Spellcast" Style="{StaticResource StyledTextBlock}"/>
+                <DataTemplate DataType="local:ObjectiveSpellcastVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Target ResRef:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding TargetResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="Target Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding TargetTag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="SpellID:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding SpellIDString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+                    </Grid>
                 </DataTemplate>
             </Setter.Value>
         </Setter>

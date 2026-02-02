@@ -67,25 +67,27 @@ namespace QuestEditor.Objectives
 
         protected override IReadOnlyList<StatefulViewModelBase>? DirectDescendants => null;
 
-        protected sealed class UpdateObjectiveOperation(ObjectiveVM origin, Objective before, Objective after, string propertyName) : UndoableOperation(origin)
+        protected sealed class UpdateObjectiveOperation(ObjectiveVM origin, Objective before, Objective after, params string[] propertyNames) : UndoableOperation(origin)
         {
             readonly Objective _before = before;
             readonly Objective _after = after;
-            readonly string _propertyName = propertyName;
+            readonly string[] _propertyNames = propertyNames;
             protected override void ProtectedDo() { }
 
             protected override void ProtectedRedo()
             {
                 var vm = (ObjectiveVM)Origin;
                 vm.model = _after;
-                vm.RaisePropertyChanged(_propertyName);
+                foreach(var pn in _propertyNames)
+                    vm.RaisePropertyChanged(pn);
             }
 
             protected override void ProtectedUndo()
             {
                 var vm = (ObjectiveVM)Origin;
                 vm.model = _before;
-                vm.RaisePropertyChanged(_propertyName);
+                foreach (var pn in _propertyNames)
+                    vm.RaisePropertyChanged(pn);
             }
         }
 

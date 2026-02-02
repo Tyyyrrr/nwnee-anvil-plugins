@@ -110,7 +110,7 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <StackPanel Width="150" MaxHeight="360">
+                    <StackPanel>
                         <TextBox Text="{Binding JournalEntry, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" MaxHeight="250" Visibility="{Binding ShowInJournal, Converter={StaticResource BoolToVis}}" Style="{StaticResource StyledTextBox}"/>
                         <StackPanel Orientation="Horizontal">
                             <CheckBox VerticalAlignment="Center" IsChecked="{Binding ShowInJournal}"/>

@@ -17,7 +17,20 @@ namespace QuestEditor.Objectives
                 if (Objective.SpellID == value) return;
                 var backup = (Objective)Objective.Clone();
                 Objective.SpellID = value;
-                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(SpellID)));
+                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(SpellID), nameof(SpellIDString)));
+            }
+        }
+
+        public string SpellIDString
+        {
+            get => SpellID.ToString();
+            set
+            {
+                if (int.TryParse(value, out var i) && i != SpellID)
+                {
+                    SpellID = i;
+                    RaisePropertyChanged(nameof(SpellIDString));
+                }
             }
         }
 

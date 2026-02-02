@@ -5,6 +5,9 @@ namespace QuestEditor.Objectives
 {
     internal class ObjectiveInteractVM(ObjectiveInteract model, StageNodeVM parent) : ObjectiveVM(model, parent)
     {
+        private static IReadOnlyList<ObjectiveInteract.InteractionType> _interactionTypes = Enum.GetValues<ObjectiveInteract.InteractionType>();
+        public IReadOnlyList<ObjectiveInteract.InteractionType> InteractionTypes => _interactionTypes;
+
         public override ObjectiveInteract Objective => (ObjectiveInteract)base.Objective;
 
         public override string ObjectiveType => "Interact";

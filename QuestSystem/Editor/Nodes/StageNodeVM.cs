@@ -55,6 +55,9 @@ namespace QuestEditor.Nodes
             base.Apply();
         }
 
+        public override bool IsDirty => base.IsDirty || Objectives.Any(o => o.IsDirty);
+
+
         public ICommand AddObjectiveInteractCommand { get; }
         void AddObjectiveInteract(object? _) => PushOperation(new AddObjectiveOperation<ObjectiveInteract>(this, new()));
         public ICommand AddObjectiveKillCommand { get; }

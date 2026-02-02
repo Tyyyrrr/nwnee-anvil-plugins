@@ -16,7 +16,19 @@ namespace QuestEditor.Objectives
                 if (Objective.AreaExplorePercentage == value) return;
                 var backup = (Objective)Objective.Clone();
                 Objective.AreaExplorePercentage = value;
-                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(AreaExplorePercentage)));
+                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(AreaExplorePercentage), nameof(AreaExplorePercentageString)));
+            }
+        }
+        public string AreaExplorePercentageString
+        {
+            get => AreaExplorePercentage.ToString();
+            set
+            {
+                if (int.TryParse(value, out var i) && i != AreaExplorePercentage)
+                {
+                    AreaExplorePercentage = i;
+                    RaisePropertyChanged(nameof(AreaExplorePercentageString));
+                }
             }
         }
     }

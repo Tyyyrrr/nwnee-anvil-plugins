@@ -40,7 +40,20 @@ namespace QuestEditor.Objectives
                 if (Objective.RequiredAmount == value) return;
                 var backup = (Objective)Objective.Clone();
                 Objective.RequiredAmount = value;
-                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(RequiredAmount)));
+                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(RequiredAmount), nameof(RequiredAmountString)));
+            }
+        }
+
+        public string RequiredAmountString
+        {
+            get => RequiredAmount.ToString();
+            set
+            {
+                if (int.TryParse(value, out var i) && i != RequiredAmount)
+                {
+                    RequiredAmount = i;
+                    RaisePropertyChanged(nameof(RequiredAmountString));
+                }
             }
         }
     }
