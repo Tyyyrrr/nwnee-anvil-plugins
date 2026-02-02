@@ -5,21 +5,30 @@ using QuestEditor.Shared;
 using QuestSystem.Nodes;
 using QuestSystem.Objectives;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace QuestEditor.Nodes
 {
     public sealed class StageNodeVM : NodeVM
     {
+        private static void DebugObjective(Objective o)
+        {
+            Trace.WriteLine($"{o} NextID: {o.NextStageID}");
+        }
         public StageNodeVM(StageNode node, QuestVM quest) : base(node, quest)
         {
             _outputVM = new(node.ID, node.NextID);
+            InputVM.SocketColorBrush = (SolidColorBrush)((App)Application.Current).Resources["StageNodeInputSocketBrush"];
             foreach (var obj in node.Objectives)
             {
                 var vm = ObjectiveVM.SelectViewModel(obj, this);
                 if (vm == null) continue;
                 Objectives.Add(vm);
                 vm.OutputChanged += OnObjectiveOutputChanged;
+                DebugObjective(obj);
             }
 
             IsInputAvailable = false;
@@ -35,6 +44,16 @@ namespace QuestEditor.Nodes
             AddObjectiveSpellcastCommand = new RelayCommand(AddObjectiveSpellcast, _ => true);
         }
 
+        protected override void Apply()
+        {
+            Node.Objectives = [.. Objectives.Select(o => o.Objective)];
+            Trace.WriteLine("Saving objectives");
+            foreach (var o in Objectives)
+            {
+                DebugObjective(o.Objective);
+            }
+            base.Apply();
+        }
 
         public ICommand AddObjectiveInteractCommand { get; }
         void AddObjectiveInteract(object? _) => PushOperation(new AddObjectiveOperation<ObjectiveInteract>(this, new()));
@@ -127,14 +146,14 @@ namespace QuestEditor.Nodes
             }
             protected override void ProtectedRedo()
             {
-                var stageVM = (StageNodeVM)Origin;
                 stageVM.Objectives.Add(viewModel!);
+                stageVM.Node.Objectives = [.. stageVM.Objectives.Select(o => o.Objective)];
                 viewModel!.OutputChanged += stageVM.OnObjectiveOutputChanged;
             }
             protected override void ProtectedUndo()
             {
-                var stageVM = (StageNodeVM)Origin;
                 stageVM.Objectives.Remove(viewModel!);
+                stageVM.Node.Objectives = [.. stageVM.Objectives.Select(o => o.Objective)];
                 viewModel!.OutputChanged -= stageVM.OnObjectiveOutputChanged;
             }
         }
@@ -145,22 +164,23 @@ namespace QuestEditor.Nodes
 
             protected override void ProtectedDo()
             {
-                var vm = (StageNodeVM)Origin;
-                vm.Objectives.Remove(_viewModel);
-                vm.Node.Objectives = vm.Objectives.Select(o => o.Objective).ToArray();
+                stageVM.Objectives.Remove(_viewModel);
+                stageVM.Node.Objectives = [.. stageVM.Objectives.Select(o => o.Objective)];
+                stageVM.Node.Objectives = stageVM.Objectives.Select(o => o.Objective).ToArray();
             }
             protected override void ProtectedRedo() => ProtectedDo();
             protected override void ProtectedUndo()
             {
-                var vm = (StageNodeVM)Origin;
-                vm.Objectives.Add(_viewModel);
-                vm.Node.Objectives = [.. vm.Node.Objectives, _viewModel.Objective];
+                stageVM.Objectives.Add(_viewModel);
+                stageVM.Node.Objectives = [.. stageVM.Objectives.Select(o => o.Objective)];
+                stageVM.Node.Objectives = [.. stageVM.Node.Objectives, _viewModel.Objective];
             }
         }
 
         void OnObjectiveOutputChanged(ObjectiveVM objective, int nextID)
         {
             var index = Objectives.IndexOf(objective);
+            Trace.WriteLine("On objective output changed. Output socket no. " + index.ToString());
             RaiseOutputChanged(index, nextID);
         }
 
@@ -184,19 +204,13 @@ namespace QuestEditor.Nodes
             }
         }
 
-        public override void SetNextID(int nextID, int outputIndex = 0)
+
+        protected override void SetNextOutputTargetID(int nextID, int outputIndex)
         {
-            if (outputIndex == 0)
-            {
-                base.SetNextID(nextID);
-                return;
-            }
-            
-            if(Objectives.Count > 0 && Objectives.Count < outputIndex)
-            {
-                var obj = Objectives[outputIndex];
-                obj.NextStageID = nextID;
-            }
+            var objective = Objectives.FirstOrDefault(o => o.OutputVM == OutputVMs[outputIndex]);
+            if (objective == null) return;
+            objective.Objective.NextStageID = nextID;
         }
+
     }
 }

@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace QuestEditor.Nodes
 {
@@ -56,6 +57,7 @@ namespace QuestEditor.Nodes
         {
             model = node;
             _inputVM = new(node.ID);
+            _inputVM.SocketColorBrush = (SolidColorBrush)((App)Application.Current).Resources["RegularNodeInputSocketBrush"];
             clone = (NodeBase)node.Clone();
             DeleteNodeCommand = new RelayCommand(quest.RemoveNode, _=>true);
         }
@@ -63,12 +65,16 @@ namespace QuestEditor.Nodes
         {
             if (node is StageNode stageNode) return new StageNodeVM(stageNode, quest);
             else if (node is RewardNode rewardNode) return new RewardNodeVM(rewardNode, quest);
+            else if (node is RandomizerNode randomizerNode) return new RandomizerNodeVM(randomizerNode, quest);
+            else if (node is CooldownNode cooldownNode) return new CooldownNodeVM(cooldownNode, quest);
             else return null;
         }
 
         public ICommand DeleteNodeCommand { get; }
 
         protected virtual NodeBase Node => clone;
+
+        public virtual bool HasNodeOutput { get; } = true;
 
         public int ID => Model.ID;
         public virtual bool CanChangeRollback => true;
@@ -97,11 +103,23 @@ namespace QuestEditor.Nodes
 
         }
 
-        public virtual void SetNextID(int nextID, int outputIndex = 0)
+        public /*virtual*/ void SetNextID(int nextID, int outputIndex = 0)
         {
+            Trace.WriteLine(Node.ID.ToString() + " setting next ID of output " + outputIndex + " to " + nextID);
+            if(outputIndex > 0)
+            {
+                var output = OutputVMs[outputIndex];
+                if (output.TargetID == nextID) return;
+                PushOperation(new SetOuptutTargetIDOperation(this, output, nextID));
+                return;
+            }
+            
             if (nextID != NextID)
                 PushOperation(new SetNextIDOperation(this, nextID));
         }
+
+        protected virtual void SetNextOutputTargetID(int nextID, int outputIndex) { }
+
 
         public string NextIDString
         {
@@ -126,19 +144,53 @@ namespace QuestEditor.Nodes
             }
         }
 
-        private sealed class SetNextIDOperation(NodeVM node, int newVal) : UndoableOperation(node)
+        protected sealed class SetOuptutTargetIDOperation(NodeVM origin, ConnectionOutputVM output, int newVal) : UndoableOperation(origin)
+        {
+            private readonly ConnectionOutputVM _output = output;
+            private readonly int _oldVal = output.TargetID;
+            private readonly int _newVal = newVal;
+            protected override void ProtectedDo()
+            {
+                for(int i = 0; i < origin.OutputVMs.Count; i++)
+                {
+                    if (origin.OutputVMs[i] == _output) 
+                    {
+                        _output.TargetID = _newVal;
+                        origin.SetNextOutputTargetID(_newVal, i);
+                        origin.RaiseOutputChanged(i, _newVal);
+                        return;
+                    }
+                }
+            }
+
+            protected override void ProtectedUndo()
+            {
+                for (int i = 0; i < origin.OutputVMs.Count; i++)
+                {
+                    if (origin.OutputVMs[i] == _output)
+                    {
+                        _output.TargetID = _oldVal;
+                        origin.SetNextOutputTargetID(_oldVal, i);
+                        origin.RaiseOutputChanged(i, _oldVal);
+                        return;
+                    }
+                }
+            }
+            protected override void ProtectedRedo() => ProtectedDo();
+        }
+        protected sealed class SetNextIDOperation(NodeVM node, int newVal) : UndoableOperation(node)
         {
             private readonly int _oldVal = node.NextID;
             private readonly int _newVal = newVal;
             protected override void ProtectedDo()
             {
-                ((NodeVM)Origin).NextID = _newVal;
+                node.NextID = _newVal;
             }
 
             protected override void ProtectedRedo() => ProtectedDo();
             protected override void ProtectedUndo()
             {
-                ((NodeVM)Origin).NextID = _oldVal;
+                node.NextID = _oldVal;
             }
         }
 
@@ -149,17 +201,15 @@ namespace QuestEditor.Nodes
 
             protected override void ProtectedDo()
             {
-                var vm = (NodeVM)Origin;
-                vm.Model.Rollback = _rollback;
-                vm.RaisePropertyChanged(nameof(Rollback));
+                node.Model.Rollback = _rollback;
+                node.RaisePropertyChanged(nameof(Rollback));
             }
 
             protected override void ProtectedRedo() => ProtectedDo();
             protected override void ProtectedUndo()
             {
-                var vm = (NodeVM)Origin;
-                vm.Model.Rollback = _oldVal;
-                vm.RaisePropertyChanged(nameof(Rollback));
+                node.Model.Rollback = _oldVal;
+                node.RaisePropertyChanged(nameof(Rollback));
             }
         }
 
@@ -173,16 +223,15 @@ namespace QuestEditor.Nodes
 
             protected override void ProtectedRedo()
             {
-                var vm = (NodeVM)Origin;
-                vm.clone = _after;
-                vm.RaisePropertyChanged(_propertyName);
+                origin.clone = _after;
+                origin.RaisePropertyChanged(_propertyName);
             }
 
             protected override void ProtectedUndo()
             {
-                var vm = (NodeVM)Origin;
-                vm.clone = _before;
-                vm.RaisePropertyChanged(_propertyName);
+                var origin = (NodeVM)Origin;
+                origin.clone = _before;
+                origin.RaisePropertyChanged(_propertyName);
             }
         }
 

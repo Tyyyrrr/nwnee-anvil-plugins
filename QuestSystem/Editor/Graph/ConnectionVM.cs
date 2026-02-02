@@ -8,7 +8,22 @@ namespace QuestEditor.Graph
         public FromToPoint FromTo
         {
             get => _fromTo;
-            set => SetProperty(ref _fromTo, value);
+            set
+            {
+                if (SetProperty(ref _fromTo, value))
+                {
+                    if (_fromTo.From.X < _fromTo.To.X)
+                    {
+                        if (FromToColorGradientBrush != _normalGradientBrush)
+                            FromToColorGradientBrush = _normalGradientBrush;
+                    }
+                    else
+                    {
+                        if (FromToColorGradientBrush != _inverseGradientBrush)
+                            FromToColorGradientBrush = _inverseGradientBrush;
+                    }
+                }
+            }
         }
         FromToPoint _fromTo;
 
@@ -29,15 +44,25 @@ namespace QuestEditor.Graph
             get => _currentGradientBrush;
             private set => SetProperty(ref _currentGradientBrush, value);
         }
-        LinearGradientBrush _currentGradientBrush = new (Colors.Red, Colors.Green, 0);//, _normalGradientBrush, _inverseGradientBrush;
+        LinearGradientBrush _currentGradientBrush, _normalGradientBrush, _inverseGradientBrush;
 
-        public ConnectionVM() { }
+        public ConnectionVM()
+        {
+            _normalGradientBrush = new(Colors.Red, Colors.Green, 0);
+            _inverseGradientBrush = new(Colors.Green, Colors.Red, 0);
+            _currentGradientBrush = _normalGradientBrush;
+        }
 
         public ConnectionVM(ConnectionOutputVM output, ConnectionInputVM input)
         {
             _output = output;
             _input = input;
             FromTo = new FromToPoint(output.CanvasPosition, input.CanvasPosition);
+            var outCol = output.SocketColor;
+            var inCol = input.SocketColor;
+            _normalGradientBrush = new(outCol, inCol,0);
+            _inverseGradientBrush = new(inCol, outCol, 0);
+            _currentGradientBrush = output.CanvasPosition.X < input.CanvasPosition.X ? _normalGradientBrush : _inverseGradientBrush;
         }
     }
 }

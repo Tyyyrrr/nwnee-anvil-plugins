@@ -36,7 +36,7 @@
                                 ContentTemplate="{TemplateBinding ContentTemplate}"/>
                         <graph:ConnectionSocketControl 
                                     Style="{StaticResource ConnectionSocketControlBaseStyle}"
-                                    BorderBrush="IndianRed"
+                                    SocketColorBrush="{DynamicResource OutputSocketBrush}"
                                     HorizontalAlignment="Right"
                                     DataContext="{Binding OutputVM}"
                                     CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"
@@ -50,7 +50,7 @@
         <Setter Property="ContextMenu">
             <Setter.Value>
                 <ContextMenu>
-                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>
@@ -67,7 +67,7 @@
         <Setter Property="ContextMenu">
             <Setter.Value>
                 <ContextMenu>
-                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>
@@ -84,7 +84,7 @@
         <Setter Property="ContextMenu">
             <Setter.Value>
                 <ContextMenu>
-                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>
@@ -101,7 +101,7 @@
         <Setter Property="ContextMenu">
             <Setter.Value>
                 <ContextMenu>
-                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>
@@ -118,7 +118,7 @@
         <Setter Property="ContextMenu">
             <Setter.Value>
                 <ContextMenu>
-                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>
@@ -135,7 +135,7 @@
         <Setter Property="ContextMenu">
             <Setter.Value>
                 <ContextMenu>
-                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
                 </ContextMenu>
             </Setter.Value>
         </Setter>

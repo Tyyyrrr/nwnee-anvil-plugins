@@ -27,7 +27,7 @@
                             <graph:ConnectionSocketControl 
                                 DataContext="{Binding InputVM}"
                                 Style="{StaticResource ConnectionSocketControlBaseStyle}"
-                                BorderBrush="Turquoise"
+                                SocketColorBrush="{TemplateBinding InputColorBrush}"
                                 HorizontalAlignment="Left"
                                 CanBeTargeted="{Binding DataContext.IsInputAvailable, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
                                 CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
@@ -43,10 +43,11 @@
                                     <TextBlock Text="Rollback" Style="{StaticResource StyledTextBlock}" Visibility="{Binding CanChangeRollback, Converter={StaticResource BoolToVis}}"/>
                                 </StackPanel>
                                 <graph:ConnectionSocketControl 
+                                    Visibility="{Binding DataContext.HasNodeOutput, Converter={StaticResource BoolToVis}, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
                                     DockPanel.Dock="Right"
                                     DataContext="{Binding OutputVM}"
                                     Style="{StaticResource ConnectionSocketControlBaseStyle}"
-                                    BorderBrush="IndianRed"
+                                    SocketColorBrush="{DynamicResource OutputSocketBrush}"
                                     HorizontalAlignment="Right"
                                     CanBeTargeted="{Binding DataContext.IsOutputAvailable, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
                                     CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
@@ -69,6 +70,8 @@
             </Setter.Value>
         </Setter>
         <Setter Property="BorderThickness" Value="3"/>
+        <Setter Property="InputColorBrush" Value="{DynamicResource RegularNodeInputSocketBrush}"/>
+        <Setter Property="OutputColorBrush" Value="{DynamicResource OutputSocketBrush}"/>
     </Style>
 
 
@@ -101,6 +104,7 @@
                 <objectives:ObjectiveControl Style="{StaticResource ObjectiveSpellcastControlStyle}"/>
             </DataTemplate>
         </Style.Resources>
+        <Setter Property="InputColorBrush" Value="{DynamicResource StageNodeInputSocketBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource StageNodeBorderBrush}"/>
         <Setter Property="Background" Value="{DynamicResource StageNodeBackgroundBrush}"/>
         <Setter Property="ContentTemplate">
@@ -117,6 +121,9 @@
                                 <Style TargetType="ListBoxItem">
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                                     <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Focusable" Value="False"/>
                                 </Style>
                             </ListBox.ItemContainerStyle>
                         </ListBox>
@@ -154,7 +161,7 @@
         <Setter Property="MaxWidth" Value="300"/>
         <Setter Property="ContentTemplate">
             <Setter.Value>
-                <DataTemplate>
+                <DataTemplate DataType="nodes:RewardNodeVM">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Gold: " Style="{StaticResource StyledTextBlock}"/>
@@ -188,10 +195,13 @@
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem">
                                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Focusable" Value="False"/>
                                     </Style>
                                 </ListBox.ItemContainerStyle>
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="shared:StringIntListItemVM">
+                                    <DataTemplate DataType="shared:StringIntListItem">
                                         <DockPanel LastChildFill="True">
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                                             <TextBlock Text="{Binding StringValue}" Style="{StaticResource StyledTextBlock}" Margin="0,0,8,0"/>
@@ -226,7 +236,240 @@
         </Style.Triggers>
     </Style>
 
+    <!-- VISIBILITY NODE -->
+    <Style x:Key="VisibilityNodeControlStyle" TargetType="nodes:VisibilityNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource VisibilityNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource VisibilityNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <StackPanel>
+                        <Expander Style="{StaticResource StyledExpander}">
+                            <Expander.Header>
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Object:" Style="{StaticResource StyledTextBlock}"/>
+                                        <TextBox Text="{Binding NewObjectString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource StyledTextBox}"/>
+                                        <Button Content="+" Command="{Binding AddObjectCommand}" Style="{StaticResource StyledButton}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Expander.Header>
+                            <ListBox ItemsSource="{Binding ObjectVisibility}" Style="{StaticResource StyledListBox}">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Focusable" Value="False"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="shared:StringBoolListItemVM">
+                                        <DockPanel LastChildFill="True">
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                                <TextBlock Text="{Binding StringValue}" Style="{StaticResource StyledTextBlock}" Margin="0,0,8,0"/>
+                                                <CheckBox IsChecked="{Binding BoolValue}"/>
+                                            </StackPanel>
+                                            <Button Content="-"
+                                                Command="{Binding DataContext.RemoveItemCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource StyledButton}"
+                                                DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ListBox>
+                        </Expander>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource VisibilityNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
 
+    <!-- RANDOMIZER NODE -->
+    <Style x:Key="RandomizerNodeControlStyle" TargetType="nodes:RandomizerNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource RandomizerNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource RandomizerNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="MinWidth" Value="120"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="nodes:RandomizerNodeVM">
+                    <ListBox ItemsSource="{Binding Elements}" Style="{StaticResource StyledListBox}">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Focusable" Value="False"/>
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu>
+                                            <MenuItem Header="Delete branch" Command="{Binding DeleteBranchCommand}" CommandParameter="{Binding}"/>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="nodes:RandomizerNodeElementVM">
+                                <DockPanel LastChildFill="True">
+                                    <Slider Value="{Binding SliderValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                            Minimum="0" Maximum="100"
+                                            DockPanel.Dock="Left" 
+                                            Width="150"/>
+                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                        <TextBlock Text="{Binding ChanceString}" Margin="0,0,8,0" DockPanel.Dock="Left" Style="{StaticResource StyledTextBlock}"/>
+                                        <graph:ConnectionSocketControl 
+                                            DockPanel.Dock="Right"
+                                            DataContext="{Binding Output}"
+                                            Style="{StaticResource ConnectionSocketControlBaseStyle}"
+                                            SocketColorBrush="{DynamicResource OutputSocketBrush}"
+                                            HorizontalAlignment="Right"
+                                            CanBeTargeted="{Binding DataContext.IsOutputAvailable, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
+                                            CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ListBox>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Add branch" Command="{Binding AddBranchCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource RandomizerNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- COOLDOWN NODE -->
+    <Style x:Key="CooldownNodeControlStyle" TargetType="nodes:CooldownNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource CooldownNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource CooldownNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="nodes:CooldownNodeVM">
+                    <StackPanel HorizontalAlignment="Stretch">
+                        <DockPanel HorizontalAlignment="Stretch" Margin="0,0,10,0">
+                            <TextBlock Text="Tag: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding Days}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <DockPanel HorizontalAlignment="Stretch">
+                            <TextBlock Text="Days: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding Days}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <DockPanel HorizontalAlignment="Stretch">
+                            <TextBlock Text="Hours: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding Hours}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <DockPanel  HorizontalAlignment="Stretch">
+                            <TextBlock Text="Minutes: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding Minutes}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <DockPanel HorizontalAlignment="Stretch">
+                            <TextBlock Text="Seconds: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding Seconds}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding RunOffline}"/>
+                            <TextBlock Text="Run offline" Style="{StaticResource StyledTextBlock}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource CooldownNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- CONDITION NODE --><!--
+    <Style x:Key="ConditionNodeControlStyle" TargetType="nodes:ConditionNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource ConditionNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource ConditionNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="CONDITION CONTENT" Style="{StaticResource StyledTextBlock}"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource ConditionNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>-->
     
-    
+    <!-- UNKNOWN NODE -->
+    <Style x:Key="UnknownNodeControlStyle" TargetType="nodes:UnknownNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource UnknownNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource UnknownNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="UNKNOWN CONTENT: " Style="{StaticResource StyledTextBlock}"/>
+                        <TextBlock Text="{Binding RawData}" FontStyle="Italic" Style="{StaticResource StyledTextBlock}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource UnknownNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
 </ResourceDictionary>

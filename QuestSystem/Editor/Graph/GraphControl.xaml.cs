@@ -111,6 +111,8 @@ namespace QuestEditor.Graph
             DrawConnectionFromTo = new(graphPos, graphPos);
             drawConnectionOrigin = socket;
             DrawConnection = true;
+            var nodeVM = ((GraphVM)DataContext).Nodes.FirstOrDefault(n=>n.ID==((ConnectionSocketVM)socket.DataContext).SourceID);
+            if(nodeVM != null) nodeVM.IsInputAvailable = false;
         }
         public void HandleNodeMouseDown(NodeControl node)
         {
@@ -284,5 +286,14 @@ namespace QuestEditor.Graph
             vm.Pan.Y = mouseScreen.Y - graphBefore.Y * zoom.ScaleY;
         }
 
+        private void Node_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (Math.Abs(e.PreviousSize.Width - e.NewSize.Width) >= 10 || Math.Abs(e.PreviousSize.Height - e.NewSize.Height) >= 10)
+            {
+                Trace.WriteLine("Node size changed. Updating positions...");
+                UpdateNodePositions();
+
+            }
+        }
     }
 }

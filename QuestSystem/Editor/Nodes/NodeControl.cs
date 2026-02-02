@@ -5,11 +5,34 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using QuestEditor.Shared;
+using System.Windows.Media;
 
 namespace QuestEditor.Nodes
 {
     public class NodeControl : ContentControl 
     {
+        public static readonly DependencyProperty InputColorBrushProperty = DependencyProperty.Register(
+            "InputColorBrush",
+            typeof(SolidColorBrush),
+            typeof(NodeControl), new PropertyMetadata(Brushes.Black));
+
+        public SolidColorBrush InputColorBrush
+        {
+            get => (SolidColorBrush)GetValue(InputColorBrushProperty);
+            set => SetValue(InputColorBrushProperty, value);
+        }
+
+        public static readonly DependencyProperty OutputColorBrushProperty = DependencyProperty.Register(
+            "OutputColorBrush",
+            typeof(SolidColorBrush),
+            typeof(NodeControl), new PropertyMetadata(Brushes.Black));
+
+        public SolidColorBrush OutputColorBrush
+        {
+            get => (SolidColorBrush)GetValue(OutputColorBrushProperty);
+            set => SetValue(OutputColorBrushProperty, value);
+        }
+
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
             var graph = this.FindParent<GraphControl>();
@@ -55,6 +78,45 @@ namespace QuestEditor.Nodes
         static RewardNodeControl()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(RewardNodeControl), new FrameworkPropertyMetadata(typeof(RewardNodeControl)));
+        }
+    }
+    public class VisibilityNodeControl : NodeControl
+    {
+        static VisibilityNodeControl()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(VisibilityNodeControl), new FrameworkPropertyMetadata(typeof(VisibilityNodeControl)));
+        }
+    }
+
+    public class RandomizerNodeControl : NodeControl
+    {
+        static RandomizerNodeControl()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(RandomizerNodeControl), new FrameworkPropertyMetadata(typeof(RandomizerNodeControl)));
+        }
+    }
+
+    public class CooldownNodeControl : NodeControl
+    {
+        static CooldownNodeControl()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(CooldownNodeControl), new FrameworkPropertyMetadata(typeof(CooldownNodeControl)));
+        }
+    }
+
+    public class ConditionNodeControl : NodeControl
+    {
+        static ConditionNodeControl()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ConditionNodeControl), new FrameworkPropertyMetadata(typeof(ConditionNodeControl)));
+        }
+    }
+
+    public class UnknownNodeControl : NodeControl
+    {
+        static UnknownNodeControl()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(UnknownNodeControl), new FrameworkPropertyMetadata(typeof(UnknownNodeControl)));
         }
     }
 }

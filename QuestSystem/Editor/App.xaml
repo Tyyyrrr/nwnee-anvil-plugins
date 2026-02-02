@@ -9,6 +9,14 @@
                 <ResourceDictionary Source="Themes/Light.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
+
+
+            <!-- Sockets -->
+            <SolidColorBrush x:Key="OutputSocketBrush" Color="IndianRed"/>
+            <SolidColorBrush x:Key="StageNodeInputSocketBrush" Color="LightGreen"/>
+            <SolidColorBrush x:Key="RegularNodeInputSocketBrush" Color="Turquoise"/>
+
+
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
             <Style TargetType="TextBox" x:Key="StyledTextBox">
@@ -85,6 +93,18 @@
             </Style>
 
             <Style TargetType="ListBox" x:Key="StyledListBox">
+                <Setter Property="Background" Value="{DynamicResource ControlBackground}"/>
+                <Setter Property="Foreground" Value="{DynamicResource ControlForeground}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>
+            </Style>
+
+            <Style TargetType="ComboBox" x:Key="StyledComboBox">
+                <Setter Property="Background" Value="{DynamicResource ControlBackground}"/>
+                <Setter Property="Foreground" Value="{DynamicResource ControlForeground}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>
+            </Style>
+
+            <Style TargetType="ComboBoxItem" x:Key="StyledComboBoxItem">
                 <Setter Property="Background" Value="{DynamicResource ControlBackground}"/>
                 <Setter Property="Foreground" Value="{DynamicResource ControlForeground}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>

@@ -44,8 +44,8 @@ namespace QuestEditor.Explorer
 
         public ICommand AddStageNodeCommand { get; }
         public ICommand AddRewardNodeCommand { get; }
-        //public ICommand AddRandomizerNodeCommand { get; }
-        //public ICommand AddCooldownNodeCommand { get; }
+        public ICommand AddRandomizerNodeCommand { get; }
+        public ICommand AddCooldownNodeCommand { get; }
         //...
 
         public ICommand DeleteQuestCommand { get; }
@@ -64,12 +64,24 @@ namespace QuestEditor.Explorer
 
             AddStageNodeCommand = new RelayCommand(AddStageNode, _ => IsSelected);
             AddRewardNodeCommand = new RelayCommand(AddRewardNode, _ => IsSelected);
+            AddRandomizerNodeCommand = new RelayCommand(AddRandomizerNode, _ => IsSelected);
+            AddCooldownNodeCommand = new RelayCommand(AddCooldownNode, _ => IsSelected);
             //...
 
             DeleteQuestCommand = new RelayCommand(PackVM.DeleteQuest, _ => true);
 
             _packManager.LoadAllNodes(quest);
 
+        }
+
+        public void Subscribe()
+        {
+            _packManager.NodesLoadCompleted += OnLoadCompleted;
+        }
+        public void Unsubscribe()
+        {
+            _packManager.NodesLoadCompleted -= OnLoadCompleted;
+            _packManager.MetadataReadCompleted -= OnMetadataLoadCompleted;
         }
 
         public override void RefreshIsDirty()
@@ -150,7 +162,7 @@ namespace QuestEditor.Explorer
             PushOperation(new RemoveNodeOperation(nodeVM, this));
         }
 
-        int GetNextNodeID()
+        int GetNextStageID()
         {
             int nextID = 0;
             foreach (var n in Nodes.OrderBy(n => n.ID))
@@ -161,9 +173,21 @@ namespace QuestEditor.Explorer
             }
             return nextID;
         }
+
+        int GetNextNodeID()
+        {
+            int nextID = int.MaxValue;
+            foreach (var n in Nodes.OrderByDescending(n => n.ID))
+            {
+                if (nextID <= n.ID)
+                    nextID--;
+                else break;
+            }
+            return nextID;
+        }
         void AddStageNode(object? _)
         {
-            int nextID = GetNextNodeID();
+            int nextID = GetNextStageID();
             var model = new StageNode() { ID = nextID, JournalEntry = $"Stage Node {nextID}" };
             PushOperation(new AddNodeOperation<StageNode>(model, this));
         }
@@ -173,6 +197,20 @@ namespace QuestEditor.Explorer
             int nextID = GetNextNodeID();
             var model = new RewardNode() { ID = nextID };
             PushOperation(new AddNodeOperation<RewardNode>(model, this));
+        }
+
+        void AddRandomizerNode(object? _)
+        {
+            int nextID = GetNextNodeID();
+            var model = new RandomizerNode() { ID = nextID };
+            PushOperation(new AddNodeOperation<RandomizerNode>(model, this));
+        }
+
+        void AddCooldownNode(object? _)
+        {
+            int nextID = GetNextNodeID();
+            var model = new CooldownNode() { ID = nextID };
+            PushOperation(new AddNodeOperation<CooldownNode>(model, this));
         }
 
 
@@ -227,6 +265,8 @@ namespace QuestEditor.Explorer
         void OnMetadataLoadCompleted(string tag, object? o)
         {
             if(tag != this.QuestTag) return;
+
+            _packManager.MetadataReadCompleted -= OnMetadataLoadCompleted;
 
             Application.Current.Dispatcher.Invoke(() =>
             {

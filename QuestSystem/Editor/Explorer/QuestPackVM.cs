@@ -69,11 +69,13 @@ namespace QuestEditor.Explorer
             protected override void ProtectedUndo()
             {
                 ((QuestPackVM)Origin).Quests.Remove(viewModel!);
+                viewModel!.Unsubscribe();
                 ((QuestPackVM)Origin)._manager.RemoveQuest(_model.Tag);
             }
             protected override void ProtectedRedo()
             {
                 ((QuestPackVM)Origin).Quests.Add(viewModel!);
+                viewModel!.Subscribe();
                 ((QuestPackVM)Origin)._manager.WriteQuest(_model);
             }
         }
@@ -85,11 +87,13 @@ namespace QuestEditor.Explorer
             protected override void ProtectedUndo()
             {
                 ((QuestPackVM)Origin).Quests.Add(_viewModel);
+                _viewModel.Subscribe();
                 ((QuestPackVM)Origin)._manager.WriteQuest(_viewModel.Model);
             }
             protected override void ProtectedRedo()
             {
                 ((QuestPackVM)Origin).Quests.Remove(_viewModel);
+                _viewModel.Unsubscribe();
                 ((QuestPackVM)Origin)._manager.RemoveQuest(_viewModel.Model.Tag);
             }
         }
@@ -114,6 +118,8 @@ namespace QuestEditor.Explorer
 
         public void ReloadAllQuests()
         {
+            foreach (var quest in Quests)
+                quest.Unsubscribe();
             Quests.Clear();
             _manager.LoadAllQuests();
         }
@@ -152,6 +158,7 @@ namespace QuestEditor.Explorer
                 
                 Trace.WriteLine("Loaded quests:" + str);
 
+                foreach (var quest in Quests) quest.Unsubscribe();
                 Quests.Clear();
                 foreach (var quest in quests)
                 {
@@ -167,25 +174,6 @@ namespace QuestEditor.Explorer
 
         protected override void Apply()
         {
-            //Trace.WriteLine("QuestPack saving");
-
-            //foreach (var questVM in Quests)
-            //{
-            //    Trace.WriteLine("QuestPack saving quest");
-            //    var quest = questVM.Model;
-            //    _manager.RemoveQuest(quest.Tag);
-            //    _manager.WriteQuest(quest);
-
-            //    foreach(var nodeVM in questVM.ActualNodes)
-            //    {
-            //        Trace.WriteLine("QuestPack saving node");
-            //        var node = nodeVM.Model;
-            //        _manager.WriteNode(quest, node);
-            //    }
-
-            //    //TODO: write metadata
-            //}
-
             _manager.ApplyChanges();
         }
 

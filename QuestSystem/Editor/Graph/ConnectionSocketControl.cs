@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace QuestEditor.Graph
 {
@@ -44,6 +45,18 @@ namespace QuestEditor.Graph
         {
             get => (Point)GetValue(CanvasPositionProperty);
             set => SetValue(CanvasPositionProperty, value);
+        }
+
+        public static readonly DependencyProperty SocketColorBrushProperty = DependencyProperty.Register(
+            "SocketColorBrush",
+            typeof(SolidColorBrush),
+            typeof(ConnectionSocketControl),
+            new PropertyMetadata(default));
+
+        public SolidColorBrush SocketColorBrush
+        {
+            get => (SolidColorBrush)GetValue(SocketColorBrushProperty);
+            set => SetValue(SocketColorBrushProperty, value);
         }
 
         static ConnectionSocketControl()

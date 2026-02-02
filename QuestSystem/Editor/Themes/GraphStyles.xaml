@@ -52,7 +52,7 @@
                         Height="10" Width="10"
                         BorderThickness="3"
                         Background="Black"
-                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderBrush="{TemplateBinding SocketColorBrush}"
                         HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                         ClipToBounds="True"/>
                     <ControlTemplate.Triggers>
