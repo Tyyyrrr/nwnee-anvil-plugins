@@ -47,6 +47,11 @@ namespace QuestEditor.Objectives
             AreaTags.CollectionChanged += OnAreaTagsChanged;
             TriggerTags.CollectionChanged += OnTriggerTagsChanged;
 
+            AddAreaTagCommand = new RelayCommand(AddAreaTag, _ => true);
+            AddTriggerTagCommand = new RelayCommand(AddTriggerTag, _ => true);
+            RemoveAreaTagCommand = new RelayCommand(RemoveAreaTag, _ => true);
+            RemoveTriggerTagCommand = new RelayCommand(RemoveTriggerTag, _ => true);
+
             DeleteObjectiveCommand = new RelayCommand(o => parent.RemoveObjective(o), _ => true);
         }
 
@@ -55,6 +60,31 @@ namespace QuestEditor.Objectives
         public virtual Objective Objective => model;
 
         public abstract string ObjectiveType { get; }
+
+        public ICommand AddAreaTagCommand { get; }
+        void AddAreaTag(object? parameter)
+        {
+            if (parameter is not string str || AreaTags.Contains(str)) return;
+            AreaTags.Add(str);
+        }
+        public ICommand RemoveAreaTagCommand { get; }
+        void RemoveAreaTag(object? parameter)
+        {
+            if(parameter is not string str) return;
+            AreaTags.Remove(str);
+        }
+        public ICommand AddTriggerTagCommand { get; }
+        void AddTriggerTag(object? parameter)
+        {
+            if( parameter is not string str || TriggerTags.Contains(str)) return;
+            TriggerTags.Add(str);
+        }
+        public ICommand RemoveTriggerTagCommand { get; }
+        void RemoveTriggerTag(object? parameter)
+        {
+            if (parameter is not string str) return;
+            TriggerTags.Remove(str);
+        }
 
         public ICommand DeleteObjectiveCommand { get; }
 
@@ -268,10 +298,17 @@ namespace QuestEditor.Objectives
             {
                 if (CooldownTag == value) return;
                 var backup = (Objective)Objective.Clone();
-                Objective.Cooldown ??= new();
+                if (string.IsNullOrWhiteSpace(value) || value == string.Empty)
+                {
+                    Objective.Cooldown = null;
+                }
+                else
+                {
+                    Objective.Cooldown ??= new();
+                    Objective.Cooldown.CooldownTag = value;
+                }
                 RaisePropertyChanged(nameof(ShowCooldownBox));
-                Objective.Cooldown.CooldownTag = value;
-                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof (CooldownTag)));
+                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof (CooldownTag), nameof(ShowCooldownBox)));
 
             }
         }
@@ -281,21 +318,34 @@ namespace QuestEditor.Objectives
             get => ShowCooldownBox ? Objective.Cooldown!.DurationSeconds : -1;
             set
             {
-                if(CooldownDurationSeconds == value) return;
+                if(!ShowCooldownBox || CooldownDurationSeconds == value) return;
                 var backup = (Objective)Objective.Clone();
                 Objective.Cooldown ??= new();
                 RaisePropertyChanged(nameof(ShowCooldownBox));
                 Objective.Cooldown.DurationSeconds = value;
-                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(CooldownDurationSeconds)));
+                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(CooldownDurationSeconds), nameof(CooldownDurationSecondsString)));
             }
         }
+
+        public string CooldownDurationSecondsString
+        {
+            get => CooldownDurationSeconds.ToString();
+            set
+            {
+                if(float.TryParse(value, out var f) && f != CooldownDurationSeconds)
+                {
+                    CooldownDurationSeconds = f;
+                    RaisePropertyChanged(nameof(CooldownDurationSecondsString));
+                }
+            }
+        } 
 
         public Objective.ObjectiveTimer.JournalFormat CooldownFormat
         {
             get => ShowCooldownBox ? Objective.Cooldown!.Format : default;
             set
             {
-                if(CooldownFormat == value) return;
+                if(!ShowCooldownBox || CooldownFormat == value) return;
                 var backup = (Objective)Objective.Clone();
                 Objective.Cooldown ??= new();
                 RaisePropertyChanged(nameof(ShowCooldownBox));
@@ -309,7 +359,7 @@ namespace QuestEditor.Objectives
             get => ShowCooldownBox && Objective.Cooldown!.RunOffline;
             set
             {
-                if(CooldownRunOffline == value) return;
+                if(!ShowCooldownBox || CooldownRunOffline == value) return;
                 var backup = (Objective)Objective.Clone();
                 Objective.Cooldown ??= new();
                 RaisePropertyChanged(nameof(ShowCooldownBox));
@@ -323,7 +373,7 @@ namespace QuestEditor.Objectives
             get => ShowCooldownBox && Objective.Cooldown!.ShowInJournal;
             set
             {
-                if (CooldownShowInJournal == value) return;
+                if (!ShowCooldownBox || CooldownShowInJournal == value) return;
                 var backup = (Objective)Objective.Clone();
                 Objective.Cooldown ??= new();
                 RaisePropertyChanged(nameof(ShowCooldownBox));
@@ -336,6 +386,7 @@ namespace QuestEditor.Objectives
 
         public int TargetID { get; private set; }
 
-        public Point Position { get; }
+        private static readonly IReadOnlyList<Objective.ObjectiveTimer.JournalFormat> _cooldownFormats = Enum.GetValues<Objective.ObjectiveTimer.JournalFormat>();
+        public IReadOnlyList<Objective.ObjectiveTimer.JournalFormat> CooldownFormats => _cooldownFormats;
     }
 }
