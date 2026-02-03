@@ -127,9 +127,14 @@ namespace QuestEditor.Nodes
             protected override void ProtectedRedo()
             {
                 var vm = (RewardNodeVM)Origin;
-                if(!vm.Node.Items.TryAdd(_item.StringValue,_item.IntValue))
+                if (!vm.Node.Items.TryAdd(_item.StringValue, _item.IntValue))
+                {
                     vm.Node.Items[_item.StringValue] = _item.IntValue;
-                vm.Items.Add(_item);
+                    var item = vm.Items.First(i=>i.StringValue == _item.StringValue);
+                    vm.Items.Remove(item);
+                    vm.Items.Add(_item);
+                }
+                else vm.Items.Add(_item);
             }
 
             protected override void ProtectedUndo()
