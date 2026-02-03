@@ -3,6 +3,7 @@ using QuestEditor.Graph;
 using QuestEditor.Shared;
 using QuestSystem.Nodes;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace QuestEditor.Nodes
@@ -29,7 +30,7 @@ namespace QuestEditor.Nodes
 
             public RandomizerNodeElementVM(RandomizerNodeVM parent, int targetID, float chance)
             {
-                Output = new(parent.ID, -1);
+                Output = new(parent.ID, targetID);
                 chance = Math.Clamp(chance, 0, 100);
                 SliderValue = chance;
 
@@ -64,6 +65,28 @@ namespace QuestEditor.Nodes
             AddBranchCommand = new RelayCommand(_ => PushOperation(new AddBranchOperation(this)), _ => true);
         }
 
+        protected override void SetNextOutputTargetID(int nextID, int outputIndex)
+        {
+            bool swapped = false;
+            for(int i = 0; i <  Elements.Count; i++)
+            {
+                var output = Elements[i].Output;
+                if (output.TargetID == nextID && outputIndex != i)
+                {
+                    output.TargetID = -1;
+                    var conn = Elements[i].Output.Connections.FirstOrDefault();
+                    if(conn != null)
+                    {
+                        output.Connections.Clear();
+                        conn.Input?.Connections.Remove(conn);
+                        conn.Input = null;
+                        conn.Output = null;
+                    }
+                    swapped = true;
+                }
+            }
+            if (swapped) RaiseShouldReconnectAllNodes();
+        }
 
         public override bool HasNodeOutput => false;
 

@@ -105,10 +105,10 @@ namespace QuestEditor.Nodes
 
         }
 
-        public /*virtual*/ void SetNextID(int nextID, int outputIndex = 0)
+        public void SetNextID(int nextID, int outputIndex = 0)
         {
-            Trace.WriteLine(Node.ID.ToString() + " setting next ID of output " + outputIndex + " to " + nextID);
-            if(outputIndex > 0)
+            //Trace.WriteLine(Node.ID.ToString() + " setting next ID of output " + outputIndex + " to " + nextID);
+            if(outputIndex > 0 || (!this.HasNodeOutput && outputIndex == 0))
             {
                 var output = OutputVMs[outputIndex];
                 if (output.TargetID == nextID) return;
@@ -241,12 +241,12 @@ namespace QuestEditor.Nodes
         private bool _isSelected = false;
         public void Select()
         {
-            Trace.WriteLine("Node select");
+            //Trace.WriteLine("Node select");
         }
 
         public void ClearSelection()
         {
-            Trace.WriteLine("Node clear selection");
+            //Trace.WriteLine("Node clear selection");
         }
 
         protected override void Apply()
