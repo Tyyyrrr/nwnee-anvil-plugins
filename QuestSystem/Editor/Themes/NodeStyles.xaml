@@ -306,6 +306,8 @@
         <Setter Property="Background" Value="{DynamicResource RandomizerNodeBackgroundBrush}"/>
         <Setter Property="MaxWidth" Value="300"/>
         <Setter Property="MinWidth" Value="120"/>
+        <Setter Property="Focusable" Value="True"/>
+        <Setter Property="Focusable" Value="True"/>
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate DataType="nodes:RandomizerNodeVM">

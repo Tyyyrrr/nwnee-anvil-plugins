@@ -469,12 +469,13 @@
 
                         <TextBlock Grid.Row="0"
                                    Grid.Column="0"
-                                   Text="Explore percentage:"
+                                   Text="Explore %:"
                                    Style="{StaticResource StyledTextBlock}"/>
                         <TextBox  Grid.Row="0" 
                                   Grid.Column="1"
                                   Text="{Binding AreaExplorePercentageString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                  Style="{StaticResource StyledTextBox}"/>
+                                  Style="{StaticResource StyledTextBox}"
+                                  Width="40"/>
                     </Grid>
                 </DataTemplate>
             </Setter.Value>

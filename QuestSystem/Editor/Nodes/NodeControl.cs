@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using QuestEditor.Shared;
 using System.Windows.Media;
+using System.Diagnostics;
 
 namespace QuestEditor.Nodes
 {
@@ -90,6 +91,12 @@ namespace QuestEditor.Nodes
 
     public class RandomizerNodeControl : NodeControl
     {
+        protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
+        {
+            (DataContext as RandomizerNodeVM)?.TryPushUndoableChanges();
+            base.OnLostKeyboardFocus(e);
+        }
+
         static RandomizerNodeControl()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(RandomizerNodeControl), new FrameworkPropertyMetadata(typeof(RandomizerNodeControl)));

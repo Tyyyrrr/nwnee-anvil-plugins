@@ -3,6 +3,7 @@ using QuestEditor.Graph;
 using QuestEditor.Shared;
 using QuestSystem.Nodes;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Input;
 
@@ -13,8 +14,7 @@ namespace QuestEditor.Nodes
     {
         public sealed class RandomizerNodeElementVM : ViewModelBase
         {
-            public string ChanceString => SliderValue.ToString("N");
-
+            public string ChanceString => $"{SliderValue:N}%";
             public float SliderValue
             {
                 get => _sliderValue;
@@ -41,6 +41,26 @@ namespace QuestEditor.Nodes
 
 
 
+        public void TryPushUndoableChanges()
+        {
+            for(int i = 0; i < Elements.Count; i++)
+            {
+                var element = Elements[i];
+                if (!Node.Branches.TryGetValue(element.Output.TargetID, out var val) || val != element.SliderValue) 
+                {
+                    var backup = (RandomizerNode)Node.Clone();
+                    var branches = Node.Branches;
+                    branches.Clear();
+                    foreach (var e in Elements)
+                    {
+                        _ = branches.TryAdd(e.Output.TargetID, e.SliderValue);
+                    }
+                    PushOperation(new UpdateBranchesOperation(this, backup.Branches.Select(kvp=>(kvp.Key,kvp.Value)).ToArray(), Node.Branches.Select(kvp=>(kvp.Key,kvp.Value)).ToArray()));
+                    return;
+                }
+            }
+        }
+
         protected override void Apply()
         {
             var branches = Node.Branches;
@@ -59,6 +79,7 @@ namespace QuestEditor.Nodes
             {
                 var elem = new RandomizerNodeElementVM(this, kvp.Key, kvp.Value);
                 Elements.Add(elem);
+                elem.PropertyChanged += OnElementPropertyChanged;
             }
 
             IsOutputAvailable = true;
@@ -117,8 +138,8 @@ namespace QuestEditor.Nodes
             private readonly RandomizerNodeElementVM _element = new(origin, -1, 0);
             protected override void ProtectedDo()
             {
-                var vm = (RandomizerNodeVM)Origin;
-                vm.Elements.Add(_element);
+                origin.Elements.Add(_element);
+                _element.PropertyChanged += origin.OnElementPropertyChanged;
                 RaiseShouldReconnectAllNodes();
             }
 
@@ -126,8 +147,8 @@ namespace QuestEditor.Nodes
 
             protected override void ProtectedUndo()
             {
-                var vm = (RandomizerNodeVM)Origin;
-                vm.Elements.Remove(_element);
+                origin.Elements.Remove(_element);
+                _element.PropertyChanged -= origin.OnElementPropertyChanged;
                 RaiseShouldReconnectAllNodes();
             }
         }
@@ -139,6 +160,7 @@ namespace QuestEditor.Nodes
             {
                 var vm = (RandomizerNodeVM)Origin;
                 vm.Elements.Remove(_element);
+                _element.PropertyChanged -= origin.OnElementPropertyChanged;
                 RaiseShouldReconnectAllNodes();
             }
 
@@ -148,9 +170,100 @@ namespace QuestEditor.Nodes
             {
                 var vm = (RandomizerNodeVM)Origin;
                 vm.Elements.Add(_element);
+                _element.PropertyChanged += origin.OnElementPropertyChanged;
                 RaiseShouldReconnectAllNodes();
             }
         }
 
+        bool lockProperties = false;
+        void OnElementPropertyChanged(object? s, PropertyChangedEventArgs args)
+        {
+            if (lockProperties || s is not RandomizerNodeElementVM element || args.PropertyName != nameof(RandomizerNodeElementVM.SliderValue))
+                return;
+
+            lockProperties = true;
+
+            IEnumerable<RandomizerNodeElementVM> elementsToUpdate = Elements.Where(e => e != element);
+
+            float[] values = [.. elementsToUpdate.Select(e => e.SliderValue)];
+
+            values = CoerceToTargetSum(values, 100f - element.SliderValue);
+
+            int i = 0;
+            foreach(var e in elementsToUpdate)
+                e.SliderValue = values[i++];
+
+            lockProperties = false;
+        }
+
+        static float[] CoerceToTargetSum(float[] values, float targetSum)
+        {
+            double[] dValues = values.Select(v => (double)v).ToArray();
+
+            double sum = values.Sum();
+
+            if (sum == targetSum) return values;
+
+            if(targetSum == 0)
+            {
+                return new float[values.Length];
+            }
+
+            if(sum == 0)
+            {
+                var res = new float[values.Length];
+                Array.Fill(res, (float)((double)targetSum / values.Length));
+                return res;
+            }
+
+            double diff = sum - targetSum;
+
+            double mul = 1f - (diff / targetSum);
+
+            var result = new float[values.Length];
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                result[i] = (float)(values[i] * mul);
+            }
+
+            var finalSum = result.Sum();
+
+            Trace.WriteLineIf(finalSum != targetSum, $"Final sum: {finalSum}, target sum: {targetSum}");
+
+
+            return result;
+        }
+
+        private sealed class UpdateBranchesOperation(RandomizerNodeVM origin, (int, float)[] before, (int, float)[] after) : UndoableOperation(origin)
+        {
+            protected override void ProtectedDo()
+            {
+                origin.Node.Branches.Clear();
+                for(int i = 0; i < after.Length; i++)
+                {
+                    origin.Node.Branches.TryAdd(after[i].Item1, after[i].Item2);
+                    var elem = origin.Elements.FirstOrDefault(e => e.Output.TargetID == after[i].Item1);
+                    if (elem != null)
+                        elem.SliderValue = after[i].Item2;
+                    
+                }
+            }
+
+            protected override void ProtectedRedo() => ProtectedDo();
+
+            protected override void ProtectedUndo()
+            {
+                origin.Node.Branches.Clear();
+                for (int i = 0; i < before.Length; i++)
+                {
+                    origin.Node.Branches.TryAdd(before[i].Item1, before[i].Item2);
+                    var elem = origin.Elements.FirstOrDefault(e => e.Output.TargetID == before[i].Item1);
+                    if (elem != null)
+                        elem.SliderValue = before[i].Item2;
+                    
+                }
+            }
+        }
     }
 }
