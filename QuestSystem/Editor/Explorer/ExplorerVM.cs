@@ -58,8 +58,15 @@ namespace QuestEditor.Explorer
 
             _openFilesDialog = fd;
             _createFileDialog = fd;
+
+            QuestVM.SelectionCleared += OnQuestSelectionCleared;
         }
 
+        void OnQuestSelectionCleared(QuestVM quest)
+        {
+            if (SelectedQuest == quest)
+                SelectedQuest = null;
+        }
 
         public override bool IsDirty => base.IsDirty || QuestPacks.Any(n => n.IsDirty);
 

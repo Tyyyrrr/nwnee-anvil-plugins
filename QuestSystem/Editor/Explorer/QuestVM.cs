@@ -16,6 +16,8 @@ namespace QuestEditor.Explorer
         public readonly QuestPackVM PackVM;
         private readonly PackManager _packManager;
 
+        public static event Action<QuestVM>? SelectionCleared;
+
         public bool IsSelected { get => _isSelected; private set => SetProperty(ref _isSelected, value); }
         private bool _isSelected = false;
 
@@ -49,6 +51,7 @@ namespace QuestEditor.Explorer
         //...
 
         public ICommand DeleteQuestCommand { get; }
+        public ICommand RenameQuestCommand { get; }
 
 
 
@@ -69,10 +72,35 @@ namespace QuestEditor.Explorer
             //...
 
             DeleteQuestCommand = new RelayCommand(PackVM.DeleteQuest, _ => true);
+            RenameQuestCommand = new RelayCommand(RenameBegin, _ => true);
 
             _packManager.LoadAllNodes(quest);
 
         }
+
+        public event Action<QuestVM, string, string>? Renamed;
+        void RenameBegin(object? _)
+        {
+            var dlg = new RenameQuestPopupWindow
+            {
+                Owner = Application.Current.MainWindow,
+                DataContext = this
+            };
+
+            Rename = QuestTag;
+
+            if (dlg.ShowDialog() == true)
+                Renamed?.Invoke(this, QuestTag, Rename);
+            
+            Rename = string.Empty;
+        }
+
+        public string Rename
+        {
+            get => _rename;
+            set => SetProperty(ref _rename, value);
+        } private string _rename = string.Empty;
+
 
         public void Subscribe()
         {
@@ -298,6 +326,7 @@ namespace QuestEditor.Explorer
         public void ClearSelection()
         {
             IsSelected = false;
+            SelectionCleared?.Invoke(this);
         }
 
 

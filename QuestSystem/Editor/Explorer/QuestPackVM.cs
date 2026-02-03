@@ -61,22 +61,24 @@ namespace QuestEditor.Explorer
 
             protected override void ProtectedDo()
             {
-                var pack = ((QuestPackVM)Origin);
                 pack._manager.WriteQuest(_model);
                 viewModel = new(_model, pack, pack._manager);
                 pack.Quests.Add(viewModel!);
+                viewModel.Renamed += pack.OnQuestRenamed;
             }
             protected override void ProtectedUndo()
             {
-                ((QuestPackVM)Origin).Quests.Remove(viewModel!);
+                pack.Quests.Remove(viewModel!);
                 viewModel!.Unsubscribe();
-                ((QuestPackVM)Origin)._manager.RemoveQuest(_model.Tag);
+                viewModel.Renamed -= pack.OnQuestRenamed;
+                pack._manager.RemoveQuest(_model.Tag);
             }
             protected override void ProtectedRedo()
             {
-                ((QuestPackVM)Origin).Quests.Add(viewModel!);
+                pack.Quests.Add(viewModel!);
                 viewModel!.Subscribe();
-                ((QuestPackVM)Origin)._manager.WriteQuest(_model);
+                viewModel.Renamed += pack.OnQuestRenamed;
+                pack._manager.WriteQuest(_model);
             }
         }
 
@@ -86,17 +88,45 @@ namespace QuestEditor.Explorer
             protected override void ProtectedDo() => ProtectedRedo();
             protected override void ProtectedUndo()
             {
-                ((QuestPackVM)Origin).Quests.Add(_viewModel);
+                pack.Quests.Add(_viewModel);
                 _viewModel.Subscribe();
-                ((QuestPackVM)Origin)._manager.WriteQuest(_viewModel.Model);
+                _viewModel.Renamed += pack.OnQuestRenamed;
+                pack._manager.WriteQuest(_viewModel.Model);
             }
             protected override void ProtectedRedo()
             {
-                ((QuestPackVM)Origin).Quests.Remove(_viewModel);
+                if (_viewModel.IsSelected)
+                {
+                    _viewModel.ClearSelection();
+                }
+                pack.Quests.Remove(_viewModel);
                 _viewModel.Unsubscribe();
-                ((QuestPackVM)Origin)._manager.RemoveQuest(_viewModel.Model.Tag);
+                _viewModel.Renamed -= pack.OnQuestRenamed;
+                pack._manager.RemoveQuest(_viewModel.Model.Tag);
             }
         }
+
+        private sealed class RenameQuestOperation(QuestVM questVM, QuestPackVM pack, string oldName, string newName) : UndoableOperation(pack)
+        {
+            protected override void ProtectedDo()
+            {
+                questVM.QuestTag = newName;
+                pack._manager.RemoveQuest(oldName);
+                pack._manager.WriteQuest(questVM.Model);
+                questVM.RecursiveApply();
+            }
+
+            protected override void ProtectedRedo() => ProtectedDo();
+
+            protected override void ProtectedUndo()
+            {
+                questVM.QuestTag = oldName;
+                pack._manager.RemoveQuest(newName);
+                pack._manager.WriteQuest(questVM.Model);
+                questVM.RecursiveApply();
+            }
+        }
+
         void AddQuest(object? _)
         {
             string newTag = "New Quest";
@@ -119,7 +149,10 @@ namespace QuestEditor.Explorer
         public void ReloadAllQuests()
         {
             foreach (var quest in Quests)
+            {
                 quest.Unsubscribe();
+                quest.Renamed -= OnQuestRenamed;
+            }
             Quests.Clear();
             _manager.LoadAllQuests();
         }
@@ -162,10 +195,22 @@ namespace QuestEditor.Explorer
                 Quests.Clear();
                 foreach (var quest in quests)
                 {
-                    Quests.Add(new(quest, this, _manager));
+                    var questVM = new QuestVM(quest, this, _manager);
+                    Quests.Add(questVM);
+                    questVM.Renamed += OnQuestRenamed;
                 }
             });
         }
+
+        void OnQuestRenamed(QuestVM quest, string oldName, string newName)
+        {
+            Trace.WriteLine("Quest rename end");
+            if (string.IsNullOrWhiteSpace(newName) || newName == string.Empty || Quests.Any(q => q.QuestTag == newName))
+                return;
+
+            PushOperation(new RenameQuestOperation(quest, this, oldName, newName));
+        }
+
 
         public void ClearSelection()
         {
