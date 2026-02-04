@@ -17,8 +17,11 @@ namespace QuestEditor.Explorer
         protected override IReadOnlyList<StatefulViewModelBase>? DirectDescendants => Quests;
 
 
+        public readonly string OriginalFilePath;
         public QuestPackVM(string filePath, ExplorerVM explorer, PackManager manager) : base(explorer)
         {
+            OriginalFilePath = filePath;
+
             _manager = manager;
 
             manager.QuestsLoadCompleted += OnLoadCompleted;

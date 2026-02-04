@@ -185,14 +185,24 @@ namespace QuestEditor.Explorer
         {
             ClearSelection();
 
-            QuestPacks.Clear();
-
             string[] fnames = _openFilesDialog.GetFileNamesFromUser();
 
             if (fnames.Length == 0) return;
 
             foreach(var fname in fnames)
             {
+                bool discarded = false;
+                foreach(var p in QuestPacks)
+                {
+                    if (p.OriginalFilePath == fname)
+                    {
+                        p.Discard();
+                        discarded = true;
+                    }
+                }
+
+                if (discarded) continue;
+
                 var manager = new PackManager(fname);
                 _packManagers.Add(manager);
                 var pack = new QuestPackVM(fname, this, manager);
