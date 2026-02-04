@@ -110,8 +110,27 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <StackPanel>
-                        <TextBox Text="{Binding JournalEntry, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" MaxHeight="250" Visibility="{Binding ShowInJournal, Converter={StaticResource BoolToVis}}" Style="{StaticResource StyledTextBox}"/>
+                    <StackPanel HorizontalAlignment="Left">
+                        <TextBox Text="{Binding JournalEntry, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                 Visibility="{Binding ShowInJournal, Converter={StaticResource BoolToVis}}"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 HorizontalAlignment="Left"
+                                 HorizontalContentAlignment="Left"
+                                 AcceptsTab="True">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource StyledTextBox}">
+                                    <Setter Property="Height" Value="25"/>
+                                    <Setter Property="Width" Value="150"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsFocused" Value="True">
+                                            <Setter Property="Height" Value="280"/>
+                                            <Setter Property="Width" Value="360"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
                         <StackPanel Orientation="Horizontal">
                             <CheckBox VerticalAlignment="Center" IsChecked="{Binding ShowInJournal}"/>
                             <TextBlock Text="Show in journal" Style="{StaticResource StyledTextBlock}"/>

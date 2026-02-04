@@ -7,11 +7,9 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/QuestEditor;component/Themes/GraphStyles.xaml"/>
     </ResourceDictionary.MergedDictionaries>
-    
-    
+
+
     <Style x:Key="ObjectiveControlBaseStyle" TargetType="local:ObjectiveControl">
-        <Setter Property="Canvas.Left" Value="{Binding CanvasLeft, Mode=TwoWay}"/>
-        <Setter Property="Canvas.Top" Value="{Binding CanvasTop, Mode=TwoWay}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:ObjectiveControl">
@@ -32,13 +30,55 @@
                                     Grid.Row="1"
                                     Grid.Column="0"
                                     Grid.ColumnSpan="2"
+                                    HorizontalAlignment="Left"
                                     Visibility="{Binding IsChecked, Source={x:Reference ToggleBtn}, Converter={StaticResource BoolToVis}}">
+
+                             <!--JOURNAL ENTRY-->
+                            <TextBox Text="{Binding JournalEntry, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                 HorizontalAlignment="Left"
+                                 HorizontalContentAlignment="Left"
+                                 AcceptsReturn="True"
+                                 AcceptsTab="True"
+                                 TextWrapping="Wrap"
+                                 Visibility="{Binding IsChecked, ElementName=ShowInJournalCheckBox, Converter={StaticResource BoolToVis}}">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox" BasedOn="{StaticResource StyledTextBox}">
+                                        <Setter Property="Height" Value="25"/>
+                                        <Setter Property="Width" Value="150"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="Height" Value="180"/>
+                                                <Setter Property="Width" Value="200"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+
+                            <!-- SHOW IN JOURNAL CHECKBOX-->
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox VerticalAlignment="Center" IsChecked="{Binding ShowInJournal}" x:Name="ShowInJournalCheckBox"/>
+                                <TextBlock Text="Show in journal" Style="{StaticResource StyledTextBlock}"/>
+                            </StackPanel>
+                            
+                            <!-- ALLOW PARTY CHECKBOX-->
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox VerticalAlignment="Center" IsChecked="{Binding PartyMembersAllowed}"/>
+                                <TextBlock Text="Allow party members" Style="{StaticResource StyledTextBlock}"/>
+                            </StackPanel>
+
+
+                            <!-- __________________ -->
                             
                             <!-- CONCRETE OBJECTIVE -->
                             <ContentPresenter 
                                     Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
                                     ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                            
+                            
+                            <!-- __________________ -->
 
+                            
 
                             <!-- COOLDOWN TIMER -->
                             <Expander>

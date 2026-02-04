@@ -4,6 +4,7 @@ using QuestEditor.Shared;
 using QuestSystem.Objectives;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 
@@ -235,7 +236,7 @@ namespace QuestEditor.Objectives
                 Objective.NextStageID = value;
                 OutputVM.TargetID = value;
                 RaisePropertyChanged(nameof(NextStageID));
-                RaisePropertyChanged(nameof(NextStageIDString));
+                //RaisePropertyChanged(nameof(NextStageIDString));
                 OutputChanged?.Invoke(this, value);
             }
 
@@ -249,17 +250,17 @@ namespace QuestEditor.Objectives
             PushOperation(new SetNextIDOperation(this, nextStageID));
         }
 
-        public string NextStageIDString
-        {
-            get => NextStageID.ToString();
-            set
-            {
-                if (pushLock || !int.TryParse(value, out var nextID) || NextStageID == nextID)
-                    return;
+        //public string NextStageIDString
+        //{
+        //    get => NextStageID.ToString();
+        //    set
+        //    {
+        //        if (pushLock || !int.TryParse(value, out var nextID) || NextStageID == nextID)
+        //            return;
 
-                PushOperation(new SetNextIDOperation(this, nextID));
-            }
-        }
+        //        PushOperation(new SetNextIDOperation(this, nextID));
+        //    }
+        //}
 
 
         private sealed class SetNextIDOperation(ObjectiveVM objective, int newVal) : UndoableOperation(objective)

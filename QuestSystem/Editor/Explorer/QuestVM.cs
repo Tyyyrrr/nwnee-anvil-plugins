@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Navigation;
 
 namespace QuestEditor.Explorer
 {
@@ -35,10 +36,36 @@ namespace QuestEditor.Explorer
         private string _questTag;
         public string Title
         {
-            get => _title;
-            set { if (SetProperty(ref _title, value)) Model.Name = _title; }
+            get => Model.Name;
+            set
+            {
+                if (Title != value)
+                {
+                    PushOperation(new SetQuestTitleOperation(this, value));
+                }
+            }
         }
-        private string _title;
+
+        private sealed class SetQuestTitleOperation(QuestVM vm, string title) : UndoableOperation(vm)
+        {
+            private readonly string _backup = vm.Title;
+            protected override void ProtectedDo()
+            {
+                vm.Model.Name = title;
+                vm.RaisePropertyChanged(nameof(Title));
+            }
+
+            protected override void ProtectedRedo() => ProtectedDo();
+
+            protected override void ProtectedUndo()
+            {
+                vm.Model.Name = _backup;
+                vm.RaisePropertyChanged(nameof(Title));
+            }
+        }
+
+
+
 
         public ObservableCollection<NodeVM> Nodes { get; } = [];
 
@@ -63,7 +90,6 @@ namespace QuestEditor.Explorer
             _packManager.NodesLoadCompleted += OnLoadCompleted;
 
             _questTag = quest.Tag;
-            _title = quest.Name;
 
             AddStageNodeCommand = new RelayCommand(AddStageNode, _ => IsSelected);
             AddRewardNodeCommand = new RelayCommand(AddRewardNode, _ => IsSelected);

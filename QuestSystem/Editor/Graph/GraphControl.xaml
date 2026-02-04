@@ -134,12 +134,28 @@
 
         </Grid>
 
-        <StackPanel Orientation="Horizontal" MaxHeight="20" MaxWidth="360" Background="IndianRed" HorizontalAlignment="left" VerticalAlignment="Top" 
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="left" VerticalAlignment="Top" 
                   Panel.ZIndex="2"
                       Grid.Row="0"
                       Grid.Column="0">
-            <TextBlock Text="Quest: " VerticalAlignment="Center" Margin="6,0,8,0" FontFamily="Times New Roman" FontWeight="Bold"/>
-            <TextBox Text="{Binding CurrentQuest.Title, Mode=TwoWay}" VerticalContentAlignment="Center" FontFamily="Cascadia Mono SemiBold" Margin="0,1,0,2"/>
+            <TextBlock Text="Quest title: " VerticalAlignment="Top" Margin="6,0,8,0" FontWeight="Bold" Style="{StaticResource StyledTextBlock}"/>
+            <TextBox Text="{Binding CurrentQuest.Title, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" 
+                     VerticalContentAlignment="Top"
+                     Margin="0,1,0,2"
+                     TextWrapping="Wrap">
+                <TextBox.Style>
+                    <Style TargetType="TextBox" BasedOn="{StaticResource StyledTextBox}">
+                        <Setter Property="Height" Value="25"/>
+                        <Setter Property="Width" Value="240"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="Height" Value="180"/>
+                                <Setter Property="Width" Value="300"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
         </StackPanel>
 
     </Grid>
