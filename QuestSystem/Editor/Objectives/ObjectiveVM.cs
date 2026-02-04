@@ -37,6 +37,8 @@ namespace QuestEditor.Objectives
             snapshot = model;
             _outputVM = new(parent.ID, model.NextStageID);
             _outputVM.CanBeTargeted = true;
+            _outputVM.ModeChanged += o => SetNextStageID(o.TargetID);
+
             this.model = (Objective)model.Clone();
             AreaTags = new(model.AreaTags);
             TriggerTags = new(model.TriggerTags);
@@ -231,6 +233,7 @@ namespace QuestEditor.Objectives
                 if (Objective.NextStageID == value) return;
 
                 Objective.NextStageID = value;
+                OutputVM.TargetID = value;
                 RaisePropertyChanged(nameof(NextStageID));
                 RaisePropertyChanged(nameof(NextStageIDString));
                 OutputChanged?.Invoke(this, value);
@@ -238,9 +241,11 @@ namespace QuestEditor.Objectives
 
         }
 
+
+        bool pushLock = false;
         public void SetNextStageID(int nextStageID)
         {
-            if(NextStageID == nextStageID) return;
+            if(pushLock || NextStageID == nextStageID) return;
             PushOperation(new SetNextIDOperation(this, nextStageID));
         }
 
@@ -249,7 +254,7 @@ namespace QuestEditor.Objectives
             get => NextStageID.ToString();
             set
             {
-                if (!int.TryParse(value, out var nextID) || NextStageID == nextID)
+                if (pushLock || !int.TryParse(value, out var nextID) || NextStageID == nextID)
                     return;
 
                 PushOperation(new SetNextIDOperation(this, nextID));
@@ -257,19 +262,23 @@ namespace QuestEditor.Objectives
         }
 
 
-        private sealed class SetNextIDOperation(ObjectiveVM node, int newVal) : UndoableOperation(node)
+        private sealed class SetNextIDOperation(ObjectiveVM objective, int newVal) : UndoableOperation(objective)
         {
-            private readonly int _oldVal = node.NextStageID;
+            private readonly int _oldVal = objective.NextStageID;
             private readonly int _newVal = newVal;
             protected override void ProtectedDo()
             {
-                ((ObjectiveVM)Origin).NextStageID = _newVal;
+                objective.pushLock = true;
+                objective.NextStageID = _newVal;
+                objective.pushLock = false;
             }
 
             protected override void ProtectedRedo() => ProtectedDo();
             protected override void ProtectedUndo()
             {
-                ((ObjectiveVM)Origin).NextStageID = _oldVal;
+                objective.pushLock = true;
+                objective.NextStageID = _oldVal;
+                objective.pushLock = false;
             }
         }
 

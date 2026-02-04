@@ -182,8 +182,8 @@
                         
                         <!-- OUTPUT SOCKET -->
                         <graph:ConnectionSocketControl 
-                                    Style="{StaticResource ConnectionSocketControlBaseStyle}"
-                                    SocketColorBrush="{DynamicResource OutputSocketBrush}"
+                                    Style="{StaticResource ConnectionSocketOutputStyle}"
+                                    SocketColorBrush="{Binding SocketColorBrush}"
                                     HorizontalAlignment="Right"
                                     DataContext="{Binding OutputVM}"
                                     CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"

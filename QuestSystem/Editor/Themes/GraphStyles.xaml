@@ -71,4 +71,38 @@
         </Setter>
     </Style>
 
+    <Style x:Key="ConnectionSocketOutputStyle" TargetType="graph:ConnectionSocketControl" BasedOn="{StaticResource ConnectionSocketControlBaseStyle}">
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Output mode">
+                        <MenuItem Command="{Binding SetModeCommand}" CommandParameter="{x:Static graph:OutputMode.Default}"  IsEnabled="{Binding IsDefaultModeInactive}">
+                            <MenuItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Default"/>
+                                    <CheckBox Visibility="{Binding IsDefaultModeActive, Converter={StaticResource BoolToVis}}" IsChecked="True"/>
+                                </StackPanel>
+                            </MenuItem.Header>
+                        </MenuItem>
+                        <MenuItem  Command="{Binding SetModeCommand}" CommandParameter="{x:Static graph:OutputMode.Loop}" IsEnabled="{Binding IsLoopModeInactive}">
+                            <MenuItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Loop"/>
+                                    <CheckBox Visibility="{Binding IsLoopModeActive, Converter={StaticResource BoolToVis}}" IsChecked="True"/>
+                                </StackPanel>
+                            </MenuItem.Header>
+                        </MenuItem>
+                        <MenuItem Command="{Binding SetModeCommand}" CommandParameter="{x:Static graph:OutputMode.Final}"  IsEnabled="{Binding IsFinalModeInactive}">
+                            <MenuItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Final"/>
+                                    <CheckBox Visibility="{Binding IsFinalModeActive, Converter={StaticResource BoolToVis}}" IsChecked="True"/>
+                                </StackPanel>
+                            </MenuItem.Header>
+                        </MenuItem>
+                    </MenuItem>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

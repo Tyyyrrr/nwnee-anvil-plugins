@@ -284,7 +284,7 @@ namespace QuestEditor.Graph
 
         private void ReconnectNodes()
         {
-            //Trace.WriteLine("Reconnecting all nodes");
+            Trace.WriteLine("Reconnecting all nodes");
             Connections.Clear();
 
             foreach (var node in Nodes)

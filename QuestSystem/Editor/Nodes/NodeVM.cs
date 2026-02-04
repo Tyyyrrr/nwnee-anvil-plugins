@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Xml.Linq;
 
 namespace QuestEditor.Nodes
 {
@@ -105,13 +106,17 @@ namespace QuestEditor.Nodes
 
         }
 
+
+        bool pushLock = false;
         public void SetNextID(int nextID, int outputIndex = 0)
         {
+            if (pushLock) return;
+
             //Trace.WriteLine(Node.ID.ToString() + " setting next ID of output " + outputIndex + " to " + nextID);
             if(outputIndex > 0 || (!this.HasNodeOutput && outputIndex == 0))
             {
                 var output = OutputVMs[outputIndex];
-                if (output.TargetID == nextID) return;
+                //if (output.TargetID == nextID) return;
                 PushOperation(new SetOuptutTargetIDOperation(this, output, nextID));
                 return;
             }
@@ -155,11 +160,13 @@ namespace QuestEditor.Nodes
             {
                 for(int i = 0; i < origin.OutputVMs.Count; i++)
                 {
-                    if (origin.OutputVMs[i] == _output) 
+                    if (origin.OutputVMs[i] == _output)
                     {
+                        origin.pushLock = true;
                         _output.TargetID = _newVal;
                         origin.SetNextOutputTargetID(_newVal, i);
                         origin.RaiseOutputChanged(i, _newVal);
+                        origin.pushLock = false;
                         return;
                     }
                 }
@@ -171,9 +178,11 @@ namespace QuestEditor.Nodes
                 {
                     if (origin.OutputVMs[i] == _output)
                     {
+                        origin.pushLock = true;
                         _output.TargetID = _oldVal;
                         origin.SetNextOutputTargetID(_oldVal, i);
                         origin.RaiseOutputChanged(i, _oldVal);
+                        origin.pushLock = false;
                         return;
                     }
                 }
@@ -186,13 +195,17 @@ namespace QuestEditor.Nodes
             private readonly int _newVal = newVal;
             protected override void ProtectedDo()
             {
+                node.pushLock = true;
                 node.NextID = _newVal;
+                node.pushLock = false;
             }
 
             protected override void ProtectedRedo() => ProtectedDo();
             protected override void ProtectedUndo()
             {
+                node.pushLock = true;
                 node.NextID = _oldVal;
+                node.pushLock = false;
             }
         }
 
@@ -203,15 +216,19 @@ namespace QuestEditor.Nodes
 
             protected override void ProtectedDo()
             {
+                node.pushLock = true;
                 node.Model.Rollback = _rollback;
                 node.RaisePropertyChanged(nameof(Rollback));
+                node.pushLock = false;
             }
 
             protected override void ProtectedRedo() => ProtectedDo();
             protected override void ProtectedUndo()
             {
+                node.pushLock = true;
                 node.Model.Rollback = _oldVal;
                 node.RaisePropertyChanged(nameof(Rollback));
+                node.pushLock = false;
             }
         }
 
@@ -225,15 +242,18 @@ namespace QuestEditor.Nodes
 
             protected override void ProtectedRedo()
             {
+                origin.pushLock = true;
                 origin.clone = _after;
                 origin.RaisePropertyChanged(_propertyName);
+                origin.pushLock = false;
             }
 
             protected override void ProtectedUndo()
             {
-                var origin = (NodeVM)Origin;
+                origin.pushLock = true;
                 origin.clone = _before;
                 origin.RaisePropertyChanged(_propertyName);
+                origin.pushLock = false;
             }
         }
 
@@ -315,6 +335,8 @@ namespace QuestEditor.Nodes
         {
             _outputVM = new(node.ID, node.NextID);
             OutputVMs = [_outputVM];
+            _outputVM.ModeChanged += o => SetNextID(o.TargetID, 0);
         }
+
     }
 }

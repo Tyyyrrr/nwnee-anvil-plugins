@@ -31,6 +31,7 @@ namespace QuestEditor.Nodes
             public RandomizerNodeElementVM(RandomizerNodeVM parent, int targetID, float chance)
             {
                 Output = new(parent.ID, targetID);
+                Output.ModeChanged += parent.OnOutputModeChanged;
                 chance = Math.Clamp(chance, 0, 100);
                 SliderValue = chance;
 
@@ -39,6 +40,25 @@ namespace QuestEditor.Nodes
             public ICommand DeleteBranchCommand { get; }
         }
 
+
+        void OnOutputModeChanged(ConnectionOutputVM outputVM)
+        {
+            for(int i = 0; i < OutputVMs.Count; i++)
+            {
+                if(OutputVMs[i] == outputVM)
+                {
+                    if (outputVM.Mode == OutputMode.Default)
+                        SetNextID(outputVM.TargetID, i);
+                    else if(outputVM.Mode == OutputMode.Loop)
+                        SetNextID(outputVM.SourceID, i);
+                    else 
+                        SetNextID(-2, i);
+
+                    return;
+                }
+            }
+            throw new InvalidOperationException("Mode changed on missing output socket");
+        }
 
 
         public void TryPushUndoableChanges()
@@ -175,6 +195,22 @@ namespace QuestEditor.Nodes
             }
         }
 
+        private sealed class SetBranchOutputOperation(RandomizerNodeVM origin, RandomizerNodeElementVM element, int nextID) : UndoableOperation(origin)
+        {
+            private readonly int _oldID = element.Output.TargetID;
+            protected override void ProtectedDo()
+            {
+                element.Output.TargetID = nextID;
+            }
+
+            protected override void ProtectedRedo() => ProtectedDo();
+
+            protected override void ProtectedUndo()
+            {
+                element.Output.TargetID = _oldID;
+            }
+        }
+
         bool lockProperties = false;
         void OnElementPropertyChanged(object? s, PropertyChangedEventArgs args)
         {
@@ -228,9 +264,6 @@ namespace QuestEditor.Nodes
             }
 
             var finalSum = result.Sum();
-
-            Trace.WriteLineIf(finalSum != targetSum, $"Final sum: {finalSum}, target sum: {targetSum}");
-
 
             return result;
         }

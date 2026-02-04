@@ -7,8 +7,9 @@ namespace QuestEditor.Graph
     public abstract class ConnectionSocketVM(int sourceID) : ViewModelBase
     {
         public int SourceID { get; } = sourceID;
-        public Color SocketColor => SocketColorBrush.Color;
-        public SolidColorBrush SocketColorBrush
+        public virtual Color SocketColor => SocketColorBrush.Color;
+
+        public virtual SolidColorBrush SocketColorBrush
         {
             get => _socketColorBrush;
             set
@@ -17,13 +18,13 @@ namespace QuestEditor.Graph
                     RaisePropertyChanged(nameof(SocketColor));
             }
         }
-        SolidColorBrush _socketColorBrush = Brushes.Black;
+        protected SolidColorBrush _socketColorBrush = Brushes.Black;
 
-        public bool CanBeTargeted
+        public virtual bool CanBeTargeted
         {
             get => _canBeTargeted;
             set => SetProperty(ref _canBeTargeted, value);
-        }bool _canBeTargeted;
+        }protected bool _canBeTargeted;
 
         public Point CanvasPosition
         {

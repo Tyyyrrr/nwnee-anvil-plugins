@@ -21,6 +21,7 @@ namespace QuestEditor.Nodes
         public StageNodeVM(StageNode node, QuestVM quest) : base(node, quest)
         {
             _outputVM = new(node.ID, node.NextID);
+            _outputVM.ModeChanged += o => SetNextID(o.TargetID, 0);
             InputVM.SocketColorBrush = (SolidColorBrush)((App)Application.Current).Resources["StageNodeInputSocketBrush"];
             foreach (var obj in node.Objectives)
             {
@@ -188,7 +189,7 @@ namespace QuestEditor.Nodes
         {
             var index = Objectives.IndexOf(objective);
             Trace.WriteLine("On objective output changed. Output socket no. " + index.ToString());
-            RaiseOutputChanged(index, nextID);
+            RaiseOutputChanged(index+1, nextID);
         }
 
         public string JournalEntry
