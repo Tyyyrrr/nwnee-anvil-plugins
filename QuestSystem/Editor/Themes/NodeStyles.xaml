@@ -262,19 +262,19 @@
         <Setter Property="MaxWidth" Value="300"/>
         <Setter Property="ContentTemplate">
             <Setter.Value>
-                <DataTemplate>
+                <DataTemplate DataType="nodes:VisibilityNodeVM">
                     <StackPanel>
                         <Expander Style="{StaticResource StyledExpander}">
                             <Expander.Header>
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Object:" Style="{StaticResource StyledTextBlock}"/>
-                                        <TextBox Text="{Binding NewObjectString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource StyledTextBox}"/>
-                                        <Button Content="+" Command="{Binding AddObjectCommand}" Style="{StaticResource StyledButton}"/>
+                                        <TextBox Text="{Binding NewObjectString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource StyledTextBox}" x:Name="ObjectTextBox"/>
+                                        <Button Content="+" Command="{Binding AddObjectCommand}" Style="{StaticResource StyledButton}" CommandParameter="{Binding Text, ElementName=ObjectTextBox}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Expander.Header>
-                            <ListBox ItemsSource="{Binding ObjectVisibility}" Style="{StaticResource StyledListBox}">
+                            <ListBox ItemsSource="{Binding Objects}" Style="{StaticResource StyledListBox}">
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem">
                                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -291,7 +291,7 @@
                                                 <CheckBox IsChecked="{Binding BoolValue}"/>
                                             </StackPanel>
                                             <Button Content="-"
-                                                Command="{Binding DataContext.RemoveItemCommand,
+                                                Command="{Binding DataContext.RemoveObjectCommand,
                                                                   RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource StyledButton}"
@@ -398,7 +398,7 @@
                     <StackPanel HorizontalAlignment="Stretch">
                         <DockPanel HorizontalAlignment="Stretch" Margin="0,0,10,0">
                             <TextBlock Text="Tag: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
-                            <TextBox Text="{Binding Days}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                            <TextBox Text="{Binding CooldownTag}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
                         </DockPanel>
                         <DockPanel HorizontalAlignment="Stretch">
                             <TextBlock Text="Days: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>

@@ -1,99 +1,125 @@
 ﻿using QuestEditor.Explorer;
+using QuestEditor.Shared;
 using QuestSystem.Nodes;
+using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace QuestEditor.Nodes
 {
-    public sealed class CooldownNodeVM : SingleOutputNodeVM
+    public sealed class CooldownNodeVM(CooldownNode node, QuestVM quest) : SingleOutputNodeVM(node, quest)
     {
-        public CooldownNodeVM(CooldownNode node, QuestVM quest) : base(node, quest)
-        {
-            var ts = TimeSpan.FromSeconds(Math.Round(node.DurationSeconds));
-            _days = ts.Days;
-            _hours = ts.Hours;
-            _minutes = ts.Minutes;
-            _seconds = ts.Seconds;
-        }
-
         public override string NodeType => "Cooldown";
 
         protected override CooldownNode Node => (CooldownNode)base.Node;
 
 
-        public string Days
+        public string CooldownTag
         {
-            get => _days.ToString();
+            get => Node.CooldownTag;
             set
             {
-                if (int.TryParse(value, out var i) && i >= 0 && SetProperty(ref _days, i))
-                {
-                    var before = (CooldownNode)Node.Clone();
-                    SetTotalSeconds();
-                    PushOperation(new UpdateNodeOperation(this, before, Node, nameof(RunOffline)));
-                }
+                if (Node.CooldownTag == value) return;
+                var before = (CooldownNode)Node.Clone();
+                Node.CooldownTag = value;
+                PushOperation(new UpdateNodeOperation(this, before, Node, nameof(CooldownTag)));
             }
-        } int _days;
-
-        public string Hours
-        {
-            get => _hours.ToString();
-            set
-            {
-                if (int.TryParse(value, out var i) && i >= 0 && i < 24 && SetProperty(ref _hours, i))
-                {
-                    var before = (CooldownNode)Node.Clone();
-                    SetTotalSeconds();
-                    PushOperation(new UpdateNodeOperation(this, before, Node, nameof(RunOffline)));
-                }
-            }
-
-        } int _hours;
-
-        public string Minutes
-        {
-            get => _minutes.ToString();
-            set
-            {
-                if (int.TryParse(value, out var i) && i >= 0 && i < 60 && SetProperty(ref _minutes, i))
-                {
-                    var before = (CooldownNode)Node.Clone();
-                    SetTotalSeconds();
-                    PushOperation(new UpdateNodeOperation(this, before, Node, nameof(RunOffline)));
-                }
-            }
-        } int _minutes;
-
-        public string Seconds
-        {
-            get => _seconds.ToString();
-            set
-            {
-                if (int.TryParse(value, out var i) && i >= 0 && i < 60 && SetProperty(ref _seconds, i))
-                {
-                    var before = (CooldownNode)Node.Clone();
-                    SetTotalSeconds();
-                    PushOperation(new UpdateNodeOperation(this, before, Node, nameof(RunOffline)));
-                }
-            }
-        } int _seconds;
-
-        void SetTotalSeconds()
-        {
-            var ts = new TimeSpan(_days, _hours, _minutes, _seconds);
-            Node.DurationSeconds = (int)Math.Round(ts.TotalSeconds);
         }
 
         public bool RunOffline
         {
-            get => _runOffline;
+            get => Node.RunOffline;
             set
             {
-                if (SetProperty(ref _runOffline, value))
+                if (Node.RunOffline != value)
                 {
                     var before = (CooldownNode)Node.Clone();
                     Node.RunOffline = value;
                     PushOperation(new UpdateNodeOperation(this, before, Node, nameof(RunOffline)));
                 }
             }
-        } bool _runOffline;
+        }
+
+        private sealed class SetDurationOperation(CooldownNodeVM node, TimeSpan oldDuration, TimeSpan newDuration) : UndoableOperation(node)
+        {
+            protected override void ProtectedDo()
+            {
+                node.Node.DurationSeconds = (float)newDuration.TotalSeconds;
+                node.RaisePropertyChanges();
+            }
+
+            protected override void ProtectedRedo() => ProtectedDo();
+
+            protected override void ProtectedUndo()
+            {
+                node.Node.DurationSeconds = (float)oldDuration.TotalSeconds;
+                node.RaisePropertyChanges();
+            }
+        }
+
+
+        void RaisePropertyChanges()
+        {
+            RaisePropertyChanged(nameof(Days));
+            RaisePropertyChanged(nameof(Hours));
+            RaisePropertyChanged(nameof(Minutes));
+            RaisePropertyChanged(nameof(Seconds));
+        }
+
+        public string Days
+        {
+            get => TimeSpan.FromSeconds(Node.DurationSeconds).Days.ToString();
+            set
+            {
+                if (value != Days && int.TryParse(value, out var i) && i >= 0)
+                {
+                    var oldDuration = TimeSpan.FromSeconds(Node.DurationSeconds);
+                    var newDuration = new TimeSpan(i,oldDuration.Hours,oldDuration.Minutes,oldDuration.Seconds);
+                    PushOperation(new SetDurationOperation(this, oldDuration, newDuration));
+                }
+            }
+        }
+
+
+        public string Hours
+        {
+            get => TimeSpan.FromSeconds(Node.DurationSeconds).Hours.ToString();
+            set
+            {
+                if (value != Hours && int.TryParse(value, out var i) && i >= 0 && i < 24)
+                {
+                    var oldDuration = TimeSpan.FromSeconds(Node.DurationSeconds);
+                    var newDuration = new TimeSpan(oldDuration.Days, i, oldDuration.Minutes, oldDuration.Seconds);
+                    PushOperation(new SetDurationOperation(this, oldDuration, newDuration));
+                }
+            }
+        }
+
+        public string Minutes
+        {
+            get => TimeSpan.FromSeconds(Node.DurationSeconds).Minutes.ToString();
+            set
+            {
+                if (value != Minutes && int.TryParse(value, out var i) && i >= 0 && i < 60)
+                {
+                    var oldDuration = TimeSpan.FromSeconds(Node.DurationSeconds);
+                    var newDuration = new TimeSpan(oldDuration.Days, oldDuration.Hours, i, oldDuration.Seconds);
+                    PushOperation(new SetDurationOperation(this, oldDuration, newDuration));
+                }
+            }
+        }
+
+        public string Seconds
+        {
+            get => TimeSpan.FromSeconds(Node.DurationSeconds).Seconds.ToString();
+            set
+            {
+                if (value != Seconds && int.TryParse(value, out var i) && i >= 0 && i < 60)
+                {
+                    var oldDuration = TimeSpan.FromSeconds(Node.DurationSeconds);
+                    var newDuration = new TimeSpan(oldDuration.Days, oldDuration.Hours, oldDuration.Minutes, i);
+                    PushOperation(new SetDurationOperation(this, oldDuration, newDuration));
+                }
+            }
+        }
     }
 }

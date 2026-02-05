@@ -68,6 +68,7 @@ namespace QuestEditor.Nodes
             else if (node is RewardNode rewardNode) return new RewardNodeVM(rewardNode, quest);
             else if (node is RandomizerNode randomizerNode) return new RandomizerNodeVM(randomizerNode, quest);
             else if (node is CooldownNode cooldownNode) return new CooldownNodeVM(cooldownNode, quest);
+            else if (node is VisibilityNode visibilityNode) return new VisibilityNodeVM(visibilityNode, quest);
             else return null;
         }
 
@@ -336,6 +337,8 @@ namespace QuestEditor.Nodes
             _outputVM = new(node.ID, node.NextID);
             OutputVMs = [_outputVM];
             _outputVM.ModeChanged += o => SetNextID(o.TargetID, 0);
+            IsInputAvailable = false;
+            IsOutputAvailable = true;
         }
 
     }

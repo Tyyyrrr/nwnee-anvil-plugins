@@ -6,7 +6,7 @@
     public readonly record struct StringBoolListItem(string StringValue, bool BoolValue);
     public sealed class StringBoolListItemVM : ViewModelBase
     {
-        public string StringValue { get; } = string.Empty;
+        public string StringValue { get; init; } = string.Empty;
         public bool BoolValue
         {
             get => _boolValue;

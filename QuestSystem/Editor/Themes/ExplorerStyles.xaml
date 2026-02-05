@@ -91,6 +91,7 @@
                         <MenuItem Header="Reward" Command="{Binding AddRewardNodeCommand}"/>
                         <MenuItem Header="Randomizer" Command="{Binding AddRandomizerNodeCommand}"/>
                         <MenuItem Header="Cooldown" Command="{Binding AddCooldownNodeCommand}"/>
+                        <MenuItem Header="Visibility" Command="{Binding AddVisibilityNodeCommand}"/>
                         <!--<MenuItem Header="Condition">
                             <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}"/>
                             <MenuItem Header="... placeholder ..." Command="{Binding AddSomeCondition1Command}"/>

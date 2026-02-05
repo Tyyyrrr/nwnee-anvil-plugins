@@ -295,5 +295,11 @@ namespace QuestEditor.Graph
 
             }
         }
+
+        private void UserControl_MouseLeave(object sender, MouseEventArgs e)
+        {
+            ReleaseKeyModifiers();
+
+        }
     }
 }

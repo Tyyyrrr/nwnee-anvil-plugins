@@ -14,7 +14,8 @@
              KeyUp="UserControl_KeyUp"
              MouseWheel="UserControl_MouseWheel"
              MouseMove="UserControl_MouseMove"
-             MouseLeftButtonUp="UserControl_MouseLeftButtonUp">
+             MouseLeftButtonUp="UserControl_MouseLeftButtonUp"
+             MouseLeave="UserControl_MouseLeave">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -35,6 +36,7 @@
                                 <MenuItem Header="Reward" Command="{Binding CurrentQuest.AddRewardNodeCommand}"/>
                                 <MenuItem Header="Randomizer" Command="{Binding CurrentQuest.AddRandomizerNodeCommand}"/>
                                 <MenuItem Header="Cooldown" Command="{Binding CurrentQuest.AddCooldownNodeCommand}"/>
+                                <MenuItem Header="Visibility" Command="{Binding CurrentQuest.AddVisibilityNodeCommand}"/>
                                 <!--<MenuItem Header="Condition">
                                     <MenuItem Header="... placeholder ..." Command="{Binding CurrentQuest.AddSomeCondition1Command}"/>
                                     <MenuItem Header="... placeholder ..." Command="{Binding CurrentQuest.AddSomeCondition1Command}"/>
@@ -111,8 +113,12 @@
                     <nodes:CooldownNodeControl Style="{StaticResource CooldownNodeControlStyle}"
                                                SizeChanged="Node_SizeChanged"/>
                 </DataTemplate>
-                
-            </ItemsControl.Resources>
+
+                <DataTemplate DataType="{x:Type nodes:VisibilityNodeVM}">
+                        <nodes:VisibilityNodeControl Style="{StaticResource VisibilityNodeControlStyle}"
+                                            SizeChanged="Node_SizeChanged"/>
+                </DataTemplate>
+                </ItemsControl.Resources>
             
             
             <ItemsControl.ItemsPanel>
@@ -137,7 +143,8 @@
         <StackPanel Orientation="Horizontal" HorizontalAlignment="left" VerticalAlignment="Top" 
                   Panel.ZIndex="2"
                       Grid.Row="0"
-                      Grid.Column="0">
+                      Grid.Column="0"
+                    Visibility="{Binding IsGraphActive, Converter={StaticResource BoolToVis }}">
             <TextBlock Text="Quest title: " VerticalAlignment="Top" Margin="6,0,8,0" FontWeight="Bold" Style="{StaticResource StyledTextBlock}"/>
             <TextBox Text="{Binding CurrentQuest.Title, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" 
                      VerticalContentAlignment="Top"

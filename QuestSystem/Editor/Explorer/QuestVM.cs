@@ -75,6 +75,7 @@ namespace QuestEditor.Explorer
         public ICommand AddRewardNodeCommand { get; }
         public ICommand AddRandomizerNodeCommand { get; }
         public ICommand AddCooldownNodeCommand { get; }
+        public ICommand AddVisibilityNodeCommand { get; }
         //...
 
         public ICommand DeleteQuestCommand { get; }
@@ -95,6 +96,7 @@ namespace QuestEditor.Explorer
             AddRewardNodeCommand = new RelayCommand(AddRewardNode, _ => IsSelected);
             AddRandomizerNodeCommand = new RelayCommand(AddRandomizerNode, _ => IsSelected);
             AddCooldownNodeCommand = new RelayCommand(AddCooldownNode, _ => IsSelected);
+            AddVisibilityNodeCommand = new RelayCommand(AddVisibilityNode, _ => IsSelected);
             //...
 
             DeleteQuestCommand = new RelayCommand(PackVM.DeleteQuest, _ => true);
@@ -267,6 +269,12 @@ namespace QuestEditor.Explorer
             PushOperation(new AddNodeOperation<CooldownNode>(model, this));
         }
 
+        void AddVisibilityNode(object? _)
+        {
+            int nextID = GetNextNodeID();
+            var model = new VisibilityNode() { ID = nextID };
+            PushOperation(new AddNodeOperation<VisibilityNode>(model, this));
+        }
 
         protected override void Apply()
         {
