@@ -31,7 +31,7 @@ namespace QuestEditor.Explorer
         public string QuestTag
         { 
             get => _questTag;
-            set { if (SetProperty(ref _questTag, value)) Model.Name = _questTag; }
+            set { if (SetProperty(ref _questTag, value)) Model.Tag = _questTag; }
         }
         private string _questTag;
         public string Title
