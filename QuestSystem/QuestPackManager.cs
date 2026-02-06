@@ -43,7 +43,10 @@ namespace QuestSystem
             {
                 quest = pack.GetQuest(questTag);
 
-                if(quest != null) return true;
+                if(quest != null){
+                    quest.Pack = pack;
+                    return true;
+                }
             }
             quest = null;
             return false;
