@@ -83,7 +83,7 @@ namespace QuestSystem.Graph
         public QuestGraph(Quest quest, INodeLoader nodeLoader)
         {
             Quest = quest;
-            _storage = new Storage(quest, nodeLoader);
+            _storage = new Storage(quest, nodeLoader, OnNodeShouldEvaluate);
             _runtime = new Runtime(quest.Tag, _storage);
             _session = new Session(_storage, OnQuestCompleted);
         }
@@ -170,6 +170,7 @@ namespace QuestSystem.Graph
 
         public static event Action<string, NwPlayer>? QuestCompleted;
         private void OnQuestCompleted(NwPlayer player) => QuestCompleted?.Invoke(Quest.Tag, player);
+        private void OnNodeShouldEvaluate(INode node, NwPlayer player) => Evaluate(node.ID, player);
 
         public void Dispose()
         {

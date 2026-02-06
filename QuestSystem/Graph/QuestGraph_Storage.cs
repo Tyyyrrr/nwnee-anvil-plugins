@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
+using Anvil.API;
 
 namespace QuestSystem.Graph
 {
@@ -24,10 +24,12 @@ namespace QuestSystem.Graph
 
             private readonly Quest _quest;
 
-            public Storage(Quest quest, INodeLoader nodeLoader)
+            private Action<INode, NwPlayer> _autoEvaluateNodeCallback;
+            public Storage(Quest quest, INodeLoader nodeLoader, Action<INode, NwPlayer> autoEvaluateNodeCallback)
             {
                 _quest = quest;
                 _nodeLoader = nodeLoader;
+                _autoEvaluateNodeCallback = autoEvaluateNodeCallback;
             }
 
             /// temporary, not precise measure
@@ -101,6 +103,7 @@ namespace QuestSystem.Graph
                         throw new InvalidOperationException("Tried to add the same node to the graph twice.");
                 }
 
+                node.ShouldEvaluate += OnNodeShouldEvaluate;
                 _nodes.Add(node.ID, new(node));
             }
 
@@ -114,10 +117,12 @@ namespace QuestSystem.Graph
                 }
                 else throw new InvalidOperationException("Tried to remove a node which does not exist in this graph.");
 
-
+                node.ShouldEvaluate -= OnNodeShouldEvaluate;
                 _nodes.Remove(node.ID);
                 node.Dispose();
             }
+
+            void OnNodeShouldEvaluate(INode node, NwPlayer player) => _autoEvaluateNodeCallback(node, player);
 
             /// <summary>                
             /// Every player should alerady Exit the graph BEFORE disposal of the storage component.
