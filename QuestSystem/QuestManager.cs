@@ -9,6 +9,7 @@ using MySQLClient;
 using QuestSystem.Graph;
 using QuestSystem.Wrappers.Nodes;
 using QuestSystem.Wrappers.Objectives;
+using System.Linq;
 
 namespace QuestSystem
 {
@@ -127,6 +128,9 @@ namespace QuestSystem
 
                 graph = _loadedQuests[questTag];
             }
+
+            if(!_questData[questTag].ContainsKey(player))
+                _questData[questTag].Add(player, new(player, graph));
 
             if(graph?.AddPlayer(player, stageId) ?? false)
                 _log.Info("Player set on quest!");
