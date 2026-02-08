@@ -100,7 +100,7 @@ namespace QuestSystem.Graph
         {
             _log.Info($"QuestGraph Evaluate\nPlayer: {(player.IsValid ? player.PlayerName : "INVALID PLAYER")}\nID: {id}\nPolicy: {policy}");
 
-            if(_storage[id] == null)
+            if(policy != EvaluationPolicy.SkipToNextRoot && _storage[id] == null)
                 throw new InvalidOperationException("First node of the chain must exist on the graph to start evaluation");
 
             var state = _session[player] ?? throw new InvalidOperationException("Session must contain player state for evaluation to start");

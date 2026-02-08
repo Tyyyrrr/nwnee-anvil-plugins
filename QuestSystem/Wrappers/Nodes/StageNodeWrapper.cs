@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -30,7 +31,7 @@ namespace QuestSystem.Wrappers.Nodes
             string text = string.Empty;
 
             foreach(var obj in _objectives.Where(o=>o.ShowInJournal))
-                text += obj.GetJournalText(player);
+                text += $"{obj.GetJournalText(player)}\n";
 
             return text;
         }
@@ -47,7 +48,17 @@ namespace QuestSystem.Wrappers.Nodes
             }
         }
 
-        void OnObjectiveUpdated(ObjectiveWrapper wrapper, NwPlayer player) => RaiseShouldEvaluate(player);
+        void OnObjectiveUpdated(ObjectiveWrapper wrapper, NwPlayer player) {
+            
+            var data = QuestManager.GetPlayerQuestData(player, Quest);
+
+            if(this._objectives.Any(o=>!o.IsCompleted(player)))
+            {
+                data?.SilentNextJournalUpdate();
+                data?.Update();
+            }
+            else RaiseShouldEvaluate(player);
+        }
 
         public override void Enter(NwPlayer player)
         {
@@ -94,5 +105,11 @@ namespace QuestSystem.Wrappers.Nodes
                 objective.Dispose();
         }
 
+        public void JournalComplete(NwPlayer player)
+        {
+            var data = QuestManager.GetPlayerQuestData(player, Quest) ?? throw new InvalidOperationException("No player data");
+
+            data.CompleteAtStage(this);
+        }
     }
 }

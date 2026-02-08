@@ -40,6 +40,7 @@ namespace QuestSystem.Graph
             #region API
             public void NodeIncrement(int id)
             {
+                _log.Info(" --- INCREMENT NODE --- " + id);
                 if(_nodes.TryGetValue(id, out var node))
                 {
                     node.RefCount++;
@@ -48,6 +49,7 @@ namespace QuestSystem.Graph
             }
             public void NodeDecrement(int id)
             {
+                _log.Info(" --- DECREMENT NODE --- " + id);
                 if(_nodes.TryGetValue(id, out var node))
                 {
                     node.RefCount--;

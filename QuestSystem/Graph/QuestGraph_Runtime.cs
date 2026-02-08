@@ -146,7 +146,10 @@ namespace QuestSystem.Graph
                 finally
                 {
                     foreach(var node in outcome.VisitedNodes)
+                    {
+                        _storage.NodeIncrement(node);
                         _storage[node]?.Reset(player);
+                    }
 
                     _evaluator.NodeVisited -= outcome.VisitedNodes.Add;
                 }

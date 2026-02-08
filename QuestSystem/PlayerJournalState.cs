@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Anvil.API;
 using QuestSystem.Wrappers.Nodes;
@@ -13,11 +12,9 @@ namespace QuestSystem
 
         private static readonly string ObjectiveSeparatorString = "--------------------------------\n";
 
-        public int LastStageID => _offsets.TryPeek(out var offset) ? offset.ID : -1;
+        private int stagesTextLength = 0;
+        public bool SilentUpdate {get;set;} = false;
 
-        private int totalLength = 0;
-
-        private readonly Stack<JournalOffset> _offsets = new(10);
         private readonly Queue<string> _schedule = new(10);
         private readonly CancellationTokenSource _cts = new();
 
@@ -50,15 +47,17 @@ namespace QuestSystem
                     if (!_cts.IsCancellationRequested)
                         JournalReady?.Invoke();
                 }
-                catch (OperationCanceledException)
-                {
-                    // expected during disposal
-                }
+
+                // expected during disposal
+                catch (OperationCanceledException){}
+                catch(ObjectDisposedException){}
+
                 catch (Exception ex)
                 {
                     NLog.LogManager.GetCurrentClassLogger()
                         .Error("Exception from async task: " + ex.Message + "\n" + ex.StackTrace);
                 }
+
                 finally
                 {
                     scheduled = false;
@@ -67,46 +66,46 @@ namespace QuestSystem
         }
         
 
-        public void PushEntry(int stageId, string? text)
+        public void PushEntry(string? text)
         {
+            NLog.LogManager.GetCurrentClassLogger().Warn("JOURNAL PUSH ENTRY: " + text +", currently scheduled stages: " + _schedule.Count);
             ScheduleUpdate();
 
             if (!string.IsNullOrEmpty(text))
             {
                 var txt = StageSeparatorString + text + "\n\n\n";
-                _schedule.Enqueue(txt);
-                _offsets.Push(new(stageId, txt.Length));
+                _schedule.Enqueue(txt);                
             }
-            _offsets.Push(new(stageId,0));
         }
 
 
         public void Update(NwPlayer player, Quest quest, StageNodeWrapper stage)
         {
-            NLog.LogManager.GetCurrentClassLogger().Info(" - - - - - Updating journal");
-
             var entry = player.GetJournalEntry(quest.Tag);
             var text = entry?.Text ?? string.Empty;
 
-            text = text.Length > totalLength ? text[..totalLength] : text;
+            text = text[..stagesTextLength];
 
 
             var objStr = stage?.GetObjectivesJournalEntry(player);
+
             if(!string.IsNullOrEmpty(objStr))
                 objStr = ObjectiveSeparatorString + objStr;
 
             entry ??= new();
 
             entry.Text = string.Concat(text,string.Concat(_schedule),objStr);
+            _schedule.Clear();
             entry.QuestTag = quest.Tag;
             entry.QuestCompleted = false;
             entry.QuestDisplayed = entry.Text.Length > 0;
             entry.Updated = true;
             entry.Name = quest.Name;
-            
-            totalLength = entry.Text.Length - (objStr?.Length ?? 0);
-
-            player.AddCustomJournalEntry(entry, entry.Text.Length == 0);
+            entry.Priority = 0;
+            entry.State = 0;
+            player.AddCustomJournalEntry(entry, SilentUpdate);
+            SilentUpdate = false;
+            stagesTextLength = entry.Text.Length - (objStr?.Length ?? 0);
         }
 
 
@@ -122,10 +121,18 @@ namespace QuestSystem
             var entry = player.GetJournalEntry(tag) 
                 ?? throw new InvalidOperationException("There is no Journal Quest Entry to complete");
             
+            NLog.LogManager.GetCurrentClassLogger().Warn("MARKING QUEST AS COMPLETED");
+            NLog.LogManager.GetCurrentClassLogger().Info("Full entry: " + entry.Text);
+            NLog.LogManager.GetCurrentClassLogger().Info("full entry length: " + entry.Text.Length + ", stages length: " + stagesTextLength);
+            NLog.LogManager.GetCurrentClassLogger().Info("Cut entry: " + entry.Text[..stagesTextLength]);
+
             entry.QuestCompleted = true;
-            entry.Text = entry.Text[.._offsets.Sum(o=>o.Length)];
+            entry.Text = entry.Text[..stagesTextLength];
+            entry.Priority = 0;
+            entry.State = 0;
             entry.Updated = true;
             entry.QuestCompleted = true;
+            entry.QuestDisplayed = true;
 
             player.AddCustomJournalEntry(entry);
         }

@@ -10,6 +10,7 @@ using QuestSystem.Graph;
 using QuestSystem.Wrappers.Nodes;
 using QuestSystem.Wrappers.Objectives;
 using System.Linq;
+using System.Formats.Asn1;
 
 namespace QuestSystem
 {
@@ -104,6 +105,23 @@ namespace QuestSystem
             ((IQuestDatabase)this).UpdateQuest(player, tag);
 
             var graph = _loadedQuests[tag];
+
+            if(!_completedQuests.ContainsKey(player))
+                _completedQuests.Add(player, new());
+
+            if(_completedQuests[player].TryGetValue(tag, out var id))
+            {
+                NLog.LogManager.GetCurrentClassLogger().Warn($"Overriding completed quest! Old stage: {id}, new stage: {graph.GetRoot(player)}");
+                _completedQuests[player][tag] = graph.GetRoot(player);
+            }
+            else _completedQuests[player].Add(tag,graph.GetRoot(player));
+
+            var hasCompleted = HasCompletedQuest(player, tag, out var completedStageID);
+            if (hasCompleted)
+            {
+                _log.Warn("PLAYER HAS COMPLETED QUEST ON STAGE " + completedStageID);
+            }
+            else _log.Error("FAILED TO SET QUEST AS COMPLETED BY THE PLAYER");
 
             graph.RemovePlayer(player);
 

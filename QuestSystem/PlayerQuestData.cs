@@ -15,28 +15,28 @@ namespace QuestSystem
 
         private readonly QuestGraph _graph;
 
-        private bool _isQuestCompleted = false;
-        public bool IsQuestCompleted 
-        {
-            get => _isQuestCompleted;
-            set
-            {
-                if(_isQuestCompleted || !value) return;
-                _isQuestCompleted = true;
-                _journalState.MarkCompleted(_player, _graph.Quest.Tag);
-            }
-        }
+        // private bool _isQuestCompleted = false;
+        // public bool IsQuestCompleted 
+        // {
+        //     get => _isQuestCompleted;
+        //     set
+        //     {
+        //         if(_isQuestCompleted || !value) return;
+        //         _isQuestCompleted = true;
+        //         _journalState.MarkCompleted(_player, _graph.Quest.Tag);
+        //     }
+        // }
 
-        private bool _isStageCompleted = false;
-        public bool IsStageCompleted
-        {
-            get => _isStageCompleted;
-            set
-            {
-                if(_isStageCompleted || !value) return;
-                _isStageCompleted = true;
-            }
-        }
+        // private bool _isStageCompleted = false;
+        // public bool IsStageCompleted
+        // {
+        //     get => _isStageCompleted;
+        //     set
+        //     {
+        //         if(_isStageCompleted || !value) return;
+        //         _isStageCompleted = true;
+        //     }
+        // }
 
         public PlayerQuestData(NwPlayer player, QuestGraph graph) 
         {
@@ -56,17 +56,14 @@ namespace QuestSystem
         {
             NLog.LogManager.GetCurrentClassLogger().Info(" - - - - Pushin' stage");
 
-            var current = _graph.GetRootNode(_player) as StageNodeWrapper;
+            var current = _graph.GetRootNode(_player) as StageNodeWrapper ?? throw new InvalidOperationException("Player is not on the graph");
 
-            if(stage == current)
-            {
+            if (_chain.TryPeek(out var previousStageID) && previousStageID == current.ID)
                 current.Reset(_player);
-                _journalState.ScheduleUpdate();
-                return;
-            }
 
-            _chain.Push(stage.ID);
-            _journalState.PushEntry(stage.ID, stage.GetStageJournalEntry(_player));
+            else _chain.Push(stage.ID);
+
+            _journalState.PushEntry(stage.GetStageJournalEntry(_player));
         }
 
         void OnJournalReadyForUpdate()
@@ -81,6 +78,15 @@ namespace QuestSystem
             NLog.LogManager.GetCurrentClassLogger().Warn("DISPOSING");
             _journalState.JournalReady -= OnJournalReadyForUpdate;
             _journalState.Dispose();
+        }
+
+        public void SilentNextJournalUpdate()
+        {
+            _journalState.SilentUpdate = true;
+        }
+        public void CompleteAtStage(StageNodeWrapper stage)
+        {
+            _journalState.MarkCompleted(_player, stage.Quest!.Tag);
         }
     }
 }

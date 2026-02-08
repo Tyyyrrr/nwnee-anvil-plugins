@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Anvil.API;
+using QuestSystem.Wrappers.Nodes;
 
 namespace QuestSystem.Graph
 {
@@ -109,6 +110,7 @@ namespace QuestSystem.Graph
                     _storage.NodeDecrement(fp);
                 }
                 _storage[state.Cursor.Root]?.Reset(player);
+                _storage[state.Cursor.Root]?.Enter(player);
                 state.Cursor = state.Cursor.Root;
             }
 
@@ -138,7 +140,7 @@ namespace QuestSystem.Graph
 
                 _storage.NodeIncrement(newRoot);
 
-                ResetChain(player, state);
+                // ResetChain(player, state);
                 var oldRoot = state.PopNode();
                 state.PushNode(newRoot);
                 state.Cursor = newRoot;
@@ -274,6 +276,8 @@ namespace QuestSystem.Graph
                 var oldPos = outcome.OldPosition;
                 var newPos = outcome.NewPosition;
 
+                _log.Info("Old pos: " + oldPos + ", New pos: " + newPos);
+
                 state.Cursor = newPos;
 
                 foreach(var visitedNode in outcome.VisitedNodes)
@@ -286,27 +290,32 @@ namespace QuestSystem.Graph
 
                         if(oldPos.Root == newPos.Root) // if root evaluated to itself - reset the chain
                         {
-                            while (state.FootprintsCount > 1)
-                            {
-                                var fp = state.PopNode();
-                                _storage[fp]?.Reset(player);
-                                _storage.NodeDecrement(fp);
-                            }
-                            _storage[state.Footprints.First()]?.Reset(player);
+                            ResetChain(player,state);
+                            // while (state.FootprintsCount > 1)
+                            // {
+                            //     var fp = state.PopNode();
+                            //     _storage[fp]?.Reset(player);
+                            //     _storage.NodeDecrement(fp);
+                            // }
+                            // var node = _storage[state.Footprints.First()];
+                            // node?.Reset(player);
+                            // node?.Enter(player);
                         }
                         else // otherwise enter the next chain and discard the previous
                         {
-                            _storage[newPos.Root]?.Enter(player);
-                            _storage.NodeIncrement(newPos.Root);
 
                             state.PushChain(oldPos);
                             while(state.FootprintsCount > 0)
                             {
                                 var fp = state.PopNode();
+                                if (fp == newPos.Root)
+                                    continue;
+
                                 _storage[fp]?.Reset(player);
                                 _storage.NodeDecrement(fp);
                             }
                             state.PushNode(newPos.Root);
+                            _storage[newPos.Root]?.Enter(player);
                         }
                     break;
 
@@ -347,17 +356,23 @@ namespace QuestSystem.Graph
 
                     // reached a terminal node
                     case Runtime.EvaluationResult.Complete:
+                        var stageNode = _storage[outcome.OldPosition.Root] as StageNodeWrapper ?? throw new InvalidOperationException("Quest can be completed only on a root node");
+
+                        stageNode.JournalComplete(player);
+
                         _completeQuestCallback(player); // notify about completion before any potential disposal
                         // if PlayerState snapshot is captured now, it should contain footprints of the last evaluation
 
                         // (no need to push chain)
 
-                        while (state.FootprintsCount > 0)
-                        {
-                            var fp = state.PopNode();
-                            _storage[fp]?.Reset(player);
-                            _storage.NodeDecrement(fp);
-                        }
+                        // while (state.FootprintsCount > 0)
+                        // {
+                        //     var fp = state.PopNode();
+                        //     _storage[fp]?.Reset(player);
+                        //     _storage.NodeDecrement(fp);
+                        // }
+
+
                         break;
 
                     // some error occurred (Cursor and result are already set)
