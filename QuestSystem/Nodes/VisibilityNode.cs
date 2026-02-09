@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using QuestSystem.Wrappers;
+using QuestSystem.Wrappers.Nodes;
 
 namespace QuestSystem.Nodes
 {
@@ -8,10 +8,7 @@ namespace QuestSystem.Nodes
     {
         public Dictionary<string,bool> Objects {get;set;} = new();
 
-        internal override WrapperBase Wrap()
-        {
-            throw new System.NotImplementedException();
-        }
+        internal override VisibilityNodeWrapper Wrap() => new(this);
 
         public override object Clone()
         {
