@@ -13,16 +13,12 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Subscribe()
         {
-            NLog.LogManager.GetCurrentClassLogger().Info("Fake subscribe...");
-            return;
             foreach (var area in NwModule.Instance.Areas)
             {
                 if (Objective.AreaTags.Length > 0 && !Objective.AreaTags.Contains(area.Tag)) continue;
 
-                foreach (var obj in area.Objects)
+                foreach (var creature in area.FindObjectsOfTypeInArea<NwCreature>())
                 {
-                    if (obj is not NwCreature creature) continue;
-
                     if ((Objective.Tag == string.Empty && Objective.ResRef != string.Empty && Objective.ResRef == creature.ResRef)
                         || (Objective.ResRef == string.Empty && Objective.Tag != string.Empty && Objective.Tag == creature.Tag)
                         || (Objective.ResRef != string.Empty && Objective.Tag != string.Empty && Objective.ResRef == creature.ResRef && Objective.Tag == creature.Tag))
@@ -39,16 +35,12 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Unsubscribe()
         {
-            NLog.LogManager.GetCurrentClassLogger().Info("Fake unsubscribe...");
-            return;
             foreach (var area in NwModule.Instance.Areas)
             {
                 if (Objective.AreaTags.Length > 0 && !Objective.AreaTags.Contains(area.Tag)) continue;
 
-                foreach (var obj in area.Objects)
+                foreach (var creature in area.FindObjectsOfTypeInArea<NwCreature>())
                 {
-                    if (obj is not NwCreature creature) continue;
-
                     if (Objective.ResRef == creature.ResRef || (Objective.Tag != string.Empty && Objective.Tag == creature.Tag))
                         creature.OnDeath -= OnCreatureDeath;
                 }

@@ -127,7 +127,7 @@ namespace QuestSystem.Graph
                 return;
 
 
-            if(outcome.Result != Runtime.EvaluationResult.Success)
+            if(outcome.Result != Runtime.EvaluationResult.Success && outcome.Result != Runtime.EvaluationResult.Complete)
             {            
                 if(outcome.VisitedNodes.Count == 0) 
                     throw new InvalidOperationException("Not a single node visited during evaluation");

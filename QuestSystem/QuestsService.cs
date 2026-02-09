@@ -32,10 +32,40 @@ namespace QuestSystem
             _mySQL = mySQL;
             _charactersRegistry = charactersRegistry;
 
+            NwModule.Instance.OnModuleLoad += OnModuleLoad;
+
             NwModule.Instance.OnClientEnter += OnClientEnter;
             NwModule.Instance.OnClientLeave += OnClientLeave;
 
             _questMan = new QuestManager(pluginStorage.GetPluginStoragePath(typeof(QuestsService).Assembly), _mySQL);
+        }
+
+        void OnModuleLoad(ModuleEvents.OnModuleLoad _)
+        {
+            foreach(var area in NwModule.Instance.Areas)
+            {
+                area.OnEnter += d =>
+                {
+                    var variable = d.EnteringObject.GetObjectVariable<LocalVariableInt>("InvisibleByDefault");
+
+                    if(variable.HasValue && variable.Value == 1)
+                    {
+                        variable.Delete();
+                        d.EnteringObject.VisibilityOverride = VisibilityMode.Hidden;
+                    }
+                };
+
+                foreach(var obj in area.Objects)
+                {                    
+                    var variable = obj.GetObjectVariable<LocalVariableInt>("InvisibleByDefault");
+
+                    if(variable.HasValue && variable.Value == 1)
+                    {
+                        variable.Delete();
+                        obj.VisibilityOverride = VisibilityMode.Hidden;
+                    }
+                }
+            }
         }
 
         public void Dispose()

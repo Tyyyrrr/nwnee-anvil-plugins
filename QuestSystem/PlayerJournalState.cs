@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Anvil.API;
-using NWN.Core;
 using QuestSystem.Wrappers.Nodes;
 
 namespace QuestSystem
@@ -82,15 +80,7 @@ namespace QuestSystem
         public void Update(NwPlayer player, Quest quest, StageNodeWrapper stage)
         {
             var time = NWN.Core.NWNX.UtilPlugin.GetWorldTime();
-
-            var entry = player.GetJournalEntry(quest.Tag) ?? new()
-            {
-                QuestTag = quest.Tag,
-                QuestCompleted = false,
-                Updated = true,
-                Name = quest.Name,
-                Priority = 0
-            };
+            var entry = NWN.Core.NWNX.PlayerPlugin.GetJournalEntry(player.ControlledCreature!.ObjectId, quest.Tag);
 
             var objStr = stage.GetObjectivesJournalEntry(player);
             if(!string.IsNullOrEmpty(objStr))
@@ -98,13 +88,23 @@ namespace QuestSystem
 
             var text = _stringBuilder.ToString() + objStr;
 
-            entry.CalendarDay = (uint)time.nCalendarDay;
-            entry.TimeOfDay = (uint)time.nTimeOfDay;
-            entry.State = (uint)nEntryState;
-            entry.Updated = true;
-            entry.Text = text;
+            if (string.IsNullOrEmpty(entry.sTag))
+            {
+                entry = new()
+                {
+                    sTag = quest.Tag,
+                    sName = quest.Name,
+                    nUpdated = 1,
+                    nQuestDisplayed = 1
+                };
+            }
 
-            nEntryState = player.AddCustomJournalEntry(entry, SilentUpdate);
+            entry.nCalendarDay = time.nCalendarDay;
+            entry.nTimeOfDay = time.nTimeOfDay;
+            entry.nState = nEntryState;
+            entry.sText = text;
+
+            nEntryState = NWN.Core.NWNX.PlayerPlugin.AddCustomJournalEntry(player.ControlledCreature!.ObjectId, entry, SilentUpdate ? 1 : 0);
 
             SilentUpdate = false;
         }

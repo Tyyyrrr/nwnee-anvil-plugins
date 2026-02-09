@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Anvil.API;
@@ -45,6 +46,8 @@ namespace QuestSystem.Wrappers.Nodes
         {
             await NwTask.Delay(TimeSpan.FromSeconds(0.7f));
 
+            var node = (RewardNode)Node.Clone();
+
             await NwTask.SwitchToMainThread();
 
             if(!player.IsValid || player.ControlledCreature is not NwCreature pc || !pc.IsValid)
@@ -52,15 +55,21 @@ namespace QuestSystem.Wrappers.Nodes
 
             await pc.WaitForObjectContext();
 
-            if (Node.Items.Count > 0)
+            if (node.Items.Count > 0)
             {
                 int count = 0;
-                var createdItems = new NwItem[Node.Items.Count];
-                foreach (var kvp in Node.Items)
+                var createdItems = new NwItem[node.Items.Count];
+                foreach (var kvp in node.Items)
                 {
+                    var splitKey = kvp.Key.Split(':');
+                    var resRef = splitKey[0];
+                    var tag = splitKey.Length > 1 ? splitKey[1] : null;
+
                     var item = await NwItem.Create(kvp.Key, pc);
 
                     if(item == null) break;
+
+                    if(tag != null) item.Tag = tag;
 
                     createdItems[count] = item;
 
@@ -69,7 +78,7 @@ namespace QuestSystem.Wrappers.Nodes
 
                 await pc.WaitForObjectContext();
 
-                if(count != Node.Items.Count) // if failed to create ANY item, destroy all items granted, and skip the reward
+                if(count != node.Items.Count) // if failed to create ANY item, destroy all items granted, and skip the reward
                 {
                     foreach(var item in createdItems)
                     {
@@ -84,10 +93,10 @@ namespace QuestSystem.Wrappers.Nodes
 
             await pc.WaitForObjectContext();
 
-            pc.Xp += Math.Max(0,Node.Xp);
-            pc.GiveGold(Node.Gold, Node.NotifyPlayer);
-            pc.GoodEvilValue += ClampAlignmentChange(pc.GoodEvilValue, Node.GoodEvilChange);
-            pc.LawChaosValue += ClampAlignmentChange(pc.LawChaosValue, Node.LawChaosChange);
+            pc.Xp += Math.Max(0,node.Xp);
+            pc.GiveGold(node.Gold, node.NotifyPlayer);
+            pc.GoodEvilValue += ClampAlignmentChange(pc.GoodEvilValue, node.GoodEvilChange);
+            pc.LawChaosValue += ClampAlignmentChange(pc.LawChaosValue, node.LawChaosChange);
 
             return true;
         }

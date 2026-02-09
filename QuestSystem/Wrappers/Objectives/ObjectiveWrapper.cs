@@ -95,13 +95,13 @@ namespace QuestSystem.Wrappers.Objectives
 
 
         protected static readonly string ObjectiveJournalPrefix = "   - ";
-        public virtual string GetJournalText(NwPlayer player)
+        public string GetJournalText(NwPlayer player)
         {
             if (!Objective.ShowInJournal) return string.Empty;
 
-            if (IsCompleted(player)) return $"{ObjectiveJournalPrefix}{Objective.JournalEntry} (Ukończono)";
+            var progress = GetTrackedProgress(player) ?? throw new InvalidOperationException("Progress is not tracked for the player");
 
-            else return ObjectiveJournalPrefix + Objective.JournalEntry;
+            return $"{ObjectiveJournalPrefix}{Objective.JournalEntry} {progress.GetProgressString()}";
         }
 
         private void OnProgressUpdate(IObjectiveProgress progress)

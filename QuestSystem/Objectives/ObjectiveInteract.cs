@@ -48,6 +48,9 @@ namespace QuestSystem.Objectives
             private bool _interacted = false;
             public bool IsCompleted => _interacted;
             public event Action<IObjectiveProgress>? OnUpdate;
+
+            public string GetProgressString() => IsCompleted ? "(Wykonano)" : string.Empty;
+
             public void Proceed(object? _ = null)
             {
                 if (_interacted) return;

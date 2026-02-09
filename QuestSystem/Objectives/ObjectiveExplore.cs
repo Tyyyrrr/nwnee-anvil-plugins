@@ -48,6 +48,8 @@ namespace QuestSystem.Objectives
                     OnUpdate?.Invoke(this);
                 }
             }
+
+            public string GetProgressString() => IsCompleted ? "(Zbadano obszar)" : $"{percentage}/{_objective.AreaExplorePercentage}";
         }
     }
 }

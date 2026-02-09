@@ -39,6 +39,9 @@ namespace QuestSystem.Objectives
             private bool _completed = false;
             public bool IsCompleted => _completed;
             public event Action<IObjectiveProgress>? OnUpdate;
+
+            public string GetProgressString() => IsCompleted ? "(Zaklęcie rzucone)" : string.Empty;
+
             public void Proceed(object? _)
             {
                 if (_completed == false)

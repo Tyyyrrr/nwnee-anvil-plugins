@@ -212,7 +212,8 @@ namespace QuestSystem
             if(stageId >= 0 && stageId != root)
                 graph.Evaluate(stageId,player,QuestGraph.EvaluationPolicy.SkipToNextRoot);
 
-            graph.Evaluate(stageId,player,QuestGraph.EvaluationPolicy.SuspendOnLeaf);
+            // graph.Evaluate(stageId,player,QuestGraph.EvaluationPolicy.SuspendOnLeaf);
+            graph.Evaluate(stageId,player,QuestGraph.EvaluationPolicy.Default);
 
             return true;
         }

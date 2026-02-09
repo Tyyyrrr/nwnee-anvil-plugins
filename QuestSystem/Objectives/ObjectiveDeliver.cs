@@ -54,6 +54,8 @@ namespace QuestSystem.Objectives
                     OnUpdate?.Invoke(this);
                 }
             }
+
+            public string GetProgressString() => IsCompleted ? "(Dostarczono)" : $"{amount}/{_objective.RequiredAmount}";
         }
     }
 }
