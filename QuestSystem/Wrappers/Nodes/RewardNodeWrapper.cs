@@ -65,11 +65,9 @@ namespace QuestSystem.Wrappers.Nodes
                     var resRef = splitKey[0];
                     var tag = splitKey.Length > 1 ? splitKey[1] : null;
 
-                    var item = await NwItem.Create(kvp.Key, pc);
+                    var item = await NwItem.Create(kvp.Key, pc, kvp.Value <= 0 ? 1 : kvp.Value, string.IsNullOrEmpty(tag) ? string.Empty : tag);
 
                     if(item == null) break;
-
-                    if(tag != null) item.Tag = tag;
 
                     createdItems[count] = item;
 
