@@ -68,7 +68,6 @@ namespace QuestSystem
 
         void OnJournalReadyForUpdate()
         {
-            NLog.LogManager.GetCurrentClassLogger().Info(" - - - - Journal ready for update");
             if (_graph.GetRootNode(_player) is StageNodeWrapper currentStage)
                 _journalState.Update(_player, _graph.Quest, currentStage);
         }

@@ -38,7 +38,6 @@ namespace QuestSystem
         {
             if (scheduled) return;
             scheduled = true;
-            NLog.LogManager.GetCurrentClassLogger().Info(" - - - - - Update scheduled");
 
             _ = NwTask.Run(async () =>
             {
@@ -69,7 +68,6 @@ namespace QuestSystem
 
         public void PushEntry(string? text)
         {
-            NLog.LogManager.GetCurrentClassLogger().Warn("JOURNAL PUSH ENTRY: " + text);
             ScheduleUpdate();
 
             if (!string.IsNullOrEmpty(text))
@@ -123,10 +121,6 @@ namespace QuestSystem
         {
             var entry = player.GetJournalEntry(tag) 
                 ?? throw new InvalidOperationException("There is no Journal Quest Entry to complete");
-            
-            NLog.LogManager.GetCurrentClassLogger().Warn("MARKING QUEST AS COMPLETED");
-            NLog.LogManager.GetCurrentClassLogger().Info("Full entry: " + entry.Text);
-            NLog.LogManager.GetCurrentClassLogger().Info("full entry length: " + entry.Text.Length);
 
             entry.QuestCompleted = true;
             entry.Text = _stringBuilder.ToString();

@@ -71,17 +71,17 @@ namespace QuestSystem
             _loadedQuests.Remove(tag);
             graph.Dispose();
 
-            List<NwPlayer> toRemove = new();
-            foreach(var kvp in _completedQuests)
-            {
-                _ = kvp.Value.Remove(tag);
-                if(kvp.Value.Count == 0)
-                {
-                    toRemove.Add(kvp.Key);
-                }
-            }
+            // List<NwPlayer> toRemove = new();
+            // foreach(var kvp in _completedQuests)
+            // {
+            //     _ = kvp.Value.Remove(tag);
+            //     if(kvp.Value.Count == 0)
+            //     {
+            //         toRemove.Add(kvp.Key);
+            //     }
+            // }
 
-            foreach(var p in toRemove) _completedQuests.Remove(p);
+            // foreach(var p in toRemove) _completedQuests.Remove(p);
         }
 
         /// <summary>
@@ -111,17 +111,10 @@ namespace QuestSystem
 
             if(_completedQuests[player].TryGetValue(tag, out var id))
             {
-                NLog.LogManager.GetCurrentClassLogger().Warn($"Overriding completed quest! Old stage: {id}, new stage: {graph.GetRoot(player)}");
+                _log.Warn($"Overriding completed quest! Old stage: {id}, new stage: {graph.GetRoot(player)}");
                 _completedQuests[player][tag] = graph.GetRoot(player);
             }
             else _completedQuests[player].Add(tag,graph.GetRoot(player));
-
-            var hasCompleted = HasCompletedQuest(player, tag, out var completedStageID);
-            if (hasCompleted)
-            {
-                _log.Warn("PLAYER HAS COMPLETED QUEST ON STAGE " + completedStageID);
-            }
-            else _log.Error("FAILED TO SET QUEST AS COMPLETED BY THE PLAYER");
 
             graph.RemovePlayer(player);
 
@@ -239,9 +232,13 @@ namespace QuestSystem
         /// <inheritdoc cref="IQuestInterface.HasCompletedQuest(NwPlayer, string, out int)"/>
         public bool HasCompletedQuest(NwPlayer player, string questTag, out int stageId)
         {
-            stageId = -1;
+            if(!_completedQuests.TryGetValue(player, out var dict))
+            {
+                dict = new();
+                _completedQuests.Add(player,dict);
+            }
 
-            if(_completedQuests.TryGetValue(player, out var dict) && dict.TryGetValue(questTag, out stageId))
+            if(dict.TryGetValue(questTag, out stageId))
                 return true;
 
             return false;
