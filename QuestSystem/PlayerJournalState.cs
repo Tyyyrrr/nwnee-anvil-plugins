@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using Anvil.API;
+using NWN.Core;
 using QuestSystem.Wrappers.Nodes;
 
 namespace QuestSystem
@@ -12,10 +14,9 @@ namespace QuestSystem
 
         private static readonly string ObjectiveSeparatorString = "--------------------------------\n";
 
-        private int stagesTextLength = 0;
+        private readonly StringBuilder _stringBuilder = new();
         public bool SilentUpdate {get;set;} = false;
 
-        private readonly Queue<string> _schedule = new(10);
         private readonly CancellationTokenSource _cts = new();
 
         private readonly struct JournalOffset
@@ -68,44 +69,46 @@ namespace QuestSystem
 
         public void PushEntry(string? text)
         {
-            NLog.LogManager.GetCurrentClassLogger().Warn("JOURNAL PUSH ENTRY: " + text +", currently scheduled stages: " + _schedule.Count);
+            NLog.LogManager.GetCurrentClassLogger().Warn("JOURNAL PUSH ENTRY: " + text);
             ScheduleUpdate();
 
             if (!string.IsNullOrEmpty(text))
             {
                 var txt = StageSeparatorString + text + "\n\n\n";
-                _schedule.Enqueue(txt);                
+                _stringBuilder.Append(txt);
             }
         }
 
 
+        private int nEntryState = 0;
         public void Update(NwPlayer player, Quest quest, StageNodeWrapper stage)
         {
-            var entry = player.GetJournalEntry(quest.Tag);
-            var text = entry?.Text ?? string.Empty;
+            var time = NWN.Core.NWNX.UtilPlugin.GetWorldTime();
 
-            text = text[..stagesTextLength];
+            var entry = player.GetJournalEntry(quest.Tag) ?? new()
+            {
+                QuestTag = quest.Tag,
+                QuestCompleted = false,
+                Updated = true,
+                Name = quest.Name,
+                Priority = 0
+            };
 
-
-            var objStr = stage?.GetObjectivesJournalEntry(player);
-
+            var objStr = stage.GetObjectivesJournalEntry(player);
             if(!string.IsNullOrEmpty(objStr))
                 objStr = ObjectiveSeparatorString + objStr;
 
-            entry ??= new();
+            var text = _stringBuilder.ToString() + objStr;
 
-            entry.Text = string.Concat(text,string.Concat(_schedule),objStr);
-            _schedule.Clear();
-            entry.QuestTag = quest.Tag;
-            entry.QuestCompleted = false;
-            entry.QuestDisplayed = entry.Text.Length > 0;
+            entry.CalendarDay = (uint)time.nCalendarDay;
+            entry.TimeOfDay = (uint)time.nTimeOfDay;
+            entry.State = (uint)nEntryState;
             entry.Updated = true;
-            entry.Name = quest.Name;
-            entry.Priority = 0;
-            entry.State = 0;
-            player.AddCustomJournalEntry(entry, SilentUpdate);
+            entry.Text = text;
+
+            nEntryState = player.AddCustomJournalEntry(entry, SilentUpdate);
+
             SilentUpdate = false;
-            stagesTextLength = entry.Text.Length - (objStr?.Length ?? 0);
         }
 
 
@@ -123,18 +126,19 @@ namespace QuestSystem
             
             NLog.LogManager.GetCurrentClassLogger().Warn("MARKING QUEST AS COMPLETED");
             NLog.LogManager.GetCurrentClassLogger().Info("Full entry: " + entry.Text);
-            NLog.LogManager.GetCurrentClassLogger().Info("full entry length: " + entry.Text.Length + ", stages length: " + stagesTextLength);
-            NLog.LogManager.GetCurrentClassLogger().Info("Cut entry: " + entry.Text[..stagesTextLength]);
+            NLog.LogManager.GetCurrentClassLogger().Info("full entry length: " + entry.Text.Length);
 
             entry.QuestCompleted = true;
-            entry.Text = entry.Text[..stagesTextLength];
+            entry.Text = _stringBuilder.ToString();
             entry.Priority = 0;
-            entry.State = 0;
+            entry.State = (uint)nEntryState;
             entry.Updated = true;
             entry.QuestCompleted = true;
             entry.QuestDisplayed = true;
 
-            player.AddCustomJournalEntry(entry);
+            nEntryState = player.AddCustomJournalEntry(entry);
+
+            _stringBuilder.Clear();
         }
     }
 }

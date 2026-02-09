@@ -86,6 +86,7 @@ namespace QuestSystem
         }
         public void CompleteAtStage(StageNodeWrapper stage)
         {
+            _journalState.Update(_player,stage.Quest!, stage);
             _journalState.MarkCompleted(_player, stage.Quest!.Tag);
         }
     }
