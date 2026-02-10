@@ -69,6 +69,7 @@ namespace QuestEditor.Nodes
             else if (node is RandomizerNode randomizerNode) return new RandomizerNodeVM(randomizerNode, quest);
             else if (node is CooldownNode cooldownNode) return new CooldownNodeVM(cooldownNode, quest);
             else if (node is VisibilityNode visibilityNode) return new VisibilityNodeVM(visibilityNode, quest);
+            else if (node is ConditionNode conditionNode) return new ConditionNodeVM(conditionNode, quest);
             else return null;
         }
 

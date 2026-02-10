@@ -76,6 +76,7 @@ namespace QuestEditor.Explorer
         public ICommand AddRandomizerNodeCommand { get; }
         public ICommand AddCooldownNodeCommand { get; }
         public ICommand AddVisibilityNodeCommand { get; }
+        public ICommand AddConditionNodeCommand { get; }
         //...
 
         public ICommand DeleteQuestCommand { get; }
@@ -97,6 +98,7 @@ namespace QuestEditor.Explorer
             AddRandomizerNodeCommand = new RelayCommand(AddRandomizerNode, _ => IsSelected);
             AddCooldownNodeCommand = new RelayCommand(AddCooldownNode, _ => IsSelected);
             AddVisibilityNodeCommand = new RelayCommand(AddVisibilityNode, _ => IsSelected);
+            AddConditionNodeCommand = new RelayCommand(AddConditionNode, _ => IsSelected);
             //...
 
             DeleteQuestCommand = new RelayCommand(PackVM.DeleteQuest, _ => true);
@@ -201,14 +203,14 @@ namespace QuestEditor.Explorer
                 foreach (var node in _viewModels)
                     ((QuestVM)Origin).Nodes.Remove(node);
 
-                Trace.WriteLine("Nodes: " + ((QuestVM)Origin).Nodes.Count);
+                //Trace.WriteLine("Nodes: " + ((QuestVM)Origin).Nodes.Count);
             }
             protected override void ProtectedUndo()
             {
                 foreach (var node in _viewModels)
                     ((QuestVM)Origin).Nodes.Add(node);
 
-                Trace.WriteLine("Nodes: " + ((QuestVM)Origin).Nodes.Count);
+                //Trace.WriteLine("Nodes: " + ((QuestVM)Origin).Nodes.Count);
             }
         }
 
@@ -276,6 +278,13 @@ namespace QuestEditor.Explorer
             PushOperation(new AddNodeOperation<VisibilityNode>(model, this));
         }
 
+        void AddConditionNode(object? _)
+        {
+            int nextID = GetNextNodeID();
+            var model = new ConditionNode() { ID = nextID };
+            PushOperation(new AddNodeOperation<ConditionNode>(model, this));
+        }
+
         protected override void Apply()
         {
             Model.Tag = QuestTag;
@@ -296,10 +305,10 @@ namespace QuestEditor.Explorer
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                Trace.WriteLine($"{this}: all nodes loaded");
+                //Trace.WriteLine($"{this}: all nodes loaded");
                 if(nodes == null)
                 {
-                    Trace.WriteLine("... but operation has failed");
+                    //Trace.WriteLine("... but operation has failed");
                     return;
                 }
 
@@ -332,15 +341,10 @@ namespace QuestEditor.Explorer
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                Trace.WriteLine($"{this} metadata loaded");
-
                 if (o != null)
                 {
-                    Trace.WriteLine("o is of type " + o.GetType().Name);
                     var dict = JsonSerializer.Deserialize<Dictionary<int, Point>>((JsonElement)o);
                     NodePositions = dict!;
-
-                    Trace.WriteLine("dict stored positions: " + NodePositions.Count);
 
                     foreach (var node in Nodes)
                         if (dict!.TryGetValue(node.ID, out Point point))
