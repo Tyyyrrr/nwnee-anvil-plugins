@@ -63,7 +63,7 @@ namespace QuestSystem.Wrappers.Objectives
 
             if(explorationState == null) return 0;
 
-            return (int)Math.Ceiling(((float)explorationState.Count(b=>b > 0)) / explorationState.Length);
+            return (int)Math.Ceiling(((float)explorationState.Count(b=>b > 0)) / explorationState.Length) * 100;
         }
     }
 }
