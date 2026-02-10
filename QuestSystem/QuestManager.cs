@@ -9,8 +9,6 @@ using MySQLClient;
 using QuestSystem.Graph;
 using QuestSystem.Wrappers.Nodes;
 using QuestSystem.Wrappers.Objectives;
-using System.Linq;
-using System.Formats.Asn1;
 
 namespace QuestSystem
 {
@@ -76,18 +74,6 @@ namespace QuestSystem
 
             _loadedQuests.Remove(tag);
             graph.Dispose();
-
-            // List<NwPlayer> toRemove = new();
-            // foreach(var kvp in _completedQuests)
-            // {
-            //     _ = kvp.Value.Remove(tag);
-            //     if(kvp.Value.Count == 0)
-            //     {
-            //         toRemove.Add(kvp.Key);
-            //     }
-            // }
-
-            // foreach(var p in toRemove) _completedQuests.Remove(p);
         }
 
         /// <summary>
@@ -253,7 +239,7 @@ namespace QuestSystem
 
             return false;
         }
-        
+
         /// <inheritdoc cref="IQuestInterface.HasCompletedQuest(NwPlayer, string, out int)"/>
         public static bool PlayerHasCompletedQuest(NwPlayer player, string questTag, out int stageId) => _instance!.HasCompletedQuest(player, questTag, out stageId);
 

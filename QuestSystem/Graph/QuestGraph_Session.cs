@@ -291,15 +291,7 @@ namespace QuestSystem.Graph
                         if(oldPos.Root == newPos.Root) // if root evaluated to itself - reset the chain
                         {
                             ResetChain(player,state);
-                            // while (state.FootprintsCount > 1)
-                            // {
-                            //     var fp = state.PopNode();
-                            //     _storage[fp]?.Reset(player);
-                            //     _storage.NodeDecrement(fp);
-                            // }
-                            // var node = _storage[state.Footprints.First()];
-                            // node?.Reset(player);
-                            // node?.Enter(player);
+
                         }
                         else // otherwise enter the next chain and discard the previous
                         {
@@ -364,14 +356,6 @@ namespace QuestSystem.Graph
                         // if PlayerState snapshot is captured now, it should contain footprints of the last evaluation
 
                         // (no need to push chain)
-
-                        // while (state.FootprintsCount > 0)
-                        // {
-                        //     var fp = state.PopNode();
-                        //     _storage[fp]?.Reset(player);
-                        //     _storage.NodeDecrement(fp);
-                        // }
-
 
                         break;
 

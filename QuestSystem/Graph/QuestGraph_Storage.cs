@@ -32,11 +32,6 @@ namespace QuestSystem.Graph
                 _autoEvaluateNodeCallback = autoEvaluateNodeCallback;
             }
 
-            /// temporary, not precise measure
-            private long totalAllocatedBytes = GC.GetTotalAllocatedBytes(true);
-            private long allocatedMemory = 0;
-
-
             #region API
             public void NodeIncrement(int id)
             {
@@ -68,8 +63,6 @@ namespace QuestSystem.Graph
                 if (_nodes.TryGetValue(cursor.Node, out var existing))
                     return existing.Node;
 
-                long allocatedBytes = GC.GetTotalAllocatedBytes(true);
-
                 if (!cursor.IsAtRoot && !_nodes.TryGetValue(cursor.Root, out _))
                     throw new InvalidOperationException($"Parent node {cursor.Root} must be loaded before adding child {cursor.Node}. (Quest: {_quest.Tag})");
                 
@@ -81,11 +74,6 @@ namespace QuestSystem.Graph
                 }
 
                 AddNode(node);
-
-                totalAllocatedBytes = GC.GetTotalAllocatedBytes(true);
-                allocatedMemory = totalAllocatedBytes - allocatedBytes;
-
-                _log.Info($"Storage allocated memory: {allocatedMemory}");
 
                 return node;
             }
@@ -134,7 +122,6 @@ namespace QuestSystem.Graph
             public void Dispose()
             {
                 _log.Info("Disposing graph storage...");
-                var memoryBefore = GC.GetTotalAllocatedBytes(true);
                 foreach(var node in _nodes.Values)
                 {
                     var str = $"Node {node.Node.ID} of quest \'{_quest.Tag}\' RefCount:{node.RefCount}{(node.RefCount == 0 ? " (leak)" : "")}";
@@ -145,10 +132,6 @@ namespace QuestSystem.Graph
                     node.Node.Dispose();
                 }
                 _nodes.Clear();
-                var memoryAfter = GC.GetTotalAllocatedBytes(true);
-
-                var diff = memoryAfter - memoryBefore;
-                _log.Info($"Bytes freed: {diff}, Captured allocation memory bytes (approx): {allocatedMemory}, difference: {allocatedMemory - diff}");
             }
         }
     }

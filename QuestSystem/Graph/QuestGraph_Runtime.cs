@@ -61,7 +61,6 @@ namespace QuestSystem.Graph
                 /// </summary>
                 public EvaluationResult Evaluate(NwPlayer player, PlayerCursor initPos)
                 {
-                    _log.Info("Chain evaluator run...");
                     Cursor = initPos;
                     int rollback = initPos.Node;
                     bool started = false;
@@ -130,7 +129,6 @@ namespace QuestSystem.Graph
 
             public EvaluationOutcome EvaluateChain(PlayerCursor initialPosition, NwPlayer player)
             {
-                _log.Info("Evaluating the chain...");
                 var outcome = new EvaluationOutcome(){OldPosition = initialPosition};
                 _evaluator.NodeVisited += outcome.VisitedNodes.Add;
                 try
