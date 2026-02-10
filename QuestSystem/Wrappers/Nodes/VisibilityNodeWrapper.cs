@@ -18,7 +18,7 @@ namespace QuestSystem.Wrappers.Nodes
 
         protected override bool ProtectedEvaluate(NwPlayer player, out int nextId)
         {
-            nextId = NextID;
+            nextId = Node.NextID;
 
             var currentArea = player.ControlledCreature?.Area;
 

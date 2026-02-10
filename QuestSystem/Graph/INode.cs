@@ -9,19 +9,7 @@ namespace QuestSystem.Graph
         /// Key/Index of this node. Unique in the context of a quest graph
         /// </summary>
         public int ID {get;}
-
-        /// <summary>
-        /// Index of the next node in evaluation chain.<br/>
-        /// Possible values:
-        /// <list type="bullet">
-        /// <item><b>-2:</b> Quest will be completed on the root node of this chain</item>
-        /// <item><b>-1:</b> Player will stay indefinitely on this node until being moved to another position on the graph.<br/>
-        /// Re-evaluation resets the progress of this node.</item>
-        /// <item><b>>0:</b> A regular "go to" node</item>
-        /// </list>
-        /// </summary>
-        public int NextID {get;}
-
+        
         /// <summary>
         /// Triggered when a chain with this node should be evaluated for the player.
         /// <br/>This is the only outward signal a node emits.<br/>

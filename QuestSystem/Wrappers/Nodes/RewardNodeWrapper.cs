@@ -112,7 +112,7 @@ namespace QuestSystem.Wrappers.Nodes
         {
             if(_rewarderPlayers.Add(player))
                 GiveReward(player);
-            nextId = NextID;
+            nextId = Node.NextID;
             return true;
         }
 

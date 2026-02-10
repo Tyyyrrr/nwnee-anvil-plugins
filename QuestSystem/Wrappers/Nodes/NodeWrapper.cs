@@ -14,7 +14,6 @@ namespace QuestSystem.Wrappers.Nodes
         internal Quest? Quest {get;set;}
 
         public int ID => _node.ID;
-        public virtual int NextID => _node.NextID;
         public bool Rollback => _node.Rollback;
 
         public virtual bool IsRoot {get;} = false;

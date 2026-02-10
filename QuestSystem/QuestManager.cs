@@ -27,6 +27,8 @@ namespace QuestSystem
         private readonly Dictionary<string, QuestGraph>  _loadedQuests = new();
         private readonly Dictionary<NwPlayer, Dictionary<string, int>> _completedQuests = new();
 
+        private static QuestManager? _instance = null;
+
 
         private static readonly Dictionary<string, Dictionary<NwPlayer, PlayerQuestData>>  _questData = new();
         public static PlayerQuestData? GetPlayerQuestData(NwPlayer player, Quest? quest)
@@ -38,6 +40,10 @@ namespace QuestSystem
 
         public QuestManager(string questPackDirectory, MySQLService mySQL)
         {
+            if(_instance == null)
+                _instance = this;
+            else throw new InvalidOperationException("QuestManager singleton can be initialized only once.");
+
             QuestGraph.QuestCompleted += OnQuestCompleted;
             _questPackMan = new(questPackDirectory);
             _nodeLoader = new NodeLoader();
@@ -229,6 +235,9 @@ namespace QuestSystem
             stageId = -1;
             return false;
         }
+        /// <inheritdoc cref="IQuestInterface.IsOnQuest(NwPlayer, string, out int)"/>
+        public static bool PlayerIsOnQuest(NwPlayer player, string questTag, out int stageId) => _instance!.IsOnQuest(player,questTag, out stageId);
+
     
         /// <inheritdoc cref="IQuestInterface.HasCompletedQuest(NwPlayer, string, out int)"/>
         public bool HasCompletedQuest(NwPlayer player, string questTag, out int stageId)
@@ -244,6 +253,9 @@ namespace QuestSystem
 
             return false;
         }
+        
+        /// <inheritdoc cref="IQuestInterface.HasCompletedQuest(NwPlayer, string, out int)"/>
+        public static bool PlayerHasCompletedQuest(NwPlayer player, string questTag, out int stageId) => _instance!.HasCompletedQuest(player, questTag, out stageId);
 
 
         private bool isDisposed = false;
@@ -266,6 +278,8 @@ namespace QuestSystem
             _completedQuests.Clear();
 
             _questPackMan.Dispose();
+
+            _instance = null;
         }
 
         void IQuestDatabase.LazyLoadPlayerQuests(NwPlayer player)

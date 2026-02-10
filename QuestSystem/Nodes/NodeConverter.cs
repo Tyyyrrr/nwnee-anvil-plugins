@@ -29,6 +29,7 @@ namespace QuestSystem.Nodes
                     "$visibility" => root.Deserialize<VisibilityNode>(_options),
                     "$randomizer" => root.Deserialize<RandomizerNode>(_options),
                     "$cooldown" => root.Deserialize<CooldownNode>(_options),
+                    "$condition" => root.Deserialize<ConditionNode>(_options),
                     _ => new UnknownNode(root.GetRawText())
                 };
             }
@@ -47,6 +48,7 @@ namespace QuestSystem.Nodes
                 VisibilityNode => "$visibility",
                 RandomizerNode => "$randomizer",
                 CooldownNode => "$cooldown",
+                ConditionNode => "$condition",
                 _ => "$unknown"
             });
 

@@ -95,7 +95,7 @@ namespace QuestSystem.Wrappers.Nodes
                     allCompleted = false;
                 }
             }
-            nextId = NextID;
+            nextId = Node.NextID;
             return allCompleted;
         }        
         
