@@ -62,6 +62,9 @@ namespace QuestSystem.Nodes
     {
         public QuestCondition[] Conditions{get;set;} = Array.Empty<QuestCondition>();
 
+        public int NextIDWhenTrue { get; set; } = -1;
+        public int NextIDWhenFalse { get; set; } = -1;
+
         public override object Clone()
         {
             var arr = new QuestCondition[Conditions.Length];
@@ -71,7 +74,16 @@ namespace QuestSystem.Nodes
                 arr[i] = (QuestCondition)c.Clone();
             }
 
-            return new ConditionNode() {Conditions = arr};
+            return new ConditionNode() 
+            {
+                ID = base.ID,
+                NextID = base.NextID,
+                Rollback = this.Rollback,
+
+                Conditions = arr,
+                NextIDWhenTrue = this.NextIDWhenTrue,
+                NextIDWhenFalse = this.NextIDWhenFalse,
+            };
         }
 
         internal override ConditionNodeWrapper Wrap() => new(this);

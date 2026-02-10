@@ -15,10 +15,7 @@ namespace QuestSystem.Wrappers.Nodes
         public Dictionary<NwPlayer, bool> _playerResults = new();
         public override bool IsRoot => false;
 
-        public int NextIDWhenFalse {get;set;} = -1;
-        public int NextIDWhenTrue {get;set;} = -1;
-
-        int GetNextID(bool value) => value ? NextIDWhenTrue : NextIDWhenFalse;
+        int GetNextID(bool value) => value ? Node.NextIDWhenTrue : Node.NextIDWhenFalse;
         bool GetResult(NwPlayer player)
         {
             foreach(var con in Node.Conditions)
