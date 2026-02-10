@@ -18,7 +18,9 @@ namespace QuestSystem.Nodes
             AlignmentGoodEvil,
             AlignmentLawChaos,
             OnQuest,
-            CompletedQuest
+            CompletedQuest,
+            HasItem,
+            HasTaggedEffect
         }        
         
         public enum ComparisonMode

@@ -153,6 +153,34 @@ namespace QuestSystem.Wrappers.Nodes
                         return hasCompletedQuest && (condition.IntParameter < 0 || stageId == condition.IntParameter);
                     }
 
+                case QuestCondition.ConditionType.HasItem:
+                    {
+                        var splitStr = condition.StringCondition.Split(':');
+                        var resRef = splitStr[0];
+                        var tag = splitStr.Length > 1 ? splitStr[1] : null;
+                        int requiredAmount = condition.IntCondition;
+
+                        foreach(var item in player.ControlledCreature!.Inventory.Items)
+                        {
+                            if(item.ResRef != resRef) continue;
+                            if(tag != null && item.Tag != tag) continue;
+                            if(item.StackSize < requiredAmount)
+                                requiredAmount -= item.StackSize;
+                            else requiredAmount = 0;
+
+                            if(requiredAmount <= 0) return true;
+                        }
+                        return false;
+                    }
+
+                case QuestCondition.ConditionType.HasTaggedEffect:
+                    {
+                        foreach(var e in player.ControlledCreature!.ActiveEffects)
+                            if(e.Tag == condition.StringCondition) 
+                                return true;
+                        return false;
+                    }
+
                 default: throw new InvalidOperationException("Unknown condition type");
             }
         }
