@@ -12,7 +12,13 @@ namespace QuestSystem.Wrappers.Objectives
         protected override ObjectiveKill Objective => base.Objective;
 
         protected override void Subscribe()
-        {
+        {            
+            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
+            {
+                _log.Error("ObjectiveKill needs ResRef, Tag or both, but none was provided");
+                return;
+            }
+
             foreach (var area in NwModule.Instance.Areas)
             {
                 if (Objective.AreaTags.Length > 0 && !Objective.AreaTags.Contains(area.Tag)) continue;

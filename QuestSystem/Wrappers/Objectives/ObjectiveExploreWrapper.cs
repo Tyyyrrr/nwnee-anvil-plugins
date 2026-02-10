@@ -10,6 +10,12 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Subscribe()
         {
+            if(Objective.AreaTags.Length == 0)
+            {
+                _log.Error("ObjectiveExplore needs at least one area tag, but none was provided");
+                return;
+            }
+            
             NLog.LogManager.GetCurrentClassLogger().Info("Fake subscribe...");
             return;
         }

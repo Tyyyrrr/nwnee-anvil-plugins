@@ -10,6 +10,12 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Subscribe()
         {
+            if(string.IsNullOrEmpty(Objective.TargetResRef) && string.IsNullOrEmpty(Objective.TargetTag))
+            {
+                _log.Error("ObjectiveSpellcast needs target ResRef, target Tag or both, but none was provided");
+                return;
+            }
+
             NLog.LogManager.GetCurrentClassLogger().Info("Fake subscribe...");
             return;
         }
