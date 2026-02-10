@@ -18,6 +18,8 @@ namespace QuestSystem.Objectives
 
         public string ResRef { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
+        public string ItemActivateTargetResRef {get;set;} = string.Empty;
+        public string ItemActivateTargetTag {get;set;} = string.Empty;
 
         internal override ObjectiveInteractWrapper Wrap() => new(this);
 
@@ -39,6 +41,8 @@ namespace QuestSystem.Objectives
 
                 ResRef = this.ResRef,
                 Tag = this.Tag,
+                ItemActivateTargetResRef = this.ItemActivateTargetResRef,
+                ItemActivateTargetTag = this.ItemActivateTargetTag,
                 Interaction = this.Interaction,
             };
         }

@@ -54,6 +54,12 @@ namespace QuestSystem.Wrappers.Objectives
 
         private void SubscribePlaceableUse()
         {
+            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
+            {
+                _log.Error("ObjectiveInteract needs ResRef, Tag or both, but none was provided");
+                return;
+            }
+
             foreach (var area in NwModule.Instance.Areas)
             {
                 if (Objective.AreaTags.Length > 0 && !Objective.AreaTags.Contains(area.Tag)) continue;
@@ -113,6 +119,27 @@ namespace QuestSystem.Wrappers.Objectives
 
             if (usingPlayer == null) return;
 
+            
+            if (Objective.AreaTags.Length > 0 && (userArea == null || !Objective.AreaTags.Contains(userArea.Tag)))
+                return;
+
+            if(Objective.TriggerTags.Length > 0)
+            {
+                var nearestTriggers = user.GetNearestObjectsByType<NwTrigger>();
+                bool inTrigger = false;
+                foreach(var t in nearestTriggers)
+                {
+                    if(!t.IsValid || !Objective.TriggerTags.Contains(t.Tag)) continue;
+                    if (t.GetObjectsInTrigger<NwCreature>().Any(c => c == user))
+                    {
+                        inTrigger = true;
+                        break;
+                    }
+                }
+
+                if(!inTrigger) return;
+            }
+
             if (Objective.PartyMembersAllowed)
             {
                 foreach (var member in usingPlayer.PartyMembers)
@@ -150,7 +177,15 @@ namespace QuestSystem.Wrappers.Objectives
             }
         }
 
-        private void SubscribeTriggerEnter() => NwModule.Instance.OnTriggerEnter += OnTriggerEntered;
+        private void SubscribeTriggerEnter() 
+        {
+            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
+            {
+                _log.Error("ObjectiveInteract needs ResRef, Tag or both, but none was provided");
+                return;
+            }
+            NwModule.Instance.OnTriggerEnter += OnTriggerEntered;
+        }
         private void UnsubscribeTriggerEnter() => NwModule.Instance.OnTriggerEnter -= OnTriggerEntered;
 
         void OnTriggerEntered(OnTriggerEnter data)
@@ -185,16 +220,96 @@ namespace QuestSystem.Wrappers.Objectives
         }
 
 
-        private void SubscribeItemActivate() => NwModule.Instance.OnActivateItem += OnItemActivated;
+        private void SubscribeItemActivate() 
+        {
+            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
+            {
+                _log.Error("ObjectiveInteract needs ResRef, Tag or both, but none was provided");
+                return;
+            }
+
+            NwModule.Instance.OnActivateItem += OnItemActivated;
+        }
         private void UnsubscribeItemActivate() => NwModule.Instance.OnActivateItem -= OnItemActivated;
 
         void OnItemActivated(ModuleEvents.OnActivateItem data)
         {
-            
+            var creature = data.ItemActivator;
+            var player = creature.ControllingPlayer;
+            if(player == null || !player.IsValid)
+            {
+                _log.Error("invalid player");
+                return;
+            }
+
+            var area = creature.Area;
+            if(area != null && !area.IsValid){
+                _log.Error("item activator not in area");
+                return;
+            }
+
+            if (Objective.AreaTags.Length > 0 && (area == null || !Objective.AreaTags.Contains(area.Tag)))
+                return;
+
+            if(Objective.TriggerTags.Length > 0)
+            {
+                var nearestTriggers = creature.GetNearestObjectsByType<NwTrigger>();
+                bool inTrigger = false;
+                foreach(var t in nearestTriggers)
+                {
+                    if(!t.IsValid || !Objective.TriggerTags.Contains(t.Tag)) continue;
+                    if (t.GetObjectsInTrigger<NwCreature>().Any(c => c == creature))
+                    {
+                        inTrigger = true;
+                        break;
+                    }
+                }
+
+                if(!inTrigger) return;
+            }
+
+            var item = data.ActivatedItem;
+            if(!item.IsValid) return;
+            if(!string.IsNullOrEmpty(Objective.ResRef) && item.ResRef != Objective.ResRef) return;
+            if(!string.IsNullOrEmpty(Objective.Tag) && item.Tag != Objective.Tag) return;
+
+            var target = data.TargetObject;
+            if(target != null)
+            {
+                if(!target.IsValid) return;
+                if(!string.IsNullOrEmpty(Objective.ItemActivateTargetResRef) && target.ResRef != Objective.ItemActivateTargetResRef) return;
+                if(!string.IsNullOrEmpty(Objective.ItemActivateTargetTag) && target.Tag != Objective.ItemActivateTargetTag) return;
+            }
+
+            if (Objective.PartyMembersAllowed)
+            {
+                foreach (var member in player.PartyMembers)
+                {
+                    var controlledCreature = player.ControlledCreature;
+
+                    if (controlledCreature == null 
+                        || !controlledCreature.IsValid 
+                        || controlledCreature.Area == null
+                        || controlledCreature.Area != area) 
+                        continue;
+
+                    GetTrackedProgress(member)?.Proceed();
+                }
+            }
+            else
+            {
+                GetTrackedProgress(player)?.Proceed();
+            }
         }
 
         private void SubscribeObjectExamine()
-        {
+        {            
+            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
+            {
+                _log.Error("ObjectiveInteract needs ResRef, Tag or both, but none was provided");
+                return;
+            }
+
             EventService.SubscribeAll<OnExamineObject,OnExamineObject.Factory>(OnObjectExamined, EventCallbackType.After);
         }
         private void UnsubscribeObjectExamine()
@@ -206,10 +321,17 @@ namespace QuestSystem.Wrappers.Objectives
         void OnObjectExamined(OnExamineObject data)
         {
             var player = data.ExaminedBy;
+            var creature = player.ControlledCreature;
 
             if(player == null || !player.IsValid)
             {
                 _log.Error("invalid player");
+                return;
+            }
+
+            if(creature == null || !creature.IsValid)
+            {
+                _log.Error("invalid creature");
                 return;
             }
 
@@ -230,6 +352,22 @@ namespace QuestSystem.Wrappers.Objectives
             if (Objective.AreaTags.Length > 0 && (area == null || !Objective.AreaTags.Contains(area.Tag)))
                 return;
 
+            if(Objective.TriggerTags.Length > 0)
+            {
+                var nearestTriggers = creature.GetNearestObjectsByType<NwTrigger>();
+                bool inTrigger = false;
+                foreach(var t in nearestTriggers)
+                {
+                    if(!t.IsValid || !Objective.TriggerTags.Contains(t.Tag)) continue;
+                    if (t.GetObjectsInTrigger<NwCreature>().Any(c => c == creature))
+                    {
+                        inTrigger = true;
+                        break;
+                    }
+                }
+
+                if(!inTrigger) return;
+            }
                 
 
             if ((Objective.Tag == string.Empty && Objective.ResRef != string.Empty && Objective.ResRef == obj.ResRef)
