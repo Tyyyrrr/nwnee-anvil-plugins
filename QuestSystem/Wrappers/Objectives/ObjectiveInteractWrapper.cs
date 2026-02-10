@@ -16,6 +16,12 @@ namespace QuestSystem.Wrappers.Objectives
 
         protected override void Subscribe()
         {
+            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
+            {
+                _log.Error("ObjectiveInteract needs ResRef, Tag or both, but none was provided");
+                return;
+            }
+
             switch (Objective.Interaction)
             {
                 case ObjectiveInteract.InteractionType.PlaceableUse:
@@ -54,11 +60,6 @@ namespace QuestSystem.Wrappers.Objectives
 
         private void SubscribePlaceableUse()
         {
-            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
-            {
-                _log.Error("ObjectiveInteract needs ResRef, Tag or both, but none was provided");
-                return;
-            }
 
             foreach (var area in NwModule.Instance.Areas)
             {
@@ -179,14 +180,12 @@ namespace QuestSystem.Wrappers.Objectives
 
         private void SubscribeTriggerEnter() 
         {
-            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
-            {
-                _log.Error("ObjectiveInteract needs ResRef, Tag or both, but none was provided");
-                return;
-            }
-            NwModule.Instance.OnTriggerEnter += OnTriggerEntered;
+            EventService.SubscribeAll<OnTriggerEnter,OnTriggerEnter.Factory>(OnTriggerEntered, EventCallbackType.After);
         }
-        private void UnsubscribeTriggerEnter() => NwModule.Instance.OnTriggerEnter -= OnTriggerEntered;
+        private void UnsubscribeTriggerEnter()
+        {
+            EventService.UnsubscribeAll<OnTriggerEnter,OnTriggerEnter.Factory>(OnTriggerEntered, EventCallbackType.After);
+        }
 
         void OnTriggerEntered(OnTriggerEnter data)
         {
@@ -222,12 +221,6 @@ namespace QuestSystem.Wrappers.Objectives
 
         private void SubscribeItemActivate() 
         {
-            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
-            {
-                _log.Error("ObjectiveInteract needs ResRef, Tag or both, but none was provided");
-                return;
-            }
-
             NwModule.Instance.OnActivateItem += OnItemActivated;
         }
         private void UnsubscribeItemActivate() => NwModule.Instance.OnActivateItem -= OnItemActivated;
@@ -304,12 +297,6 @@ namespace QuestSystem.Wrappers.Objectives
 
         private void SubscribeObjectExamine()
         {            
-            if(string.IsNullOrEmpty(Objective.ResRef) && string.IsNullOrEmpty(Objective.Tag))
-            {
-                _log.Error("ObjectiveInteract needs ResRef, Tag or both, but none was provided");
-                return;
-            }
-
             EventService.SubscribeAll<OnExamineObject,OnExamineObject.Factory>(OnObjectExamined, EventCallbackType.After);
         }
         private void UnsubscribeObjectExamine()

@@ -54,7 +54,7 @@ namespace QuestSystem
 
         public void PushStage(StageNodeWrapper stage)
         {
-            NLog.LogManager.GetCurrentClassLogger().Info(" - - - - Pushin' stage");
+            NLog.LogManager.GetCurrentClassLogger().Info(" - - - - Pushin' stage " + stage.ID);
 
             var current = _graph.GetRootNode(_player) as StageNodeWrapper ?? throw new InvalidOperationException("Player is not on the graph");
 

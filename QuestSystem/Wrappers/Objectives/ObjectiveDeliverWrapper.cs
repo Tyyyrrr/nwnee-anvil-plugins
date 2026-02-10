@@ -11,7 +11,6 @@ namespace QuestSystem.Wrappers.Objectives
         public ObjectiveDeliverWrapper(ObjectiveDeliver objective) : base(objective) { }
         protected override ObjectiveDeliver Objective => base.Objective;
 
-        private readonly List<NwTrigger> _subscribedTriggers = new();
 
         protected override void Subscribe()
         {
@@ -20,31 +19,18 @@ namespace QuestSystem.Wrappers.Objectives
                 _log.Error("ObjectiveObtain needs ResRef, Tag or both, but none was provided");
                 return;
             }
-            
-            _subscribedTriggers.Clear();
-            
-            foreach(var area in NwModule.Instance.Areas)
-            {
-                foreach(var trigger in area.FindObjectsOfTypeInArea<NwTrigger>())
-                {
-                    if(Objective.TriggerTags.Contains(trigger.Tag))
-                    {
-                        trigger.OnEnter += OnTriggerEnter;
-                        _subscribedTriggers.Add(trigger);
-                    }
-                }
-            }
+
+            EventService.SubscribeAll<OnTriggerEnter,OnTriggerEnter.Factory>(OnTriggerEnter, Anvil.Services.EventCallbackType.After);
         }
 
         protected override void Unsubscribe()
         {
-            foreach(var trigger in _subscribedTriggers)
-                trigger.OnEnter -= OnTriggerEnter;
+            EventService.UnsubscribeAll<OnTriggerEnter,OnTriggerEnter.Factory>(OnTriggerEnter, Anvil.Services.EventCallbackType.After);
         }
 
-        void OnTriggerEnter(TriggerEvents.OnEnter data)
+        void OnTriggerEnter(OnTriggerEnter data)
         {
-            var creature = data.EnteringObject as NwCreature;
+            var creature = data.EnteredObject as NwCreature;
             if(creature == null || !creature.IsValid) return;
 
             var player = creature.ControllingPlayer;
@@ -110,22 +96,23 @@ namespace QuestSystem.Wrappers.Objectives
             else if(Objective.DestroyItemsOnDelivery)
             {
                 int idx = 0;
-                while(collectedAmount > 0)
+                var remaining = Objective.RequiredAmount;
+                while(remaining > 0)
                 {
                     var item = itemsToDeliver[idx];
-                    if(item.StackSize > collectedAmount)
+                    if(item.StackSize > remaining)
                     {
                         item.StackSize -= collectedAmount;
                         break;
                     }
-                    else if(item.StackSize == collectedAmount)
+                    else if(item.StackSize == remaining)
                     {
                         item.Destroy();
                         break;
                     }
                     else
                     {
-                        collectedAmount -= item.StackSize;
+                        remaining -= item.StackSize;
                         item.Destroy();
                         idx++;
                     }
@@ -142,7 +129,14 @@ namespace QuestSystem.Wrappers.Objectives
         {
             base.StartTrackingProgress(player);
 
-            UpdatePlayer(player);
+            foreach(var trigger in player.ControlledCreature!.GetNearestObjectsByType<NwTrigger>())
+            {
+                if(trigger.GetObjectsInTrigger<NwCreature>().Contains(player.ControlledCreature) && Objective.TriggerTags.Contains(trigger.Tag))
+                {
+                    UpdatePlayer(player);
+                    return;
+                }
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-
+using System.Runtime.CompilerServices;
 using Anvil.API;
 
 using QuestSystem.Nodes;
@@ -24,6 +24,7 @@ namespace QuestSystem.Wrappers.Nodes
         }
         public string? GetObjectivesJournalEntry(NwPlayer player)
         {
+            NLog.LogManager.GetCurrentClassLogger().Warn("Stage ID " + this.ID + " getting objectives text");
             if(!ShowInJournal || _objectives.Length == 0) return string.Empty;
 
             string text = string.Empty;
@@ -46,8 +47,29 @@ namespace QuestSystem.Wrappers.Nodes
             }
         }
 
+        bool updateLazy = false;
         void OnObjectiveUpdated(ObjectiveWrapper wrapper, NwPlayer player) {
             
+            if(updateLazy)
+            {
+                _ = NwTask.Run(async () =>
+                {
+                    try{
+                    await NwTask.Delay(TimeSpan.FromSeconds(1.5));
+                    await NwTask.SwitchToMainThread();
+                    if(updateLazy == true) return;
+                    OnObjectiveUpdated(wrapper,player);
+                    }
+                    catch(Exception ex)
+                    {
+                        NLog.LogManager.GetCurrentClassLogger()
+                            .Error("Exception from async task: " + ex.Message + "\n" + ex.StackTrace);
+                    }
+
+                });
+                return;
+            }
+
             var data = QuestManager.GetPlayerQuestData(player, Quest);
 
             if(this._objectives.Any(o=>!o.IsCompleted(player)))
@@ -60,8 +82,10 @@ namespace QuestSystem.Wrappers.Nodes
 
         public override void Enter(NwPlayer player)
         {
+            updateLazy = true;
             foreach(var objective in _objectives)
                 objective.StartTrackingProgress(player);
+            updateLazy = false;
             var data = QuestManager.GetPlayerQuestData(player,Quest);
             data?.PushStage(this);
         }
