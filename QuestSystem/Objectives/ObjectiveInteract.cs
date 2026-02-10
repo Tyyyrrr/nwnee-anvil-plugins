@@ -60,6 +60,8 @@ namespace QuestSystem.Objectives
                 _interacted = true;
                 OnUpdate?.Invoke(this);
             }
+            
+            public object? GetProgressValue() => _interacted;
         }
 
     }

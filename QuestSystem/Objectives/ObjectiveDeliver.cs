@@ -56,6 +56,8 @@ namespace QuestSystem.Objectives
             }
 
             public string GetProgressString() => IsCompleted ? "(Dostarczono)" : $"{amount}/{_objective.RequiredAmount}";
+
+            public object? GetProgressValue() => amount;
         }
     }
 }

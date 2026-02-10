@@ -7,6 +7,7 @@ namespace QuestSystem.Wrappers.Objectives
         public event Action<IObjectiveProgress>? OnUpdate;
         public void Proceed(object? parameter = null);
         public string GetProgressString();
+        public object? GetProgressValue();
         public bool IsCompleted { get; }
     }
 }

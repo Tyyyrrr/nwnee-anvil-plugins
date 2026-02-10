@@ -49,6 +49,8 @@ namespace QuestSystem.Objectives
                     OnUpdate?.Invoke(this);
                 }
             }
+            
+            public object? GetProgressValue() => _completed;
         }
 
     }

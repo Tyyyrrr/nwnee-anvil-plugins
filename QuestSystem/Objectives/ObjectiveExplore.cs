@@ -49,6 +49,8 @@ namespace QuestSystem.Objectives
             }
 
             public string GetProgressString() => IsCompleted ? "(Zbadano obszar)" : $"{percentage}/{_objective.AreaExplorePercentage}";
+
+            public object? GetProgressValue() => percentage;
         }
     }
 }

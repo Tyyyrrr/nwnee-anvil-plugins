@@ -47,6 +47,8 @@ namespace QuestSystem.Objectives
             }
 
             public string GetProgressString() => IsCompleted ? "(Ukończono)" : $"{_kills}/{_objective.Amount}";
+
+            public object? GetProgressValue() => _kills;
         }
     }
 }
