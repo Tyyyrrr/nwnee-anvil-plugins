@@ -46,5 +46,31 @@ namespace QuestEditor.Objectives
                 PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(Tag)));
             }
         }
+
+        public string TargetResRef
+        {
+            get => Objective.ItemActivateTargetResRef;
+            set
+            {
+                if (Objective.ItemActivateTargetResRef == value) return;
+                var backup = (Objective)Objective.Clone();
+                Objective.ItemActivateTargetResRef = value;
+                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(TargetResRef)));
+            }
+        }
+
+        public string TargetTag
+        {
+            get => Objective.ItemActivateTargetTag;
+            set
+            {
+                if (Objective.ItemActivateTargetTag == value) return;
+                var backup = (Objective)Objective.Clone();
+                Objective.ItemActivateTargetTag = value;
+                PushOperation(new UpdateObjectiveOperation(this, backup, Objective, nameof(TargetTag)));
+            }
+        }
+
+        public bool CanSpecifyTarget => Objective.Interaction == ObjectiveInteract.InteractionType.ItemActivate;
     }
 }

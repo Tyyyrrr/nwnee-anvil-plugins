@@ -273,6 +273,8 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0"
@@ -301,6 +303,30 @@
                                   Grid.Column="1"
                                   Text="{Binding Tag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                   Style="{StaticResource StyledTextBox}"/>
+
+
+                        <TextBlock  Grid.Row="3" 
+                                    Grid.Column="0"
+                                    Text="TargetResRef:" 
+                                    Style="{StaticResource StyledTextBlock}"
+                                    Visibility="{Binding CanSpecifyTarget, Converter={StaticResource BoolToVis}}"/>
+                        <TextBox  Grid.Row="3" 
+                                  Grid.Column="1"
+                                  Text="{Binding TargetResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"
+                                  Visibility="{Binding CanSpecifyTarget, Converter={StaticResource BoolToVis}}"/>
+
+
+                        <TextBlock  Grid.Row="4" 
+                                    Grid.Column="0"
+                                    Text="TargetTag:" 
+                                    Style="{StaticResource StyledTextBlock}"
+                                    Visibility="{Binding CanSpecifyTarget, Converter={StaticResource BoolToVis}}"/>
+                        <TextBox  Grid.Row="4" 
+                                  Grid.Column="1"
+                                  Text="{Binding TargetTag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"
+                                  Visibility="{Binding CanSpecifyTarget, Converter={StaticResource BoolToVis}}"/>
                     </Grid>
                 </DataTemplate>
             </Setter.Value>
