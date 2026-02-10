@@ -1,3 +1,7 @@
+using System;
+using System.Linq;
+using Anvil.API;
+using Anvil.API.Events;
 using QuestSystem.Objectives;
 
 namespace QuestSystem.Wrappers.Objectives
@@ -16,14 +20,50 @@ namespace QuestSystem.Wrappers.Objectives
                 return;
             }
             
-            NLog.LogManager.GetCurrentClassLogger().Info("Fake subscribe...");
-            return;
+
+            foreach(var area in NwModule.Instance.Areas)
+            {
+                if(!Objective.AreaTags.Contains(area.Tag)) continue;
+
+                area.OnHeartbeat += OnAreaHeartbeat;
+            }
         }
 
         protected override void Unsubscribe()
         {
-            NLog.LogManager.GetCurrentClassLogger().Info("Fake unsubscribe...");
-            return;
+            foreach(var area in NwModule.Instance.Areas)
+                area.OnHeartbeat -= OnAreaHeartbeat;
+        }
+
+        void OnAreaHeartbeat(AreaEvents.OnHeartbeat data)
+        {
+            var area = data.Area;
+
+            foreach(var obj in area.Objects)
+            {
+                if(obj is not NwCreature creature) continue;
+
+                var player = creature.ControllingPlayer;
+
+                if(player == null || !player.IsValid) continue;
+
+                var progress = GetTrackedProgress(player);
+
+                if(progress == null) continue;
+
+                int percentage = RecalculatePercentage(area,player);
+
+                progress.Proceed(percentage);
+            }
+        }
+
+        static int RecalculatePercentage(NwArea area, NwPlayer player)
+        {
+            var explorationState = player.GetAreaExplorationState(area);
+
+            if(explorationState == null) return 0;
+
+            return (int)Math.Ceiling(((float)explorationState.Count(b=>b > 0)) / explorationState.Length);
         }
     }
 }

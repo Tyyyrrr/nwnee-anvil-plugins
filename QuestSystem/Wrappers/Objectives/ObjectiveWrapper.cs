@@ -51,7 +51,7 @@ namespace QuestSystem.Wrappers.Objectives
         protected abstract void Unsubscribe();
 
 
-        public void StartTrackingProgress(NwPlayer player)
+        public virtual void StartTrackingProgress(NwPlayer player)
         {
             bool shouldSubscribe = !IsActive;
 
