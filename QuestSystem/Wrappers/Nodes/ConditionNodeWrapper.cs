@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Anvil.API;
 using NLog;
 using QuestSystem.Nodes;
@@ -186,9 +187,9 @@ namespace QuestSystem.Wrappers.Nodes
         {
             bool playerResult = GetResult(player);
 
-            nextId = playerResult ? GetNextID(playerResult) : -1;
-
-            return playerResult;
+            nextId = GetNextID(playerResult);
+            
+            return true; // condition check results always in either true, or false value. (while ProtectedEvaluate returning false would mean error/no result)
         }
 
         protected override void ProtectedDispose(){}
