@@ -33,7 +33,7 @@
 
     <Window.Resources>
         <Style TargetType="{x:Type local:MainWindow}">
-            <!--<Setter Property="HelpCommand" Value="{Binding HelpCommand}" />-->
+            <Setter Property="HelpCommand" Value="{Binding HelpCommand}" />
             <Setter Property="CloseCommand" Value="{Binding CloseCommand}" />
             <Setter Property="UndoCommand" Value="{Binding UndoCommand}" />
             <Setter Property="RedoCommand" Value="{Binding RedoCommand}" />
@@ -101,7 +101,7 @@
                 <MenuItem Header="Light" Click="ToggleLightMode" x:Name="LightThemeMenuOption" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
                 <MenuItem Header="Dark" Click="ToggleDarkMode" x:Name="DarkThemeMenuOption" Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
             </MenuItem>
-            <!--<MenuItem Header ="Help" Command="{x:Static ApplicationCommands.Help}" Background="{DynamicResource MenuBackgroundColorBrush}" Foreground="{DynamicResource MenuForegroundColorBrush}"/>-->
+            <MenuItem Header ="Help" Command="{x:Static ApplicationCommands.Help}" Background="{DynamicResource MenuBackgroundColorBrush}" Foreground="{DynamicResource MenuForegroundColorBrush}"/>
         </Menu>
     </Grid>
 </Window>

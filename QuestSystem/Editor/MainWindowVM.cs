@@ -4,6 +4,7 @@ using QuestEditor.Inspector;
 using QuestEditor.Nodes;
 using QuestEditor.Shared;
 using System.Diagnostics;
+using System.Windows;
 using System.Windows.Input;
 
 namespace QuestEditor
@@ -81,7 +82,10 @@ namespace QuestEditor
 
 
         public ICommand HelpCommand { get; } = new RelayCommand(Help, _ => true);
-        static void Help(object? _) => Trace.WriteLine("There is no help.");
+        static void Help(object? _)
+        {
+            ((App)Application.Current).OpenManual();
+        }
         
         public ICommand CloseCommand { get; } = new RelayCommand(Close, _ => true);
         static void Close(object? _) => App.Current.MainWindow.Close();

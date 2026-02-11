@@ -1,6 +1,8 @@
 ﻿using System.Windows;
 using System.IO;
 using System.Text.Json;
+using System.Reflection;
+using System.Diagnostics;
 
 namespace QuestEditor;
 
@@ -27,6 +29,24 @@ public partial class App : Application
             
         };
     }
+
+
+    public void OpenManual()
+    {
+        var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        path = Path.Combine(path, "MANUAL.pdf");
+
+        if(!File.Exists(path))
+        {
+            Trace.WriteLine("No manual PDF file");
+            return;
+        }
+
+        var startInfo = new ProcessStartInfo(path) { UseShellExecute = true };
+        _ = Process.Start(startInfo);
+    }
+
+
 
     protected override void OnExit(ExitEventArgs e)
     {
