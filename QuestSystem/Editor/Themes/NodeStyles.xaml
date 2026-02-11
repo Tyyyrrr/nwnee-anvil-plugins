@@ -457,7 +457,7 @@
                                     <Setter Property="ContextMenu">
                                         <Setter.Value>
                                             <ContextMenu>
-                                                <MenuItem Header="Delete condition" Command="{Binding DeleteBranchCommand}" CommandParameter="{Binding}"/>
+                                                <MenuItem Header="Delete condition" Command="{Binding RemoveConditionCommand}" CommandParameter="{Binding}"/>
                                             </ContextMenu>
                                         </Setter.Value>
                                     </Setter>

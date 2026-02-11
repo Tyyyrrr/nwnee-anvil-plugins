@@ -8,53 +8,69 @@ using System.Windows.Input;
 
 namespace QuestEditor.Nodes
 {
-    public sealed class QuestConditionVM(QuestCondition condition) : ViewModelBase
+    public sealed class QuestConditionVM : ViewModelBase
     {
-        private QuestCondition _condition = (QuestCondition)condition.Clone();
+        public QuestConditionVM(QuestCondition condition, ConditionNodeVM parent)
+        {
+            _condition = (QuestCondition)condition.Clone();
+            _stringCondition = _condition.StringCondition;
+            _intCondition = _condition.IntCondition;
+            _intParameter = _condition.IntParameter;
+            _type = _condition.Type;
+            _comparison = _condition.Comparison;
+            _isInverted = _condition.Invert;
+
+            RemoveConditionCommand = parent.RemoveConditionCommand;
+
+            SetBooleanFlags();
+        }
+        private QuestCondition _condition;
         public string StringCondition
         {
             get => _stringCondition;
             set {if(SetProperty(ref _stringCondition, value)) _condition.StringCondition = value; Updated?.Invoke(); }
-        } private string _stringCondition = condition.StringCondition;
+        } private string _stringCondition;
 
         public int IntCondition
         {
             get => _intCondition;
             set {if (!SetProperty(ref _intCondition, value)) return; _condition.IntCondition = value; Updated?.Invoke();}
-        } private int _intCondition = condition.IntCondition;
+        } private int _intCondition;
 
         public int IntParameter
         {
             get => _intParameter;
             set { if(SetProperty(ref _intParameter, value)) _condition.IntParameter = value; Updated?.Invoke(); }
-        } private int _intParameter = condition.IntParameter;
+        } private int _intParameter;
 
         public QuestCondition.ConditionType Type
         {
             get => _type;
             set { if(SetProperty(ref _type, value)) _condition.Type = value; SetBooleanFlags(); Updated?.Invoke(); }
-        } private QuestCondition.ConditionType _type = condition.Type;
+        } private QuestCondition.ConditionType _type;
 
         public QuestCondition.ComparisonMode Comparison
         {
             get => _comparison;
             set { if(SetProperty(ref _comparison,value)) _condition.Comparison = value; Updated?.Invoke(); }
-        } private QuestCondition.ComparisonMode _comparison = condition.Comparison;
+        } private QuestCondition.ComparisonMode _comparison;
 
         public QuestCondition GetCondition() => (QuestCondition)_condition.Clone();
         public void SetCondition(QuestCondition condition)
         {
             _condition = (QuestCondition)condition.Clone();
-            _intCondition = condition.IntCondition;
+            _intCondition = _condition.IntCondition;
             RaisePropertyChanged(nameof(IntCondition));
-            _intParameter = condition.IntParameter;
+            _intParameter = _condition.IntParameter;
             RaisePropertyChanged(nameof(IntParameter));
-            _stringCondition = condition.StringCondition;
+            _stringCondition = _condition.StringCondition;
             RaisePropertyChanged(nameof(StringCondition));
-            _type = condition.Type;
+            _type = _condition.Type;
             RaisePropertyChanged(nameof(Type));
-            _comparison = condition.Comparison;
+            _comparison = _condition.Comparison;
             RaisePropertyChanged(nameof(Comparison));
+            _isInverted = _condition.Invert;
+            RaisePropertyChanged(nameof(IsInverted));
             RaisePropertyChanged(nameof(IntConditionText));
             RaisePropertyChanged(nameof(IntParameterText));
 
@@ -124,7 +140,7 @@ namespace QuestEditor.Nodes
             get => _isInverted;
             set { if(SetProperty(ref _isInverted,value)) _condition.Invert = value; Updated?.Invoke(); }
         }
-        bool _isInverted = condition.Invert;
+        bool _isInverted;
 
         private static IReadOnlyList<QuestCondition.ConditionType> _conditionTypes = Enum.GetValues<QuestCondition.ConditionType>();
         public IReadOnlyList<QuestCondition.ConditionType> ConditionTypes => _conditionTypes;
@@ -133,7 +149,7 @@ namespace QuestEditor.Nodes
         private static IReadOnlyList<QuestCondition.ComparisonMode> _comparisonModes = Enum.GetValues<QuestCondition.ComparisonMode>();
         public IReadOnlyList<QuestCondition.ComparisonMode> ComparisonModes => _comparisonModes;
 
-
+        public ICommand RemoveConditionCommand { get; }
 
 
 
@@ -169,7 +185,7 @@ namespace QuestEditor.Nodes
             get => IntCondition.ToString();
             set
             {
-                if (!int.TryParse(value, out var i) || i == IntCondition) return;
+                if (!int.TryParse(value, out var i)) return;
                 IntCondition = i;
                 RaisePropertyChanged(nameof(IntConditionText));
             }
@@ -180,7 +196,7 @@ namespace QuestEditor.Nodes
             get=> IntParameter.ToString();
             set
             {
-                if(!int.TryParse(value, out var i) || i == IntParameter) return;
+                if(!int.TryParse(value, out var i)) return;
                 IntParameter = i;
                 RaisePropertyChanged(nameof(IntParameterText));
             }
@@ -205,7 +221,7 @@ namespace QuestEditor.Nodes
 
         public ConditionNodeVM(ConditionNode node, QuestVM quest) : base(node, quest)
         {
-            Conditions = new ObservableCollection<QuestConditionVM>(node.Conditions.Select(c => new QuestConditionVM(c)));
+            Conditions = new ObservableCollection<QuestConditionVM>(node.Conditions.Select(c => new QuestConditionVM(c, this)));
             oldValues = node.Conditions.Select(c => (QuestCondition)c.Clone()).ToArray();
             OutputWhenTrue = new(node.ID, node.NextIDWhenTrue);
             OutputWhenFalse = new(node.ID, node.NextIDWhenFalse);
@@ -245,7 +261,7 @@ namespace QuestEditor.Nodes
         {
             Node.Conditions = [.. Conditions.Select(c => c.GetCondition())];
 
-            Trace.WriteLine("Writing new target id: true:" + OutputWhenTrue.TargetID + " false: " + OutputWhenFalse.TargetID);
+            //Trace.WriteLine("Writing new target id: true:" + OutputWhenTrue.TargetID + " false: " + OutputWhenFalse.TargetID);
             Node.NextIDWhenTrue = OutputWhenTrue.TargetID;
             Node.NextIDWhenFalse = OutputWhenFalse.TargetID;
             oldValues = Node.Conditions.Select(c => (QuestCondition) c.Clone()).ToArray();
@@ -258,7 +274,7 @@ namespace QuestEditor.Nodes
             protected override void ProtectedDo()
             {
                 var condition = new QuestCondition();
-                vm = new QuestConditionVM(condition);
+                vm = new QuestConditionVM(condition, origin);
                 ProtectedRedo();
             }
 
@@ -266,11 +282,13 @@ namespace QuestEditor.Nodes
             {
                 vm!.Updated += origin.Update;
                 origin.Conditions.Add(vm);
+                origin.oldValues = origin.Conditions.Select(c => c.GetCondition()).ToArray();
             }
             protected override void ProtectedUndo()
             {
                 vm!.Updated -= origin.Update;
-                origin.Conditions.Remove(vm!);
+                origin.Conditions.Remove(vm);
+                origin.oldValues = origin.Conditions.Select(c => c.GetCondition()).ToArray();
             }
         }
 
