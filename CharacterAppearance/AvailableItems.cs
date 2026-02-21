@@ -205,7 +205,7 @@ namespace CharacterAppearance
         {
             var tab = NwGameTables.PartsChestTable;
 
-            return tab.Where(e=>e.ACBonus == AC).Select(e=>e.RowIndex).ToArray();
+            return tab.Where(e=>Math.Floor(e.ACBonus ?? -1) == AC).Select(e=>e.RowIndex).ToArray();
         }
 
         public static IReadOnlyList<int>GetAvailableTorsoParts(NwItem item, Gender gender)
