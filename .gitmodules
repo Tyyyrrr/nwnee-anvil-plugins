@@ -1,0 +1,3 @@
+[submodule "NWN.Toolbox"]
+	path = NWN.Toolbox
+	url = https://github.com/Tyyyrrr/NWN.Toolbox.git
