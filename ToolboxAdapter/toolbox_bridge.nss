@@ -3,9 +3,10 @@
 //
 //  Available NUI windows:
 //  1: module explorer
-//  2: creature visuals editor
-//  3: creature statistics editor
-//  4: object visual transform editor
+//  2: objects creator
+//  3: creature visuals editor
+//  4: creature statistics editor
+//  5: object visual transform editor
 
 void main()
 {

@@ -17,9 +17,10 @@ namespace ToolboxAdapter
         private enum ToolboxWindows
         {
             Chooser = 1,
-            CreatureBasic = 2,
-            CreatureStats = 3,
-            Transform = 4,
+            Creator = 2,
+            CreatureBasic = 3,
+            CreatureStats = 4,
+            Transform = 5,
         }
 
         [ScriptHandler("toolbox_bridge")]
@@ -51,6 +52,10 @@ namespace ToolboxAdapter
             {
                 case ToolboxWindows.Chooser:
                     _winMan.OpenWindow<ChooserWindowView,ChooserWindowController>(player);
+                    break;
+
+                case ToolboxWindows.Creator:
+                    _winMan.OpenWindow<CreatorWindowView,CreatorWindowController>(player);
                     break;
 
                 case ToolboxWindows.CreatureBasic:
