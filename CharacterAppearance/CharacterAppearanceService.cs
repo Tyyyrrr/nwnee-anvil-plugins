@@ -28,9 +28,9 @@ namespace CharacterAppearance
 
         private static EditorConfig? _editorCfg = null;
 
-        internal static (float, float) ArmorEditCostMultiplierMinMax => _editorCfg == null ? (-1,-1) : (_editorCfg.ArmorEditCostMultiplierMin, _editorCfg.ArmorEditCostMultiplierMax);
+        internal static (float, float) ArmorEditCostMultiplierMinMax => _editorCfg == null ? (-1,-1) : (_editorCfg.ArmorEditCostMultiplierMin * _editorCfg.TotalItemCostMultiplier, _editorCfg.ArmorEditCostMultiplierMax * _editorCfg.TotalItemCostMultiplier);
         internal static float ArmorEditColorToPartRatio => _editorCfg == null ? 0f : _editorCfg.ArmorEditColorToPartRatio;
-        internal static (float, float) WeaponEditCostMultiplierMinMax => _editorCfg == null ? (-1,-1) : (_editorCfg.WeaponEditCostMultiplierMin, _editorCfg.WeaponEditCostMultiplierMax);
+        internal static (float, float) WeaponEditCostMultiplierMinMax => _editorCfg == null ? (-1,-1) : (_editorCfg.WeaponEditCostMultiplierMin * _editorCfg.TotalItemCostMultiplier, _editorCfg.WeaponEditCostMultiplierMax * _editorCfg.TotalItemCostMultiplier);
 
         internal static int HairChangeCost => _editorCfg?.HairChangeCost ?? -1;
         internal static int HairColorChangeCost => _editorCfg?.HairColorChangeCost ?? -1;

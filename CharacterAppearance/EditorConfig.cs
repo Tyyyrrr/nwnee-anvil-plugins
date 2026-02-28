@@ -11,6 +11,7 @@ namespace CharacterAppearance
         public float WeaponEditCostMultiplierMax {get;set;} = 0.2f;
         public float WeaponEditCostMultiplierMin {get;set;} = 0.05f;
 
+        public float TotalItemCostMultiplier {get;set;} = 1f;
 
 
         public int HairChangeCost {get;set;} = 1000;
