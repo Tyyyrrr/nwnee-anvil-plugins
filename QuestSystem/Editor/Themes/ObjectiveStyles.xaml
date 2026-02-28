@@ -1,0 +1,611 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:QuestEditor.Objectives"
+                    xmlns:graph="clr-namespace:QuestEditor.Graph">
+
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/QuestEditor;component/Themes/GraphStyles.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+
+    <Style x:Key="ObjectiveControlBaseStyle" TargetType="local:ObjectiveControl">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:ObjectiveControl">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <ToggleButton Width="10" Height="10" x:Name="ToggleBtn" Grid.Row="0" Grid.Column="0" Style="{StaticResource StyledToggleButton}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ObjectiveType}" Style="{StaticResource StyledTextBlock}" Grid.Row="0" Grid.Column="1"/>
+                        <StackPanel 
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    HorizontalAlignment="Left"
+                                    Visibility="{Binding IsChecked, Source={x:Reference ToggleBtn}, Converter={StaticResource BoolToVis}}">
+
+                             <!--JOURNAL ENTRY-->
+                            <TextBox Text="{Binding JournalEntry, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                 HorizontalAlignment="Left"
+                                 HorizontalContentAlignment="Left"
+                                 AcceptsReturn="True"
+                                 AcceptsTab="True"
+                                 TextWrapping="Wrap"
+                                 Visibility="{Binding IsChecked, ElementName=ShowInJournalCheckBox, Converter={StaticResource BoolToVis}}">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox" BasedOn="{StaticResource StyledTextBox}">
+                                        <Setter Property="Height" Value="25"/>
+                                        <Setter Property="Width" Value="150"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="Height" Value="180"/>
+                                                <Setter Property="Width" Value="200"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+
+                            <!-- SHOW IN JOURNAL CHECKBOX-->
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox VerticalAlignment="Center" IsChecked="{Binding ShowInJournal}" x:Name="ShowInJournalCheckBox"/>
+                                <TextBlock Text="Show in journal" Style="{StaticResource StyledTextBlock}"/>
+                            </StackPanel>
+                            
+                            <!-- ALLOW PARTY CHECKBOX-->
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox VerticalAlignment="Center" IsChecked="{Binding PartyMembersAllowed}"/>
+                                <TextBlock Text="Allow party members" Style="{StaticResource StyledTextBlock}"/>
+                            </StackPanel>
+
+
+                            <!-- __________________ -->
+                            
+                            <!-- CONCRETE OBJECTIVE -->
+                            <ContentPresenter 
+                                    Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                            
+                            
+                            <!-- __________________ -->
+
+                            
+
+                            <!-- COOLDOWN TIMER -->
+                            <Expander>
+                                <Expander.Header>
+                                    <DockPanel>
+                                        <TextBlock Text="Cooldown timer:" Style="{StaticResource StyledTextBlock}" HorizontalAlignment="Left" DockPanel.Dock="Left"/>
+                                        <TextBox Text="{Binding CooldownTag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Style="{StaticResource StyledTextBox}"/>
+                                    </DockPanel>
+                                </Expander.Header>
+                                <StackPanel Visibility="{Binding ShowCooldownBox, Converter={StaticResource BoolToVis}}">
+                                    <DockPanel>
+                                        <TextBlock Text="Duration seconds:" Style="{StaticResource StyledTextBlock}" HorizontalAlignment="Left" DockPanel.Dock="Left"/>
+                                        <TextBox Text="{Binding CooldownDurationSecondsString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Right" DockPanel.Dock="Right" Style="{StaticResource StyledTextBox}"/>
+                                    </DockPanel>
+                                    <DockPanel>
+                                        <TextBlock Text="Format:" Style="{StaticResource StyledTextBlock}" HorizontalAlignment="Left" DockPanel.Dock="Left"/>
+                                        <ComboBox ItemsSource="{Binding CooldownFormats}" SelectedItem="{Binding CooldownFormat}"/>
+                                    </DockPanel>
+                                    <DockPanel>
+                                        <TextBlock Text="Run offline" Style="{StaticResource StyledTextBlock}" HorizontalAlignment="Left" DockPanel.Dock="Right"/>
+                                        <CheckBox IsChecked="{Binding CooldownRunOffline}" HorizontalAlignment="Left" DockPanel.Dock="Left"/>
+                                    </DockPanel>
+                                    <DockPanel>
+                                        <TextBlock Text="Show in journal" Style="{StaticResource StyledTextBlock}" HorizontalAlignment="Left" DockPanel.Dock="Right"/>
+                                        <CheckBox IsChecked="{Binding CooldownShowInJournal}" HorizontalAlignment="Left" DockPanel.Dock="Left"/>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Expander>
+
+
+
+                            <!-- AREA TAGS -->
+                            <Expander Style="{StaticResource StyledExpander}">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Area tag:" Style="{StaticResource StyledTextBlock}" Width="120" HorizontalAlignment="Left"/>
+                                        <TextBox x:Name="NewAreaTagTextBox" Style="{StaticResource StyledTextBox}" HorizontalContentAlignment="Left" MinWidth="50" MaxWidth="180"/>
+                                        <Button Content="+" 
+                                                Command="{Binding AddAreaTagCommand}" 
+                                                CommandParameter="{Binding Text, ElementName=NewAreaTagTextBox}"
+                                                Style="{StaticResource StyledButton}" 
+                                                Width="18" Height="18" 
+                                                VerticalAlignment="Center" 
+                                                VerticalContentAlignment="Center" 
+                                                HorizontalAlignment="Right"
+                                                HorizontalContentAlignment="Center"
+                                                Padding="0"
+                                                Margin="4,0,8,0"
+                                                FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Expander.Header>
+
+                                <ListBox ItemsSource="{Binding AreaTags}" Style="{StaticResource StyledListBox}">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Focusable" Value="False"/>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="shared:StringIntListItem">
+                                            <DockPanel LastChildFill="True">
+                                                <TextBlock Text="{Binding}" Style="{StaticResource StyledTextBlock}" Margin="0,0,8,0" DockPanel.Dock="Left"/>
+                                                <Button Content="-"
+                                                        Command="{Binding DataContext.RemoveAreaTagCommand,
+                                                                          RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource StyledButton}"
+                                                        DockPanel.Dock="Right" 
+                                                        Width="18" Height="18" 
+                                                        VerticalAlignment="Center" 
+                                                        VerticalContentAlignment="Center" 
+                                                        HorizontalAlignment="Right"
+                                                        HorizontalContentAlignment="Center"
+                                                        Padding="0"
+                                                        Margin="4,0,8,0"
+                                                        FontWeight="Bold"/>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ListBox>
+                            </Expander>
+
+
+                            <!-- TRIGGER TAGS -->
+                            <Expander Style="{StaticResource StyledExpander}">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Trigger tag:" Style="{StaticResource StyledTextBlock}" Width="120" HorizontalAlignment="Left"/>
+                                        <TextBox x:Name="NewTriggerTagTextBox" Style="{StaticResource StyledTextBox}" HorizontalContentAlignment="Left" MinWidth="50" MaxWidth="180"/>
+                                        <Button Content="+"
+                                                Command="{Binding AddTriggerTagCommand}" 
+                                                CommandParameter="{Binding Text, ElementName=NewTriggerTagTextBox}"
+                                                Style="{StaticResource StyledButton}" 
+                                                Width="18" Height="18" 
+                                                VerticalAlignment="Center" 
+                                                VerticalContentAlignment="Center" 
+                                                HorizontalAlignment="Right"
+                                                HorizontalContentAlignment="Center"
+                                                Padding="0"
+                                                Margin="4,0,8,0"
+                                                FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Expander.Header>
+
+                                <ListBox ItemsSource="{Binding TriggerTags}" Style="{StaticResource StyledListBox}">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Focusable" Value="False"/>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="shared:StringIntListItem">
+                                            <DockPanel LastChildFill="True">
+                                                <TextBlock Text="{Binding}" Style="{StaticResource StyledTextBlock}" Margin="4,0,8,0" DockPanel.Dock="Left"/>
+                                                <Button Content="-"
+                                                        Command="{Binding DataContext.RemoveTriggerTagCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource StyledButton}"
+                                                        DockPanel.Dock="Right" 
+                                                        Width="18" Height="18" 
+                                                        VerticalAlignment="Center" 
+                                                        VerticalContentAlignment="Center" 
+                                                        HorizontalAlignment="Right"
+                                                        HorizontalContentAlignment="Center"
+                                                        Padding="0"
+                                                        Margin="4,0,8,0"
+                                                        FontWeight="Bold"/>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ListBox>
+                            </Expander>
+                        </StackPanel>
+                        
+                        <!-- OUTPUT SOCKET -->
+                        <graph:ConnectionSocketControl 
+                                    Style="{StaticResource ConnectionSocketOutputStyle}"
+                                    SocketColorBrush="{Binding SocketColorBrush}"
+                                    HorizontalAlignment="Right"
+                                    DataContext="{Binding OutputVM}"
+                                    CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"
+                                    Grid.Column="2"
+                                    Grid.Row="0"
+                                    CanBeTargeted="{Binding CanBeTargeted}"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveControlDefaultStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="DEFAULT OBJECTIVE" Style="{StaticResource StyledTextBlock}"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveInteractControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="local:ObjectiveInteractVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Interaction:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <ComboBox Grid.Row="0"
+                                  Grid.Column="1"
+                                  ItemsSource="{Binding InteractionTypes}"
+                                  SelectedItem="{Binding Interaction}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="ResRef:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding ResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding Tag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+
+                        <TextBlock  Grid.Row="3" 
+                                    Grid.Column="0"
+                                    Text="TargetResRef:" 
+                                    Style="{StaticResource StyledTextBlock}"
+                                    Visibility="{Binding CanSpecifyTarget, Converter={StaticResource BoolToVis}}"/>
+                        <TextBox  Grid.Row="3" 
+                                  Grid.Column="1"
+                                  Text="{Binding TargetResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"
+                                  Visibility="{Binding CanSpecifyTarget, Converter={StaticResource BoolToVis}}"/>
+
+
+                        <TextBlock  Grid.Row="4" 
+                                    Grid.Column="0"
+                                    Text="TargetTag:" 
+                                    Style="{StaticResource StyledTextBlock}"
+                                    Visibility="{Binding CanSpecifyTarget, Converter={StaticResource BoolToVis}}"/>
+                        <TextBox  Grid.Row="4" 
+                                  Grid.Column="1"
+                                  Text="{Binding TargetTag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"
+                                  Visibility="{Binding CanSpecifyTarget, Converter={StaticResource BoolToVis}}"/>
+                    </Grid>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveKillControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="local:ObjectiveKillVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="ResRef:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding ResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding Tag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="Amount:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding AmountString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+                    </Grid>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveDeliverControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="local:ObjectiveDeliverVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="ResRef:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding ItemResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding ItemTag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="Amount:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding RequiredAmountString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <CheckBox   Grid.Row="3" 
+                                    Grid.Column="0"
+                                    IsChecked="{Binding AllowPartialDelivery, Mode=TwoWay}"/>
+                        <TextBlock  Grid.Row="3" 
+                                    Grid.Column="1"
+                                    Text="Allow partial delivery" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+
+                        <CheckBox   Grid.Row="4" 
+                                    Grid.Column="0"
+                                    IsChecked="{Binding DestroyItemsOnDelivery, Mode=TwoWay}"/>
+                        <TextBlock  Grid.Row="4" 
+                                    Grid.Column="1"
+                                    Text="Destroy items on delivery" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                    </Grid>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveObtainControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="local:ObjectiveObtainVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="ResRef:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding ItemResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding ItemTag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="Amount:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding RequiredAmountString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+                    </Grid>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete objective" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveExploreControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="local:ObjectiveExploreVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Explore %:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding AreaExplorePercentageString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"
+                                  Width="40"/>
+                    </Grid>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ObjectiveSpellcastControlStyle" TargetType="local:ObjectiveControl" BasedOn="{StaticResource ObjectiveControlBaseStyle}">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="local:ObjectiveSpellcastVM">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*" MinWidth="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Target ResRef:"
+                                   Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="0" 
+                                  Grid.Column="1"
+                                  Text="{Binding TargetResRef, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="1" 
+                                    Grid.Column="0"
+                                    Text="Target Tag:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="1" 
+                                  Grid.Column="1"
+                                  Text="{Binding TargetTag, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+
+                        <TextBlock  Grid.Row="2" 
+                                    Grid.Column="0"
+                                    Text="SpellID:" 
+                                    Style="{StaticResource StyledTextBlock}"/>
+                        <TextBox  Grid.Row="2" 
+                                  Grid.Column="1"
+                                  Text="{Binding SpellIDString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                  Style="{StaticResource StyledTextBox}"/>
+                    </Grid>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteObjectiveCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

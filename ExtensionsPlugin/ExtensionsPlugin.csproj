@@ -1,9 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>ExtensionsPlugin</RootNamespace>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+  <PropertyGroup Condition="'$(Configuration)'=='All'">
+    <OutputPath>$(SharedOutputDirectory)\$(AssemblyName)</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='PluginsOnly'">
     <OutputPath>$(SharedOutputDirectory)\$(AssemblyName)</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
@@ -13,8 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EasyConfig\EasyConfig.csproj" Private="false"/>
-    <ProjectReference Include="..\ServerData\ServerData.csproj" Private="false"/>
+    <ProjectReference Include="..\EasyConfig\EasyConfig.csproj" Private="false" />
+    <ProjectReference Include="..\ServerData\ServerData.csproj" Private="false" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,593 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:graph="clr-namespace:QuestEditor.Graph"
+                    xmlns:nodes="clr-namespace:QuestEditor.Nodes"
+                    xmlns:objectives="clr-namespace:QuestEditor.Objectives"
+                    xmlns:shared="clr-namespace:QuestEditor.Shared">
+
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/QuestEditor;component/Themes/GraphStyles.xaml"/>
+        <ResourceDictionary Source="/QuestEditor;component/Themes/ObjectiveStyles.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+    <Style x:Key="NodeControlBaseStyle" TargetType="nodes:NodeControl">
+        <Setter Property="Canvas.Left" Value="{Binding CanvasLeft, Mode=TwoWay}"/>
+        <Setter Property="Canvas.Top" Value="{Binding CanvasTop, Mode=TwoWay}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="nodes:NodeControl">
+                    <Border 
+                            Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" 
+                            CornerRadius="6"
+                            Opacity="{TemplateBinding Opacity}">
+                        <StackPanel>
+                            <graph:ConnectionSocketControl 
+                                DataContext="{Binding InputVM}"
+                                Style="{StaticResource ConnectionSocketControlBaseStyle}"
+                                SocketColorBrush="{TemplateBinding InputColorBrush}"
+                                HorizontalAlignment="Left"
+                                CanBeTargeted="{Binding DataContext.IsInputAvailable, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
+                                CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
+
+                            <TextBlock Text="{Binding NodeTitle}" Style="{StaticResource StyledTextBlock}"/>
+                            <ContentPresenter 
+                                Content="{Binding DataContext, RelativeSource={RelativeSource TemplatedParent}}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"/>
+
+                            <DockPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox VerticalAlignment="Center" IsChecked="{Binding Rollback}" DockPanel.Dock="Left" Visibility="{Binding CanChangeRollback, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="Rollback" Style="{StaticResource StyledTextBlock}" Visibility="{Binding CanChangeRollback, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                                <graph:ConnectionSocketControl 
+                                    Visibility="{Binding DataContext.HasNodeOutput, Converter={StaticResource BoolToVis}, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
+                                    DockPanel.Dock="Right"
+                                    DataContext="{Binding OutputVM}"
+                                    Style="{StaticResource ConnectionSocketOutputStyle}"
+                                    SocketColorBrush="{Binding SocketColorBrush}"
+                                    HorizontalAlignment="Right"
+                                    CanBeTargeted="{Binding CanBeTargeted}"
+                                    CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="BorderThickness" Value="4"/>
+                            <Setter Property="RenderTransform">
+                                <Setter.Value>
+                                    <TransformGroup>
+                                        <TranslateTransform X="-1" Y="-1"/>
+                                    </TransformGroup>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="BorderThickness" Value="3"/>
+        <Setter Property="InputColorBrush" Value="{DynamicResource RegularNodeInputSocketBrush}"/>
+        <Setter Property="OutputColorBrush" Value="{DynamicResource OutputSocketBrush}"/>
+    </Style>
+
+
+    <Style x:Key="NodeControlDefaultStyle" TargetType="nodes:NodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="Opacity" Value="0.8"/>
+    </Style>
+
+    <!-- STAGE NODE -->
+    <Style x:Key="StageNodeControlStyle" TargetType="nodes:StageNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Style.Resources>
+            <DataTemplate DataType="{x:Type objectives:ObjectiveVM}">
+                <objectives:ObjectiveControl Style="{StaticResource ObjectiveControlDefaultStyle}"/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type objectives:ObjectiveInteractVM}">
+                <objectives:ObjectiveControl Style="{StaticResource ObjectiveInteractControlStyle}"/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type objectives:ObjectiveKillVM}">
+                <objectives:ObjectiveControl Style="{StaticResource ObjectiveKillControlStyle}"/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type objectives:ObjectiveDeliverVM}">
+                <objectives:ObjectiveControl Style="{StaticResource ObjectiveDeliverControlStyle}"/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type objectives:ObjectiveObtainVM}">
+                <objectives:ObjectiveControl Style="{StaticResource ObjectiveObtainControlStyle}"/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type objectives:ObjectiveExploreVM}">
+                <objectives:ObjectiveControl Style="{StaticResource ObjectiveExploreControlStyle}"/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type objectives:ObjectiveSpellcastVM}">
+                <objectives:ObjectiveControl Style="{StaticResource ObjectiveSpellcastControlStyle}"/>
+            </DataTemplate>
+        </Style.Resources>
+        <Setter Property="InputColorBrush" Value="{DynamicResource StageNodeInputSocketBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource StageNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource StageNodeBackgroundBrush}"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <StackPanel HorizontalAlignment="Left">
+                        <TextBox Text="{Binding JournalEntry, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                 Visibility="{Binding ShowInJournal, Converter={StaticResource BoolToVis}}"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 HorizontalAlignment="Left"
+                                 HorizontalContentAlignment="Left"
+                                 AcceptsTab="True">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource StyledTextBox}">
+                                    <Setter Property="Height" Value="25"/>
+                                    <Setter Property="Width" Value="150"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsFocused" Value="True">
+                                            <Setter Property="Height" Value="280"/>
+                                            <Setter Property="Width" Value="360"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding ShowInJournal}"/>
+                            <TextBlock Text="Show in journal" Style="{StaticResource StyledTextBlock}"/>
+                        </StackPanel>
+                        <ListBox ItemsSource="{Binding Objectives}" Style="{StaticResource StyledListBox}" HorizontalContentAlignment="Stretch">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Focusable" Value="False"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Add objective">
+                        <MenuItem Header="Interact" Command="{Binding AddObjectiveInteractCommand}"/>
+                        <MenuItem Header="Kill" Command="{Binding AddObjectiveKillCommand}"/>
+                        <MenuItem Header="Deliver" Command="{Binding AddObjectiveDeliverCommand}"/>
+                        <MenuItem Header="Obtain" Command="{Binding AddObjectiveObtainCommand}"/>
+                        <MenuItem Header="Explore" Command="{Binding AddObjectiveExploreCommand}"/>
+                        <MenuItem Header="Spellcast" Command="{Binding AddObjectiveSpellcastCommand}"/>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource StageNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- REWARD NODE -->
+    <Style x:Key="RewardNodeControlStyle" TargetType="nodes:RewardNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource RewardNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource RewardNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="nodes:RewardNodeVM">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Gold: " Style="{StaticResource StyledTextBlock}"/>
+                            <TextBox Text="{Binding GoldString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                            <TextBlock Text="XP: " Style="{StaticResource StyledTextBlock}"/>
+                            <TextBox Text="{Binding XpString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Good/Evil change: " Style="{StaticResource StyledTextBlock}"/>
+                            <TextBox Text="{Binding AlignmentGEString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Law/Chaos change: " Style="{StaticResource StyledTextBlock}"/>
+                            <TextBox Text="{Binding AlignmentLCString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                        </StackPanel>
+                        <Expander Style="{StaticResource StyledExpander}">
+                            <Expander.Header>
+                                <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Item:" Style="{StaticResource StyledTextBlock}"/>
+                                        <TextBox Text="{Binding NewItemString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource StyledTextBox}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Amount:" Style="{StaticResource StyledTextBlock}"/>
+                                        <TextBox Text="{Binding NewItemAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource StyledTextBox}"/>
+                                        <Button Content="+" Command="{Binding AddItemCommand}" Style="{StaticResource StyledButton}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Expander.Header>
+                            <ListBox ItemsSource="{Binding Items}" Style="{StaticResource StyledListBox}">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Focusable" Value="False"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="shared:StringIntListItem">
+                                        <DockPanel LastChildFill="True">
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                            <TextBlock Text="{Binding StringValue}" Style="{StaticResource StyledTextBlock}" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding IntValue}" Style="{StaticResource StyledTextBlock}"/>
+                                            </StackPanel>
+                                            <Button Content="-"
+                                                Command="{Binding DataContext.RemoveItemCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource StyledButton}"
+                                                DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ListBox>
+                        </Expander>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource RewardNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- VISIBILITY NODE -->
+    <Style x:Key="VisibilityNodeControlStyle" TargetType="nodes:VisibilityNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource VisibilityNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource VisibilityNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="nodes:VisibilityNodeVM">
+                    <StackPanel>
+                        <Expander Style="{StaticResource StyledExpander}">
+                            <Expander.Header>
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Object:" Style="{StaticResource StyledTextBlock}"/>
+                                        <TextBox Text="{Binding NewObjectString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource StyledTextBox}" x:Name="ObjectTextBox"/>
+                                        <Button Content="+" Command="{Binding AddObjectCommand}" Style="{StaticResource StyledButton}" CommandParameter="{Binding Text, ElementName=ObjectTextBox}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Expander.Header>
+                            <ListBox ItemsSource="{Binding Objects}" Style="{StaticResource StyledListBox}">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Focusable" Value="False"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="shared:StringBoolListItemVM">
+                                        <DockPanel LastChildFill="True">
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                                <TextBlock Text="{Binding StringValue}" Style="{StaticResource StyledTextBlock}" Margin="0,0,8,0"/>
+                                                <CheckBox IsChecked="{Binding BoolValue}"/>
+                                            </StackPanel>
+                                            <Button Content="-"
+                                                Command="{Binding DataContext.RemoveObjectCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource StyledButton}"
+                                                DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ListBox>
+                        </Expander>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource VisibilityNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- RANDOMIZER NODE -->
+    <Style x:Key="RandomizerNodeControlStyle" TargetType="nodes:RandomizerNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource RandomizerNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource RandomizerNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="MinWidth" Value="120"/>
+        <Setter Property="Focusable" Value="True"/>
+        <Setter Property="Focusable" Value="True"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="nodes:RandomizerNodeVM">
+                    <ListBox ItemsSource="{Binding Elements}" Style="{StaticResource StyledListBox}">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Focusable" Value="False"/>
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu>
+                                            <MenuItem Header="Delete branch" Command="{Binding DeleteBranchCommand}" CommandParameter="{Binding}"/>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="nodes:RandomizerNodeElementVM">
+                                <DockPanel LastChildFill="True">
+                                    <Slider Value="{Binding SliderValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                            Minimum="0" Maximum="100"
+                                            DockPanel.Dock="Left" 
+                                            Width="150"/>
+                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                        <TextBlock Text="{Binding ChanceString}" Margin="0,0,8,0" DockPanel.Dock="Left" Style="{StaticResource StyledTextBlock}"/>
+                                        <graph:ConnectionSocketControl 
+                                            DockPanel.Dock="Right"
+                                            DataContext="{Binding Output}"
+                                            Style="{StaticResource ConnectionSocketOutputStyle}"
+                                            SocketColorBrush="{Binding SocketColorBrush}"
+                                            HorizontalAlignment="Right"
+                                            CanBeTargeted="{Binding DataContext.IsOutputAvailable, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
+                                            CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ListBox>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Add branch" Command="{Binding AddBranchCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource RandomizerNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- COOLDOWN NODE -->
+    <Style x:Key="CooldownNodeControlStyle" TargetType="nodes:CooldownNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource CooldownNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource CooldownNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="nodes:CooldownNodeVM">
+                    <StackPanel HorizontalAlignment="Stretch">
+                        <DockPanel HorizontalAlignment="Stretch" Margin="0,0,10,0">
+                            <TextBlock Text="Tag: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding CooldownTag}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <DockPanel HorizontalAlignment="Stretch">
+                            <TextBlock Text="Days: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding Days}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <DockPanel HorizontalAlignment="Stretch">
+                            <TextBlock Text="Hours: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding Hours}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <DockPanel  HorizontalAlignment="Stretch">
+                            <TextBlock Text="Minutes: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding Minutes}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <DockPanel HorizontalAlignment="Stretch">
+                            <TextBlock Text="Seconds: " Style="{StaticResource StyledTextBlock}" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                            <TextBox Text="{Binding Seconds}" Style="{StaticResource StyledTextBox}" DockPanel.Dock="Right" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding RunOffline}"/>
+                            <TextBlock Text="Run offline" Style="{StaticResource StyledTextBlock}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource CooldownNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+     <!--CONDITION NODE--> 
+    <Style x:Key="ConditionNodeControlStyle" TargetType="nodes:ConditionNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource ConditionNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource ConditionNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="nodes:ConditionNodeVM">
+                    <StackPanel>
+                        <ListBox ItemsSource="{Binding Conditions}" Style="{StaticResource StyledListBox}">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Focusable" Value="False"/>
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu>
+                                                <MenuItem Header="Delete condition" Command="{Binding RemoveConditionCommand}" CommandParameter="{Binding}"/>
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="nodes:QuestConditionVM">
+                                    <StackPanel>
+                                    
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Type: " Style="{StaticResource StyledTextBlock}"/>
+                                            <ComboBox ItemsSource="{Binding ConditionTypes}" SelectedItem="{Binding Type}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Visibility="{Binding TextConditionVisible, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Text condition: " Style="{StaticResource StyledTextBlock}"/>
+                                            <TextBox Text="{Binding StringCondition, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Visibility="{Binding NumericConditionVisible, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Numeric condition: " Style="{StaticResource StyledTextBlock}"/>
+                                            <TextBox Text="{Binding IntConditionText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Visibility="{Binding NumericParameterVisible, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Numeric parameter: " Style="{StaticResource StyledTextBlock}"/>
+                                            <TextBox Text="{Binding IntParameterText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Style="{StaticResource StyledTextBox}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Visibility="{Binding ComparisonModeVisible, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Comparison: " Style="{StaticResource StyledTextBlock}"/>
+                                            <ComboBox ItemsSource="{Binding ComparisonModes}" SelectedItem="{Binding Comparison}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <CheckBox IsChecked="{Binding IsInverted}" />
+                                            <TextBlock Text=" Invert" Style="{StaticResource StyledTextBlock}"/>
+                                        </StackPanel>
+
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ListBox>
+
+                        <Grid HorizontalAlignment="Right">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition MinWidth="120" Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" 
+                                                       HorizontalAlignment="Left" 
+                                                       Style="{StaticResource StyledTextBlock}" 
+                                                       Text="True "/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" 
+                                                       HorizontalAlignment="Left" 
+                                                       Style="{StaticResource StyledTextBlock}" 
+                                                       Text="False "/>
+
+                            <graph:ConnectionSocketControl 
+                                                Grid.Row="0" Grid.Column="1"
+                                                DataContext="{Binding OutputWhenTrue}"
+                                                Style="{StaticResource ConnectionSocketOutputStyle}"
+                                                SocketColorBrush="{Binding SocketColorBrush}"
+                                                HorizontalAlignment="Right"
+                                                CanBeTargeted="{Binding DataContext.IsOutputAvailable, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
+                                                CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
+
+
+                            <graph:ConnectionSocketControl 
+                                                Grid.Row="1" Grid.Column="1"
+                                                DataContext="{Binding OutputWhenFalse}"
+                                                Style="{StaticResource ConnectionSocketOutputStyle}"
+                                                SocketColorBrush="{Binding SocketColorBrush}"
+                                                HorizontalAlignment="Right"
+                                                CanBeTargeted="{Binding DataContext.IsOutputAvailable, RelativeSource={RelativeSource AncestorType=nodes:NodeControl}}"
+                                                CanvasPosition="{Binding CanvasPosition, Mode=OneWayToSource}"/>
+
+                        </Grid>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Add condition" Command="{Binding AddConditionCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource ConditionNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    
+    <!-- UNKNOWN NODE -->
+    <Style x:Key="UnknownNodeControlStyle" TargetType="nodes:UnknownNodeControl" BasedOn="{StaticResource NodeControlBaseStyle}">
+        <Setter Property="BorderBrush" Value="{DynamicResource UnknownNodeBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource UnknownNodeBackgroundBrush}"/>
+        <Setter Property="MaxWidth" Value="300"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="UNKNOWN CONTENT: " Style="{StaticResource StyledTextBlock}"/>
+                        <TextBlock Text="{Binding RawData}" FontStyle="Italic" Style="{StaticResource StyledTextBlock}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Header="Delete node" Command="{Binding DeleteNodeCommand}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource UnknownNodeBorderBrush_Highlighted}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+</ResourceDictionary>

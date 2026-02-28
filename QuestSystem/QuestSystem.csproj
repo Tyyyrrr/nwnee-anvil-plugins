@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>QuestSystem</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='All'">
+    <OutputPath>$(SharedOutputDirectory)\$(AssemblyName)</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='PluginsOnly'">
+    <OutputPath>$(SharedOutputDirectory)\$(AssemblyName)</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NWN.Anvil" Version="8193.37.2" ExcludeAssets="runtime" PrivateAssets="all" />
+    
+    <!-- you'll need the binaries in the same directory as this .csproj for development, but NOT in your server's "../anvil/Plugins/YourPlugin/" !-->
+    <Reference Include="NWN.Core" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MySQLClient\MySQLClient.csproj" Private="false" />
+    <ProjectReference Include="..\ServerData\ServerData.csproj" Private="false" />
+    <ProjectReference Include="..\CharactersRegistry\CharactersRegistry.csproj" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Editor\**\*.cs" />
+    <None Remove="Editor\**\*" />
+    <EmbeddedResource Remove="Editor\**\*" />
+  </ItemGroup>
+
+</Project>

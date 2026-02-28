@@ -1,0 +1,181 @@
+﻿<UserControl x:Class="QuestEditor.Graph.GraphControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:QuestEditor.Graph"
+             xmlns:explorer="clr-namespace:QuestEditor.Explorer"
+             xmlns:nodes="clr-namespace:QuestEditor.Nodes"
+             mc:Ignorable="d"
+             Focusable="True"
+             IsTabStop="True"
+             KeyDown="UserControl_KeyDown"
+             KeyUp="UserControl_KeyUp"
+             MouseWheel="UserControl_MouseWheel"
+             MouseMove="UserControl_MouseMove"
+             MouseLeftButtonUp="UserControl_MouseLeftButtonUp"
+             MouseLeave="UserControl_MouseLeave">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/QuestEditor;component/Themes/NodeStyles.xaml"/>
+                <ResourceDictionary Source="/QuestEditor;component/Themes/GraphStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="local:GraphControl">
+                <Setter Property="DrawConnection" Value="{Binding DrawConnection, Mode=OneWayToSource}"/>
+                <Setter Property="DrawConnectionFromTo" Value="{Binding DrawConnectionContext.FromTo, Mode=OneWayToSource}"/>
+                <Setter Property="EstablishConnectionCommand" Value="{Binding EstablishConnectionCommand}"/>
+                <Setter Property="ClearConnectionCommand" Value="{Binding ClearConnectionCommand}"/>
+                <Setter Property="ContextMenu">
+                    <Setter.Value>
+                        <ContextMenu IsEnabled="{Binding IsGraphActive}" Visibility="{Binding IsGraphActive, Converter={StaticResource BoolToVis}}">
+                            <MenuItem Header="Add Node">
+                                <MenuItem Header="Stage" Command="{Binding CurrentQuest.AddStageNodeCommand}"/>
+                                <MenuItem Header="Reward" Command="{Binding CurrentQuest.AddRewardNodeCommand}"/>
+                                <MenuItem Header="Randomizer" Command="{Binding CurrentQuest.AddRandomizerNodeCommand}"/>
+                                <MenuItem Header="Cooldown" Command="{Binding CurrentQuest.AddCooldownNodeCommand}"/>
+                                <MenuItem Header="Visibility" Command="{Binding CurrentQuest.AddVisibilityNodeCommand}"/>
+                                <MenuItem Header="Condition" Command="{Binding CurrentQuest.AddConditionNodeCommand}"/>
+                            </MenuItem>
+                            <!--<Separator/>
+                            <MenuItem Header="Discard changes" Command="{Binding CurrentQuest.DiscardChangesCommand}" />-->
+                        </ContextMenu>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid ClipToBounds="True">
+    <Grid MouseEnter="Grid_MouseEnter"
+          MouseLeave="Grid_MouseLeave">
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="{Binding Zoom.ScaleX}"
+                                    ScaleY="{Binding Zoom.ScaleY}" />
+                    <TranslateTransform X="{Binding Pan.X}"
+                                        Y="{Binding Pan.Y}" />
+                </TransformGroup>
+            </Grid.RenderTransform>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <!-- Connections -->
+        <ItemsControl ItemsSource="{Binding Connections}"
+                  Panel.ZIndex="0"
+                      Grid.Row="0"
+                      Grid.Column="0">
+            <ItemsControl.Resources>
+                <DataTemplate DataType="{x:Type local:ConnectionVM}">
+                    <local:ConnectionControl />
+                </DataTemplate>
+            </ItemsControl.Resources>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas Background="Transparent"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+
+        <!-- Nodes -->
+        <ItemsControl ItemsSource="{Binding Nodes}" x:Name="NodesItemsControl"
+                  Panel.ZIndex="1"
+                      Grid.Row="0"
+                      Grid.Column="0">
+            
+            <ItemsControl.Resources>
+                
+                <DataTemplate DataType="{x:Type nodes:StageNodeVM}">
+                    <nodes:StageNodeControl Style="{StaticResource StageNodeControlStyle}"
+                                            SizeChanged="Node_SizeChanged"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type nodes:RewardNodeVM}">
+                    <nodes:RewardNodeControl Style="{StaticResource RewardNodeControlStyle}"
+                                             SizeChanged="Node_SizeChanged"/>
+                </DataTemplate>
+                
+                <DataTemplate DataType="{x:Type nodes:RandomizerNodeVM}">
+                    <nodes:RandomizerNodeControl Style="{StaticResource RandomizerNodeControlStyle}"
+                                                 SizeChanged="Node_SizeChanged"/>
+                </DataTemplate>
+                
+                <DataTemplate DataType="{x:Type nodes:CooldownNodeVM}">
+                    <nodes:CooldownNodeControl Style="{StaticResource CooldownNodeControlStyle}"
+                                               SizeChanged="Node_SizeChanged"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type nodes:VisibilityNodeVM}">
+                        <nodes:VisibilityNodeControl Style="{StaticResource VisibilityNodeControlStyle}"
+                                            SizeChanged="Node_SizeChanged"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type nodes:ConditionNodeVM}">
+                    <nodes:ConditionNodeControl Style="{StaticResource ConditionNodeControlStyle}"
+                                        SizeChanged="Node_SizeChanged"/>
+                </DataTemplate>
+                </ItemsControl.Resources>
+            
+            
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas
+                            Background="Transparent" 
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
+                    <Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+        </ItemsControl>
+
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="left" VerticalAlignment="Top" 
+                  Panel.ZIndex="2"
+                      Grid.Row="0"
+                      Grid.Column="0"
+                    Visibility="{Binding IsGraphActive, Converter={StaticResource BoolToVis }}">
+            <TextBlock Text="Quest title: " VerticalAlignment="Top" Margin="6,0,8,0" FontWeight="Bold" Style="{StaticResource StyledTextBlock}"/>
+            <TextBox Text="{Binding CurrentQuest.Title, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" 
+                     VerticalContentAlignment="Top"
+                     Margin="0,1,0,2"
+                     TextWrapping="Wrap">
+                <TextBox.Style>
+                    <Style TargetType="TextBox" BasedOn="{StaticResource StyledTextBox}">
+                        <Setter Property="Height" Value="25"/>
+                        <Setter Property="Width" Value="240"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="Height" Value="180"/>
+                                <Setter Property="Width" Value="300"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+            <TextBlock Text="Level: " VerticalAlignment="Top" Margin="6,0,8,0" FontWeight="Bold" Style="{StaticResource StyledTextBlock}"/>
+            <TextBox Text="{Binding CurrentQuest.TargetLevelString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" 
+                     VerticalContentAlignment="Top"
+                     Margin="0,1,0,2">
+                <TextBox.Style>
+                    <Style TargetType="TextBox" BasedOn="{StaticResource StyledTextBox}">
+                        <Setter Property="Height" Value="25"/>
+                        <Setter Property="Width" Value="35"/>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+        </StackPanel>
+
+    </Grid>
+</UserControl>

@@ -24,3 +24,8 @@ so adaptation __is__ possible — but __not__ plug‑and‑play._
 This repository is licensed under the [Apache License 2.0](LICENSE).
 
 Plugin directories may include their own README files with usage notes / configuration details / integration guidance.
+
+# MSBuild configurations:
+Running ```dotnet build``` builds only plugins by default (i.e. 'PluginsOnly' projects configuration).
+Use ```dotnet build -c All``` to compile plugin assemblies AND any other assemblies, such as custom tools or unit tests. 
+For running tests, you'd need to ```dotnet test -c All```, since test assemblies are not plugins and they are excluded from default configuration.

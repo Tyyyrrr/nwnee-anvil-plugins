@@ -20,16 +20,27 @@ namespace ServerData
         {
             var bootstrapper = GetBootstrapper();
 
+            // Core:
             PlayerSQLMap = bootstrapper.GetPlayerSQLMap();
             CreatureInspector = bootstrapper.GetCreatureInspector();
             CustomClassesMap = bootstrapper.GetCustomClassesMap();
             CustomFeatsMap = bootstrapper.GetCustomFeatsMap();
+
+            // Appearance editor:
             CustomBaseItemTypesMap = bootstrapper.GetCustomBaseItemTypesMap();
             BodyAppearanceProvider = bootstrapper.GetBodyAppearanceProvider();
             ItemAppearanceProvider = bootstrapper.GetItemAppearanceProvider();
             BodyAppearanceSQLMap = bootstrapper.GetBodyAppearanceSQLMap();
+
+            // False identities system:
             IdentitySQLMap = bootstrapper.GetIdentitySQLMap();
             AcquaintanceSQLMap = bootstrapper.GetAcquaintanceSQLMap();
+
+            // Quest system:
+            QuestSQLMap = bootstrapper.GetQuestSQLMap();
+            QuestObjectiveSQLMap = bootstrapper.GetQuestObjectiveSQLMap();
+            QuestVisibilitySQLMap = bootstrapper.GetQuestVisibilitySQLMap();
+
         }
 
 
@@ -142,5 +153,38 @@ namespace ServerData
                 _acquaintanceSQLMap = value;
             } 
         } static IAcquaintanceSQLMap? _acquaintanceSQLMap;
+
+        
+
+        public static IQuestSQLMap QuestSQLMap
+        {
+            get => _questSQLMap ?? throw new InvalidOperationException($"{nameof(IQuestSQLMap)} is not initialized.");
+            set
+            {
+                if(_questSQLMap != null) throw new InvalidOperationException($"{nameof(IQuestSQLMap)} is already initialized.");
+                _questSQLMap = value;
+            } 
+        } static IQuestSQLMap? _questSQLMap;
+        
+
+        public static IQuestObjectiveSQLMap QuestObjectiveSQLMap
+        {
+            get => _questObjectiveSQLMap ?? throw new InvalidOperationException($"{nameof(IQuestObjectiveSQLMap)} is not initialized.");
+            set
+            {
+                if(_questObjectiveSQLMap != null) throw new InvalidOperationException($"{nameof(IQuestObjectiveSQLMap)} is already initialized.");
+                _questObjectiveSQLMap = value;
+            } 
+        } static IQuestObjectiveSQLMap? _questObjectiveSQLMap;
+
+        public static IQuestVisibilitySQLMap QuestVisibilitySQLMap
+        {
+            get => _questVisibilitySQLMap ?? throw new InvalidOperationException($"{nameof(IQuestVisibilitySQLMap)} is not initialized.");
+            set
+            {
+                if(_questVisibilitySQLMap != null) throw new InvalidOperationException($"{nameof(IQuestVisibilitySQLMap)} is already initialized.");
+                _questVisibilitySQLMap = value;
+            } 
+        } static IQuestVisibilitySQLMap? _questVisibilitySQLMap;
     }
 }

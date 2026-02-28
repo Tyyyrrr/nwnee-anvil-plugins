@@ -14,5 +14,8 @@ namespace ServerData
         IBodyAppearanceSQLMap GetBodyAppearanceSQLMap();
         IIdentitySQLMap GetIdentitySQLMap();
         IAcquaintanceSQLMap GetAcquaintanceSQLMap();
+        IQuestSQLMap GetQuestSQLMap();
+        IQuestObjectiveSQLMap GetQuestObjectiveSQLMap();
+        IQuestVisibilitySQLMap GetQuestVisibilitySQLMap();
     }
 }
