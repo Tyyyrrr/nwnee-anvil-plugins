@@ -103,17 +103,25 @@ namespace MovementSystem
             MovementState.MovementService = this;
         }
 
+        private static readonly NLog.Logger _log = NLog.LogManager.GetCurrentClassLogger();
 
         [ScriptHandler("mvtsys_csbridge")]
         ScriptHandleResult MvtSysCSBridgeHandler(CallInfo info)
         {
             var pc = info.ObjectSelf as NwCreature;
 
-            if(pc == null || !pc.IsValid || !MovementState.TryGetState(pc, out var ms)){
-                NLog.LogManager.GetCurrentClassLogger().Error((pc == null || !pc.IsValid) ? "PC is invalid." : "No MovementState object on PC.");
+            if(pc == null || !pc.IsValid || pc.ControllingPlayer == null || !pc.ControllingPlayer.IsValid){
+                _log.Error("Player or PC is invalid.");
                 return ScriptHandleResult.NotHandled;
             }
             
+            if(pc.IsDMAvatar || pc.ControllingPlayer.IsDM)
+                return ScriptHandleResult.Handled; // Movement System does not impact DM clients (but does impact PlayerDMs)
+
+            if(!MovementState.TryGetState(pc, out var ms)){
+                _log.Error("No MovementState object on PC.");
+                return ScriptHandleResult.NotHandled;
+            }
 
             var param = pc.GetObjectVariable<LocalVariableInt>(LOCVAR_PARAM);
 
