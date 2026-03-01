@@ -600,6 +600,19 @@ namespace MovementSystem
             Refresh();
         }
 
+        internal void RefreshWalking()
+        {
+            var isWalking = _pc.GetObjectVariable<LocalVariableBool>("WALKING_MODE").Value;
+
+            if(!isWalking && (stealth || _pc.StealthModeActive))
+            {
+                NWScript.SetActionMode(_pc.ObjectId, NWScript.ACTION_MODE_STEALTH, 0);
+                NWScript.SetActionMode(_pc.ObjectId, NWScript.ACTION_MODE_STEALTH, 1);
+            }
+
+            Refresh();
+        }
+
 
         internal async void MountHorseAsync()
         {

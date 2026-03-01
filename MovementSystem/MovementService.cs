@@ -49,6 +49,8 @@ namespace MovementSystem
         const int PARAM_SURF_MAT_CHANGE = 6;
         const int PARAM_FLY = 7;
 
+        const int PARAM_WALK=8;
+
         private enum BridgeParam
         {
             Print = PARAM_PRINT,
@@ -57,7 +59,8 @@ namespace MovementSystem
             Mounting = PARAM_MOUNTING,
             Dismounting = PARAM_DISMOUNTING,
             SurfMatChange = PARAM_SURF_MAT_CHANGE,
-            FlyToggle = PARAM_FLY
+            FlyToggle = PARAM_FLY,
+            Walk = PARAM_WALK
         }
 
 
@@ -148,6 +151,10 @@ namespace MovementSystem
                     
                 case BridgeParam.Crawl:
                     ms.RefreshCrawling();
+                    break;
+
+                case BridgeParam.Walk:
+                    ms.RefreshWalking();
                     break;
 
                 case BridgeParam.Mounting:

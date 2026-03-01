@@ -13,6 +13,8 @@ const int PARAM_HORSE = 3;
 const int PARAM_MOUNTING = 4;
 const int PARAM_DISMOUNTING = 5;
 const int PARAM_SURF_MAT_CHANGE = 6;
+const int PARAM_FLY = 7;
+const int PARAM_WALK = 8;
 //...
 //...
 
@@ -34,6 +36,17 @@ void RefreshCrawl(object oPC)
         return;
 
     SetLocalInt(oPC,LOCVAR_PARAM,PARAM_CRAWL);
+
+    ExecuteScript("mvtsys_csbridge", oPC);
+}
+
+void RefreshFly(object oPC);
+void RefreshFly(object oPC)
+{
+    if(oPC == OBJECT_INVALID || !GetIsPC(oPC))
+        return;
+
+    SetLocalInt(oPC,LOCVAR_PARAM,PARAM_FLY);
 
     ExecuteScript("mvtsys_csbridge", oPC);
 }
@@ -67,6 +80,17 @@ void OnSurfaceMaterialChanged(object oPC)
         return;
 
     SetLocalInt(oPC,LOCVAR_PARAM, PARAM_SURF_MAT_CHANGE);
+
+    ExecuteScript("mvtsys_csbridge", oPC);
+}
+
+void RefreshWalk(object oPC);
+void RefreshWalk(object oPC)
+{
+    if(oPC == OBJECT_INVALID || !GetIsPC(oPC))
+        return;
+
+    SetLocalInt(oPC,LOCVAR_PARAM, PARAM_WALK);
 
     ExecuteScript("mvtsys_csbridge", oPC);
 }
