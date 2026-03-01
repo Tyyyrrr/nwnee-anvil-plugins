@@ -155,7 +155,7 @@ namespace MovementSystem
 
         static EffectKeys KeyFromSpellId(int spellId) => spellId switch
         {
-            NWScript.SPELL_HASTE => EffectKeys.Haste,
+            NWScript.SPELL_HASTE or NWScript.SPELL_MASS_HASTE => EffectKeys.Haste,
             NWScript.SPELL_SLOW => EffectKeys.Slow,
             NWScript.SPELL_EXPEDITIOUS_RETREAT => EffectKeys.ExpeditiousRetreat,
             NWScript.SPELL_BIGBYS_CRUSHING_HAND or NWScript.SPELL_BIGBYS_GRASPING_HAND => EffectKeys.BigbyHand,
