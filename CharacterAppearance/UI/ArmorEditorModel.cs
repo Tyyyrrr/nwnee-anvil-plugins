@@ -384,6 +384,8 @@ namespace CharacterAppearance.UI
             RefreshMainEntries();
             
             MainSelection = 0;
+
+            _pc.GetObjectVariable<LocalVariableBool>("EditingArmor").Value = true;
         }
 
         public void Dispose()
@@ -392,6 +394,8 @@ namespace CharacterAppearance.UI
             
             CharacterAppearanceService.EventService.Unsubscribe<OnItemEquip, OnItemEquip.Factory>(_pc, OnItemEquip, Anvil.Services.EventCallbackType.After);
             CharacterAppearanceService.EventService.Unsubscribe<OnItemUnequip, OnItemUnequip.Factory>(_pc, OnItemUnequip, Anvil.Services.EventCallbackType.After);
+
+            _pc.GetObjectVariable<LocalVariableBool>("EditingArmor").Delete();
         }
 
         bool OnHelmetItemChanged(NwItem? item)

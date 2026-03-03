@@ -33,7 +33,7 @@ namespace QuestSystem
             _mySQL = mySQL;
             _charactersRegistry = charactersRegistry;
 
-            NwModule.Instance.OnModuleLoad += OnModuleLoad;
+            // NwModule.Instance.OnModuleLoad += OnModuleLoad;
 
             NwModule.Instance.OnClientEnter += OnClientEnter;
             NwModule.Instance.OnClientLeave += OnClientLeave;
@@ -45,36 +45,36 @@ namespace QuestSystem
             _mySQL.ExecuteQuery(DataProviders.QuestVisibilitySQLMap.CreateTableIfNotExistsQuery);
         }
 
-        void OnModuleLoad(ModuleEvents.OnModuleLoad _)
-        {
-            foreach(var area in NwModule.Instance.Areas)
-            {
-                area.OnEnter += d =>
-                {
-                    if(d.EnteringObject is NwCreature creature && creature.IsValid && creature.IsPlayerControlled(out var player) && player.IsValid)
-                    {
-                        // run visibility override update of every object for this player in this area
-                        _questMan.RefreshVisibilityOverridesForPlayerEnteringArea(player, area);
-                    }
-                    else
-                    {
-                        // run visibility override update of this object for every player in this area
-                        _questMan.RefreshVisibilityOverridesForObjectEnteringArea(d.EnteringObject, area);
-                    }
-                };
+        // void OnModuleLoad(ModuleEvents.OnModuleLoad _)
+        // {
+        //     foreach(var area in NwModule.Instance.Areas)
+        //     {
+        //         area.OnEnter += d =>
+        //         {
+        //             if(d.EnteringObject is NwCreature creature && creature.IsValid && creature.IsPlayerControlled(out var player) && player.IsValid)
+        //             {
+        //                 // run visibility override update of every object for this player in this area
+        //                 _questMan.RefreshVisibilityOverridesForPlayerEnteringArea(player, area);
+        //             }
+        //             else
+        //             {
+        //                 // run visibility override update of this object for every player in this area
+        //                 _questMan.RefreshVisibilityOverridesForObjectEnteringArea(d.EnteringObject, area);
+        //             }
+        //         };
 
-                foreach(var obj in area.Objects)
-                {                    
-                    var variable = obj.GetObjectVariable<LocalVariableInt>("InvisibleByDefault");
+        //         foreach(var obj in area.Objects)
+        //         {                    
+        //             var variable = obj.GetObjectVariable<LocalVariableInt>("InvisibleByDefault");
 
-                    if(variable.HasValue && variable.Value == 1)
-                    {
-                        variable.Delete();
-                        obj.VisibilityOverride = VisibilityMode.Hidden;
-                    }
-                }
-            }
-        }
+        //             if(variable.HasValue && variable.Value == 1)
+        //             {
+        //                 variable.Delete();
+        //                 obj.VisibilityOverride = VisibilityMode.Hidden;
+        //             }
+        //         }
+        //     }
+        // }
 
         public void Dispose()
         {

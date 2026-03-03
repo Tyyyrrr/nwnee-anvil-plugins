@@ -456,6 +456,10 @@ namespace CharacterIdentity
             {
                 if (observer == _player) continue;
 
+                var obsCreature = observer.ControlledCreature;
+                if(observer.IsDM && obsCreature != null && obsCreature.IsValid && (obsCreature.IsDMPossessed || obsCreature.IsDMAvatar))
+                    NWNXRename.ClearPCNameOverride(_loginCharacter.ObjectId, obsCreature.ObjectId);
+
                 var obsState = GetState(observer);
 
                 if (obsState == null) continue;
