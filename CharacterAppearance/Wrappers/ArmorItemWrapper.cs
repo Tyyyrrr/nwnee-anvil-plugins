@@ -43,7 +43,7 @@ namespace CharacterAppearance.Wrappers
                 return false;
 
             var ac = item.BaseACValue;
-            if(ac > 4) return _flags.HasFlag(EditorFlags.ArmorHeavy);
+            if(ac > 3) return _flags.HasFlag(EditorFlags.ArmorHeavy);
             if(ac > 0) return _flags.HasFlag(EditorFlags.ArmorMedium);
             return _flags.HasFlag(EditorFlags.ArmorLight); 
         }
