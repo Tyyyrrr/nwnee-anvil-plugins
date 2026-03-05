@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Anvil.API;
@@ -396,6 +397,15 @@ namespace CharacterAppearance.Wrappers
             (float,float) minMax = CharacterAppearanceService.ArmorEditCostMultiplierMinMax;
 
             int gpVal = Item.GoldValue;
+            int maximumTotalCost = Item.BaseItem.ItemType switch
+            {
+                BaseItemType.Helmet or
+                BaseItemType.Cloak or
+                BaseItemType.SmallShield or
+                BaseItemType.LargeShield or
+                BaseItemType.TowerShield => Math.Max(1,gpVal/3),
+                _ => Math.Max(1,gpVal/2)
+            };
             var minMaxCost = (gpVal * minMax.Item1, gpVal * minMax.Item2);
             float colorToPartRatio = CharacterAppearanceService.ArmorEditColorToPartRatio;
             int editableParts = CurrentAppearance.Count;
@@ -451,7 +461,7 @@ namespace CharacterAppearance.Wrappers
 
                 total = Math.Max(1, (int)Math.Round(colorsCost + modelsCost, 0));
 
-                return total;
+                return total > maximumTotalCost ? maximumTotalCost : total;
             }
 
 
@@ -463,7 +473,7 @@ namespace CharacterAppearance.Wrappers
             cost = Math.Max(minMaxCost.Item1, Math.Min(minMaxCost.Item2, cost));
             total = Math.Max(1,(int)Math.Round(cost, 0));
 
-            return total;
+            return total > maximumTotalCost ? maximumTotalCost : total;
         }
     }
 
