@@ -35,6 +35,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PCTimers", "PCTimers\PCTime
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DMUtils", "DMUtils\DMUtils.csproj", "{CF2F3E41-07F1-4AAD-A0DB-4BA548C92E41}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BehaviorTrees.Core", "BehaviorTrees.Core\BehaviorTrees.Core.csproj", "{87622971-CCBD-47AA-96C8-A1FC7BF3AC42}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BehaviorTrees", "BehaviorTrees\BehaviorTrees.csproj", "{08341EF6-1481-4E1D-9E1B-CAE355613A8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		PluginsOnly|x64 = PluginsOnly|x64
@@ -99,6 +103,14 @@ Global
 		{CF2F3E41-07F1-4AAD-A0DB-4BA548C92E41}.PluginsOnly|x64.Build.0 = PluginsOnly|x64
 		{CF2F3E41-07F1-4AAD-A0DB-4BA548C92E41}.All|x64.ActiveCfg = All|x64
 		{CF2F3E41-07F1-4AAD-A0DB-4BA548C92E41}.All|x64.Build.0 = All|x64
+		{87622971-CCBD-47AA-96C8-A1FC7BF3AC42}.PluginsOnly|x64.ActiveCfg = PluginsOnly|x64
+		{87622971-CCBD-47AA-96C8-A1FC7BF3AC42}.PluginsOnly|x64.Build.0 = PluginsOnly|x64
+		{87622971-CCBD-47AA-96C8-A1FC7BF3AC42}.All|x64.ActiveCfg = All|x64
+		{87622971-CCBD-47AA-96C8-A1FC7BF3AC42}.All|x64.Build.0 = All|x64
+		{08341EF6-1481-4E1D-9E1B-CAE355613A8D}.PluginsOnly|x64.ActiveCfg = PluginsOnly|x64
+		{08341EF6-1481-4E1D-9E1B-CAE355613A8D}.PluginsOnly|x64.Build.0 = PluginsOnly|x64
+		{08341EF6-1481-4E1D-9E1B-CAE355613A8D}.All|x64.ActiveCfg = All|x64
+		{08341EF6-1481-4E1D-9E1B-CAE355613A8D}.All|x64.Build.0 = All|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
