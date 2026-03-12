@@ -148,12 +148,18 @@ namespace CharacterAppearance
                 _log.Error("Null or invalid PC");
                 return ScriptHandleResult.NotHandled;
             }
+
+            if (pc.IsDMPossessed)
+            {
+                player = pc.ControllingPlayer;
+            }
             else if(!pc.IsLoginPlayerCharacter(out player))
             {
                 _log.Error("Not a login player character");
                 return ScriptHandleResult.NotHandled;
             }
-            else if(player == null || !player.IsValid)
+            
+            if(player == null || !player.IsValid)
             {
                 _log.Error("Null or invalid player");
                 return ScriptHandleResult.NotHandled;
