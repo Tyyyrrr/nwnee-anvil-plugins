@@ -15,9 +15,18 @@ namespace ServerData
             return bootstrapper;
         }
         
-
-        static DataProviders()
+        static DataProviders() => Bootstrap();
+        static bool bootstrapped = false;
+        public static void Bootstrap()
         {
+            if (bootstrapped)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Error("Already bootstrapped");
+                return;
+            }
+
+            bootstrapped = true;
+
             var bootstrapper = GetBootstrapper();
 
             // Core:
@@ -41,8 +50,9 @@ namespace ServerData
             QuestObjectiveSQLMap = bootstrapper.GetQuestObjectiveSQLMap();
             QuestVisibilitySQLMap = bootstrapper.GetQuestVisibilitySQLMap();
 
+            // Behavior trees:
+            BehaviorTreesProvider = bootstrapper.GetBehaviorTreesProvider();
         }
-
 
 
         public static IPlayerSQLMap PlayerSQLMap
@@ -186,5 +196,15 @@ namespace ServerData
                 _questVisibilitySQLMap = value;
             } 
         } static IQuestVisibilitySQLMap? _questVisibilitySQLMap;
+        
+        public static IBehaviorTreesProvider BehaviorTreesProvider
+        {
+            get => _behaviorTreesProvider ?? throw new InvalidOperationException($"{nameof(IBehaviorTreesProvider)} is not initialized.");
+            set
+            {
+                if(_behaviorTreesProvider != null) throw new InvalidOperationException($"{nameof(IBehaviorTreesProvider)} is already initialized.");
+                _behaviorTreesProvider = value;
+            } 
+        } static IBehaviorTreesProvider? _behaviorTreesProvider;
     }
 }

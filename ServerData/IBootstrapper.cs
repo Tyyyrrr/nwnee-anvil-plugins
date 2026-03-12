@@ -17,5 +17,6 @@ namespace ServerData
         IQuestSQLMap GetQuestSQLMap();
         IQuestObjectiveSQLMap GetQuestObjectiveSQLMap();
         IQuestVisibilitySQLMap GetQuestVisibilitySQLMap();
+        IBehaviorTreesProvider GetBehaviorTreesProvider();
     }
 }
