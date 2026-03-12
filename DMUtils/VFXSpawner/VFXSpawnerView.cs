@@ -9,7 +9,8 @@ namespace DMUtils.VFXSpawner
         public static readonly NuiWindow NuiWindow;
 
         public static readonly NuiBind<List<NuiComboEntry>> ComboEntriesProperty = NuiProperty<List<NuiComboEntry>>.CreateBind(nameof(ComboEntriesProperty));
-        public static readonly NuiBind<int> SelectedVFXEntryProperty = NuiProperty<int>.CreateBind(nameof(SelectedVFXEntryProperty));
+        public static readonly NuiBind<int> SelectedVFXEntryProperty = NuiProperty<int>.CreateBind(nameof(SelectedVFXEntryProperty));        
+        public static readonly NuiBind<string> SelectedVFXIndexStringProperty = NuiProperty<string>.CreateBind(nameof(SelectedVFXIndexStringProperty));
         public static readonly NuiBind<string> DurationTextEditValueProperty = NuiProperty<string>.CreateBind(nameof(DurationTextEditValueProperty));
         public static readonly NuiCombo VFXCombo = new()
         {
@@ -21,6 +22,17 @@ namespace DMUtils.VFXSpawner
         };
 
         private static readonly NuiLabel DurationTextLabel = new("Czas trwania:")
+        {
+            Height=40,
+            Width=120
+        };
+
+        private static readonly NuiLabel VFXIndexLabel = new("Indeks: ")
+        {
+            Height=40,
+            Width=80
+        };
+        private static readonly NuiLabel VFXIndexValueLabel = new(SelectedVFXIndexStringProperty)
         {
             Height=40,
             Width=80
@@ -55,6 +67,11 @@ namespace DMUtils.VFXSpawner
                 Children= new NuiElement[]{OkButton,ExitButton}.ToList()
             };
 
+            NuiRow appIdRow = new()
+            {
+                Children = new NuiElement[]{VFXIndexLabel,VFXIndexValueLabel}.ToList()
+            };
+
             NuiRow durationRow = new()
             {
                 Children = new NuiElement[] {DurationTextLabel, DurationTextEdit}.ToList()
@@ -64,7 +81,8 @@ namespace DMUtils.VFXSpawner
             {
                 Children= new NuiElement[]{
                     VFXCombo,
-                    DurationTextEdit,
+                    appIdRow,
+                    durationRow,
                     buttonsRow
                 }.ToList()
             };
@@ -72,7 +90,7 @@ namespace DMUtils.VFXSpawner
             NuiWindow = new(mainLayout, "Tworzenie VFX")
             {
                 Id = nameof(VFXSpawnerView),
-                Geometry = new NuiRect(-1, 128, 215,180),
+                Geometry = new NuiRect(-1, 128, 230,200),
                 Resizable=false
             };
         }

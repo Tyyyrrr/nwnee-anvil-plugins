@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Anvil.API;
-using Anvil.Services;
 using NuiMVC;
 
 using VFXSModel = DMUtils.VFXSpawner.VFXSpawnerModel;
@@ -45,6 +44,7 @@ namespace DMUtils.VFXSpawner
                 if(entryId >= 0 && entryId < tempEffects.Count)
                 {
                     var entryLabel = tempEffects[entryId];
+                    SetValue(VFXSView.SelectedVFXIndexStringProperty,entryLabel.Value.ToString());
                     _model.SelectedVFXID = entryLabel.Value;
                 }
             }
@@ -67,7 +67,8 @@ namespace DMUtils.VFXSpawner
         {
             if (elementId == nameof(VFXSView.OkButton))
                 _model.SpawnVFX();
-            Close();
+
+            else Close();
         }
 
         protected override object? OnClose(){return null;}
