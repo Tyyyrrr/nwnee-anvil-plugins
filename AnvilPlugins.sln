@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestEditor", "QuestSystem\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PCTimers", "PCTimers\PCTimers.csproj", "{BBDBEA4B-B83C-400D-84EF-D283B5B97BEE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DMUtils", "DMUtils\DMUtils.csproj", "{CF2F3E41-07F1-4AAD-A0DB-4BA548C92E41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		PluginsOnly|x64 = PluginsOnly|x64
@@ -93,6 +95,10 @@ Global
 		{BBDBEA4B-B83C-400D-84EF-D283B5B97BEE}.PluginsOnly|x64.Build.0 = PluginsOnly|x64
 		{BBDBEA4B-B83C-400D-84EF-D283B5B97BEE}.All|x64.ActiveCfg = All|x64
 		{BBDBEA4B-B83C-400D-84EF-D283B5B97BEE}.All|x64.Build.0 = All|x64
+		{CF2F3E41-07F1-4AAD-A0DB-4BA548C92E41}.PluginsOnly|x64.ActiveCfg = PluginsOnly|x64
+		{CF2F3E41-07F1-4AAD-A0DB-4BA548C92E41}.PluginsOnly|x64.Build.0 = PluginsOnly|x64
+		{CF2F3E41-07F1-4AAD-A0DB-4BA548C92E41}.All|x64.ActiveCfg = All|x64
+		{CF2F3E41-07F1-4AAD-A0DB-4BA548C92E41}.All|x64.Build.0 = All|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
