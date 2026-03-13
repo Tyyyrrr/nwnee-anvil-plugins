@@ -22,6 +22,11 @@ namespace BehaviorTrees
 
         internal void RemoveCreature(NwCreature creature) => _perceived.Remove(creature);
 
+        internal void ClearInvalidPerceivedCreatures()
+        {
+            _perceived.RemoveAll(c=>!c.IsValid);
+        }
+
         public object? Context { get; set; } = null;
     }
 }

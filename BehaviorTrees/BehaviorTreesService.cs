@@ -58,7 +58,13 @@ namespace BehaviorTrees
         return ScriptHandleResult.NotHandled;
       }
 
-      
+      var seen = NWN.Core.NWScript.GetLastPerceptionSeen() > 0 || NWN.Core.NWScript.GetLastPerceptionVanished() < 1;
+      var heard = NWN.Core.NWScript.GetLastPerceptionHeard() > 0 || NWN.Core.NWScript.GetLastPerceptionInaudible() < 1;
+
+      if(seen || heard)
+        creature.NoticeCreature(perceived);
+      else
+        creature.UnNoticeCreature(perceived);
 
       return ScriptHandleResult.Handled;
     }

@@ -8,9 +8,8 @@ namespace BehaviorTrees
         public static void EvaluateBehaviorTrees(this NwArea area)
         {
             foreach(NwCreature creature in area.Objects.Where(c=>c is NwCreature).Cast<NwCreature>())
-            {
                 creature.EvaluateBehaviorTree();
-            }
+            
         }
     }
 }

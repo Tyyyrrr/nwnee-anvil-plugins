@@ -32,7 +32,14 @@ namespace BehaviorTrees
         {
             if(_behaviorStates.TryGetValue(creature, out var bs))
             {
-                bs.TreeRoot.Evaluate(bs);
+                if (!creature.IsValid)
+                    _behaviorStates.Remove(creature);
+                
+                else
+                {
+                    bs.ClearInvalidPerceivedCreatures();
+                    bs.TreeRoot.Evaluate(bs);
+                }
             }
         }
     }
