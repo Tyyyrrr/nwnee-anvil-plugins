@@ -439,8 +439,8 @@ namespace MovementSystem
                 if(HasFeatFlag(FeatFlags.LivelyStep))
                 {
                     var monkClasses = NWScript.GetLevelByClass(NWScript.CLASS_TYPE_MONK, pcObj) + NWScript.GetLevelByClass(ServerData.DataProviders.CustomClassesMap.Sage, pcObj);
-                    var wisMod = NWScript.GetAbilityModifier(NWScript.ABILITY_WISDOM);
-                    speed += MovementService.GetFeatSpeedModifier(ServerData.DataProviders.CustomFeatsMap.Gadabout) * Math.Min(wisMod, monkClasses);
+                    var wisMod = NWScript.GetAbilityModifier(NWScript.ABILITY_WISDOM, pcObj);
+                    speed += MovementService.GetFeatSpeedModifier(ServerData.DataProviders.CustomFeatsMap.LivelyStep) * Math.Min(wisMod, monkClasses);
                 }
             }
 
