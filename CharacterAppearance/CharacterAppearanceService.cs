@@ -224,7 +224,7 @@ namespace CharacterAppearance
                 }
                 else
                 {              
-                    creature.MovementRate = creature.IsBrownie() ? MovementRate.Slow : MovementRate.PC;      
+                    creature.MovementRate = MovementRate.PC;      
                     creature.VisualTransform.Translation = new System.Numerics.Vector3(vt.X, vt.Y, 0.0f);
                     var pheno = (int)creature.Phenotype;
 
