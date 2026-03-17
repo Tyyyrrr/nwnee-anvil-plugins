@@ -17,9 +17,14 @@ namespace BehaviorTrees.Core
         /// Creatures of which this creature is aware.
         /// </summary>
         public IReadOnlyList<NwCreature> PerceivedCreatures {get;}
+
+        /// <summary>
+        /// Other objects (non-creatures) of which this creature is aware.
+        /// </summary>
+        public IReadOnlyList<NwObject> PerceivedObjects {get;}
         
         /// <summary>
-        /// Arbitrary object passed to child nodes during evaluation. It can be a creature, placeable, item, or a custom container for state data.
+        /// Arbitrary object passed to child nodes during evaluation. Will carry the most of behaviorstate related data in the implementations.
         /// </summary>
         public object? Context {get;set;}
     }
