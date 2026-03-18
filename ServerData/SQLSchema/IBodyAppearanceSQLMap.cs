@@ -4,5 +4,6 @@ namespace ServerData.SQLSchema
     {
         public string ID {get;}
         public string Serialized {get;}
+        public string BodyHeight {get;}
     }
 }

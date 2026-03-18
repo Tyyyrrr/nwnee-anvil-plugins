@@ -179,7 +179,7 @@ namespace CharacterAppearance
         public static event Action<NwPlayer, bool>? OnBodyAppearanceEditComplete;
         internal static void RaiseOnBodyAppearanceEditComplete(NwPlayer player, bool applyChanges) => OnBodyAppearanceEditComplete?.Invoke(player, applyChanges);
 
-        private static readonly string _sqlSaveBodyColumns = $"{ServerData.DataProviders.IdentitySQLMap.ID}, {ServerData.DataProviders.BodyAppearanceSQLMap.Serialized}";
+        private static readonly string _sqlSaveBodyColumns = $"{ServerData.DataProviders.IdentitySQLMap.ID}, {ServerData.DataProviders.BodyAppearanceSQLMap.Serialized}, {ServerData.DataProviders.BodyAppearanceSQLMap.BodyHeight}";
         private sealed class SerializableAppearance
         {
             public int Phenotype {get;set;} = 0;
@@ -258,11 +258,17 @@ namespace CharacterAppearance
             app.Apply(creature);
 
             var serialized = JsonSerializer.Serialize(app);
+            float height;
+            var validScale = ServerData.DataProviders.BodyAppearanceProvider.GetMinMaxBodyHeightForCreature(creature);
+            var scale = creature.VisualTransform.Scale;
+                
+            height = Math.Clamp(scale, validScale.Item1, validScale.Item2);
+            if(scale != height) creature.VisualTransform.Scale = height;
 
             _mySQL.QueryBuilder.InsertOrUpdate(
                 ServerData.DataProviders.BodyAppearanceSQLMap.TableName,
                 _sqlSaveBodyColumns,
-                identityID, serialized
+                identityID, serialized, height
             );
 
             _ = _mySQL.ExecuteQuery();
@@ -276,16 +282,43 @@ namespace CharacterAppearance
             var identitySQLMap = ServerData.DataProviders.IdentitySQLMap;
 
             //_log.Warn("Loading identity " + identityID.ToString() + " appearance");
-            _mySQL.QueryBuilder.Select(bodyAppSQLMap.TableName, bodyAppSQLMap.Serialized)
+            _mySQL.QueryBuilder.Select(bodyAppSQLMap.TableName, $"{bodyAppSQLMap.Serialized}, {bodyAppSQLMap.BodyHeight}")
             .Where(identitySQLMap.ID, identityID).Limit(1);
 
-            using var result = _mySQL.ExecuteQuery();
-            if (!result.HasData)
+            string? serialized;
+            float height;
+            using (var result = _mySQL.ExecuteQuery())
             {
-                return false;
+                if (!result.HasData)
+                {
+                    return false;
+                }
+                
+                var row = result.First();
+
+                serialized = row.Get<string>(0);
+
+                if(string.IsNullOrEmpty(serialized))
+                    return false;
+
+                height = row.Get<float>(1);
+            }
+            
+            if(height <= 0) // save height in database if it's not saved already
+            {
+                var validScale = ServerData.DataProviders.BodyAppearanceProvider.GetMinMaxBodyHeightForCreature(creature);
+                var scale = creature.VisualTransform.Scale;
+                           
+                height = Math.Clamp(scale, validScale.Item1, validScale.Item2);
+                if(scale != height) creature.VisualTransform.Scale = height;
+
+                _mySQL.QueryBuilder.Update(bodyAppSQLMap.TableName, bodyAppSQLMap.BodyHeight, height)
+                .Where(identitySQLMap.ID, identityID).Limit(1);
+
+                _mySQL.ExecuteQuery();
             }
 
-            var serialized = result.First().Get<string>(0);
+            creature.VisualTransform.Scale = height;
 
             if (string.IsNullOrEmpty(serialized))
             {
@@ -313,8 +346,9 @@ namespace CharacterAppearance
             // ensure correct size for the creature
             var validScale = ServerData.DataProviders.BodyAppearanceProvider.GetMinMaxBodyHeightForCreature(creature);
             var scale = creature.VisualTransform.Scale;
-            if(scale < validScale.Item1) creature.VisualTransform.Scale = validScale.Item1;
-            if(scale > validScale.Item2) creature.VisualTransform.Scale = validScale.Item2;
+
+            float height = Math.Clamp(scale, validScale.Item1, validScale.Item2);
+            if(scale != height) creature.VisualTransform.Scale = height;
 
             // ensure correct skin color for the creature
             var validSkinColors = ServerData.DataProviders.BodyAppearanceProvider.GetSkinColorsForCreature(creature);
