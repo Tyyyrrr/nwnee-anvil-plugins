@@ -80,6 +80,7 @@ namespace CharacterAppearance
         [ScriptHandler("app_edit_nui")]
         ScriptHandleResult HandleEditorNUIRequest(CallInfo info)
         {
+
             var obj = info.ObjectSelf;
             if(obj == null || !obj.IsValid)
             {
@@ -87,67 +88,43 @@ namespace CharacterAppearance
                 return ScriptHandleResult.NotHandled;
             }
 
-            var locVar = obj.GetObjectVariable<LocalVariableInt>("AppearanceEditorFlags");
+            int nObjType = NWScript.GetObjectType(obj.ObjectId);
+            bool isDMCommand = nObjType == NWScript.OBJECT_TYPE_CREATURE;
 
-            int flags;
+            var variable = obj.GetObjectVariable<LocalVariableInt>("AppearanceEditorFlags");
 
-            NwCreature? pc;
-            
-            if (!locVar.HasValue || locVar.Value == 0)
-            {
-                if (!info.ScriptParams.IsSet("AppearanceEditorFlags") || !int.TryParse(info.ScriptParams["AppearanceEditorFlags"], out flags))
-                {
-                    _log.Error("Missing or invalid parameter");
-                    return ScriptHandleResult.NotHandled;
-                }
-                pc = obj as NwCreature;
-            }
-            else
-            {
-                flags = locVar.Value;
-                if ((obj as NwPlaceable) != null)
-                {
-                    pc = NWScript.GetLastUsedBy().ToNwObjectSafe<NwCreature>();
+            int flags = variable?.Value ?? 0;
 
-                    if(pc == null || !pc.IsValid)
-                    {
-                        _log.Error("Null or invalid PC");
-                        return ScriptHandleResult.NotHandled;
-                    }
+            if(isDMCommand) variable?.Delete();
 
-                    if(flags <= 0 || flags > ushort.MaxValue || (((EditorFlags)flags & ~EditorFlags.All) != 0))
-                    {                
-                        _log.Error("Flags out of range");
-                        return ScriptHandleResult.NotHandled;
-                    }
-
-                    if(pc.Level > 3 && ((EditorFlags)flags).HasFlag(EditorFlags.FreeOfCharge))
-                    {
-                        var p = pc.ControllingPlayer;
-                        if(p == null || !p.IsValid)
-                        {
-                            _log.Error("Not controlled by valid player");
-                            return ScriptHandleResult.NotHandled;
-                        }
-
-                        p.SendServerMessage("Darmowa edycja wyglądu jest dostępna wyłącznie poniżej 4-go poziomu postaci.", ColorConstants.Red);
-                        return ScriptHandleResult.Handled;
-                    }
-                }
-                else
-                {
-                    _log.Error("Not a placeable");
-                    return ScriptHandleResult.NotHandled;
-                }
+            if(flags <= 0 || flags > ushort.MaxValue || (((EditorFlags)flags & ~EditorFlags.All) != 0))
+            {                
+                _log.Error("Flags out of range");
+                return ScriptHandleResult.NotHandled;
             }
 
-            NwPlayer? player;
+            NwCreature? pc = isDMCommand ? obj as NwCreature : (obj is NwPlaceable ? NWScript.GetLastUsedBy().ToNwObjectSafe<NwCreature>() : null);
 
-            if (pc == null || !pc.IsValid)
+            if(pc == null || !pc.IsValid)
             {
                 _log.Error("Null or invalid PC");
                 return ScriptHandleResult.NotHandled;
             }
+
+            if(!isDMCommand && pc.Level > 3 && ((EditorFlags)flags).HasFlag(EditorFlags.FreeOfCharge))
+            {
+                var p = pc.ControllingPlayer;
+                if(p == null || !p.IsValid)
+                {
+                    _log.Error("Not controlled by valid player");
+                    return ScriptHandleResult.NotHandled;
+                }
+
+                p.SendServerMessage("Darmowa edycja wyglądu jest dostępna wyłącznie poniżej 4-go poziomu postaci.", ColorConstants.Red);
+                return ScriptHandleResult.Handled;
+            }
+
+            NwPlayer? player;
 
             if (pc.IsDMPossessed)
             {
@@ -162,11 +139,6 @@ namespace CharacterAppearance
             if(player == null || !player.IsValid)
             {
                 _log.Error("Null or invalid player");
-                return ScriptHandleResult.NotHandled;
-            }
-            else if(flags <= 0 || flags > ushort.MaxValue || (((EditorFlags)flags & ~EditorFlags.All) != 0))
-            {                
-                _log.Error("Flags out of range");
                 return ScriptHandleResult.NotHandled;
             }
             
