@@ -6,6 +6,9 @@
 // - "IsNotOnQuest"
 // - "CompletedQuest"       
 // - "NotCompletedQuest"    
+// - "HasItemTag"           "itemATag:10; itemBTag"        (amount is optional. Default is 1)
+// - "HasItemResRef"        "itemAResRef:10; itemBResRef"
+// - "HasItemTagResRef"      "itemATag:itemAResRef:10; itemBTag:itemBResRef"
 //////////////////////////
 
 void main(){
